@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  }
+}
+
+@layer components {
+  /* Shared input — use className="input" on any input/textarea/select */
+  .input {
+    @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none;
+  }
+  .input:focus {
+    @apply border-primary-500 ring-1 ring-primary-500;
+  }
+  .input:disabled {
+    @apply cursor-not-allowed bg-gray-50 text-gray-400;
+  }
+
+  /* Card wrapper */
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white p-6 shadow-sm;
+  }
+
+  /* Clickable card (list items with hover) */
+  .card-link {
+    @apply block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition;
+  }
+  .card-link:hover {
+    @apply border-primary-300 shadow;
+  }
+
+  /* Compact card (tighter padding, no shadow) */
+  .card-sm {
+    @apply rounded-lg border border-gray-100 bg-white p-4;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white;
+  }
+  .btn-primary:hover {
+    @apply bg-primary-700;
+  }
+  .btn-primary:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-secondary {
+    @apply rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700;
+  }
+  .btn-secondary:hover {
+    @apply bg-gray-50;
+  }
+  .btn-secondary:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-danger {
+    @apply rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white;
+  }
+  .btn-danger:hover {
+    @apply bg-red-700;
+  }
+  .btn-danger:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  /* Inline link button */
+  .btn-link {
+    @apply text-sm font-medium text-primary-600;
+  }
+  .btn-link:hover {
+    @apply underline;
+  }
+
+  /* Form label */
+  .label {
+    @apply mb-1 block text-sm font-medium text-gray-700;
+  }
+
+  /* Section heading (h2-level) */
+  .section-heading {
+    @apply mb-3 text-base font-semibold text-gray-900;
+  }
+
+  /* Uppercase metadata label */
+  .label-caps {
+    @apply text-xs font-medium uppercase tracking-wide text-gray-500;
+  }
+
+  /* Muted body text */
+  .text-muted {
+    @apply text-sm text-gray-400;
+  }
+
+  /* Inline error text */
+  .text-error {
+    @apply text-sm text-red-600;
+  }
+
+  /* Alert banners */
+  .alert-success {
+    @apply rounded-lg border border-green-200 bg-green-50 p-4 text-green-700;
+  }
+  .alert-warning {
+    @apply rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-700;
+  }
+  .alert-danger {
+    @apply rounded-lg border border-red-200 bg-red-50 p-4 text-red-700;
+  }
+}

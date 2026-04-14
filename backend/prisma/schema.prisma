@@ -1,0 +1,61 @@
+// This Prisma schema covers only what's needed to bootstrap auth.
+// Full schema (goals, reviews, cycles, templates, appeals) to be added
+// when the team finalizes the data model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  Admin
+  RegionalHR
+  Manager
+  Supervisor
+  Employee
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  employeeId   String   @unique
+  passwordHash String
+  name         String
+  email        String   @unique
+  role         Role
+  region       String
+  department   String
+  jobLevel     String   // e.g. L1, L2, L3
+  jobTitle     String   // e.g. Software Engineer, Operator
+
+  managerId    String?
+  supervisorId String?
+
+  sessions     Session[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([region])
+  @@index([department])
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────────
+
+model Session {
+  id        String   @id  // UUID used as cookie value
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
