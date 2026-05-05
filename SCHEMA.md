@@ -88,17 +88,36 @@
 ## User — 自我關聯（Manager / Supervisor）
 
 ### 決策
-- `managerId String?` → `User.id`（上級 Manager）
-- `supervisorId String?` → `User.id`（直屬 Supervisor）
+- `managerId String?` → 只設在 **Supervisor** 身上，指向其上級 Manager
+- `supervisorId String?` → 只設在 **Employee** 身上，指向其直屬 Supervisor
+- Manager 可由鏈推導：`employee.supervisor.managerId`，Employee 不重複存 `managerId`
 - 兩條關係各用具名字串（`"UserManager"` / `"UserSupervisor"`）以避免 Prisma 多重 self-relation 衝突
 - `onDelete: SetNull`：主管離職後不刪除下屬，下屬的 FK 設為 null
 
+### 邊界情況：直屬員工（無 Supervisor）
+若某員工直接匯報給 Manager（不經過 Supervisor）：
+- `managerId = manager.id`（例外地設在 Employee 身上）
+- `supervisorId = null`
+- 查詢時以 OR 同時涵蓋兩條路徑：
+  ```ts
+  OR: [
+    { employee: { supervisor: { managerId: user.id } } }, // 一般路徑
+    { employee: { managerId: user.id, supervisorId: null } }, // 直屬路徑
+  ]
+  ```
+
 ### 種子資料層級（Taiwan 為例）
 ```
-RegionalHR(tw-hr001) → Manager(tw-mgr001)
-  ├── Supervisor(tw-sup001) → Employee(tw-emp001, tw-emp004)
-  └── Supervisor(tw-sup002) → Employee(tw-emp002)
-RegionalHR(tw-hr001) → Supervisor(tw-sup003) → Employee(tw-emp003)
+Manager(tw-mgr001)
+  ├── Supervisor(tw-sup001) [managerId=tw-mgr001]
+  │   ├── Employee(tw-emp001) [supervisorId=tw-sup001]
+  │   └── Employee(tw-emp004) [supervisorId=tw-sup001]
+  └── Supervisor(tw-sup002) [managerId=tw-mgr001]
+      └── Employee(tw-emp002) [supervisorId=tw-sup002]
+
+RegionalHR(tw-hr001)
+  └── Supervisor(tw-sup003) [managerId=tw-hr001]
+      └── Employee(tw-emp003) [supervisorId=tw-sup003]
 ```
 
 ---
