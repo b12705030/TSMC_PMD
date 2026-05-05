@@ -4,26 +4,26 @@ type BadgeStatus = CycleStatus | ReviewStatus | GoalStatus | AppealStatus
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   // Cycle
-  GoalSetting: { label: 'Goal Setting', className: 'bg-blue-100 text-blue-700' },
-  InProgress: { label: 'In Progress', className: 'bg-yellow-100 text-yellow-700' },
-  UnderReview: { label: 'Under Review', className: 'bg-purple-100 text-purple-700' },
-  Completed: { label: 'Completed', className: 'bg-green-100 text-green-700' },
+  GoalSetting: { label: '目標設定', className: 'bg-blue-100 text-blue-700' },
+  InProgress:  { label: '執行中',   className: 'bg-yellow-100 text-yellow-700' },
+  UnderReview: { label: '評核中',   className: 'bg-purple-100 text-purple-700' },
+  Completed:   { label: '已完成',   className: 'bg-green-100 text-green-700' },
 
   // Goal
-  Draft: { label: 'Draft', className: 'bg-gray-100 text-gray-600' },
-  PendingApproval: { label: 'Pending Approval', className: 'bg-yellow-100 text-yellow-700' },
-  Approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
+  Draft:           { label: '草稿',   className: 'bg-gray-100 text-gray-600' },
+  PendingApproval: { label: '待審核', className: 'bg-yellow-100 text-yellow-700' },
+  Approved:        { label: '已核准', className: 'bg-green-100 text-green-700' },
 
   // Review
-  PendingEmployeeSubmit: { label: 'Awaiting Your Input', className: 'bg-blue-100 text-blue-700' },
-  PendingSupervisorReview: { label: 'Awaiting Review', className: 'bg-yellow-100 text-yellow-700' },
-  PendingManagerApproval: { label: 'Awaiting Approval', className: 'bg-purple-100 text-purple-700' },
-  Published: { label: 'Published', className: 'bg-green-100 text-green-700' },
-  Appealed: { label: 'Appealed', className: 'bg-red-100 text-red-700' },
+  PendingEmployeeSubmit:   { label: '待您填寫', className: 'bg-blue-100 text-blue-700' },
+  PendingSupervisorReview: { label: '待主管初評', className: 'bg-yellow-100 text-yellow-700' },
+  PendingManagerApproval:  { label: '待校準',   className: 'bg-purple-100 text-purple-700' },
+  Published:               { label: '已發布',   className: 'bg-green-100 text-green-700' },
+  Appealed:                { label: '申訴中',   className: 'bg-red-100 text-red-700' },
 
   // Appeal
-  Pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-700' },
-  Resolved: { label: 'Resolved', className: 'bg-green-100 text-green-700' },
+  Pending:  { label: '待處理', className: 'bg-yellow-100 text-yellow-700' },
+  Resolved: { label: '已解決', className: 'bg-green-100 text-green-700' },
 }
 
 interface StatusBadgeProps {

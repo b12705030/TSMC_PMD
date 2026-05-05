@@ -8,44 +8,100 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTeamMembers(currentUser: SessionUser) {
-    // Manager sees entire unit; Supervisor sees direct reports
     if (currentUser.role === Role.Manager) {
-      return this.prisma.user.findMany({
-        where: { department: currentUser.department },
-        select: userSelectFields,
+      const users = await this.prisma.user.findMany({
+        where: { supervisor: { managerId: currentUser.id } },
+        include: { region: true, department: true },
       })
+      return users.map(flattenUser)
     }
 
     if (currentUser.role === Role.Supervisor) {
-      return this.prisma.user.findMany({
+      const users = await this.prisma.user.findMany({
         where: { supervisorId: currentUser.id },
-        select: userSelectFields,
+        include: { region: true, department: true },
       })
+      return users.map(flattenUser)
     }
 
     return []
   }
 
-  async getEmployee(employeeId: string) {
-    return this.prisma.user.findUnique({
-      where: { id: employeeId },
-      select: userSelectFields,
+  async getTeamHierarchy(currentUser: SessionUser) {
+    const [supervisors, directReports] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { managerId: currentUser.id, role: Role.Supervisor },
+        include: {
+          region: true,
+          department: true,
+          supervisedUsers: { include: { region: true, department: true } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+      // Employees who report directly to this manager (no supervisor)
+      this.prisma.user.findMany({
+        where: { managerId: currentUser.id, supervisorId: null, role: Role.Employee },
+        include: { region: true, department: true },
+        orderBy: { name: 'asc' },
+      }),
+    ])
+
+    return {
+      groups: supervisors.map((sup) => ({
+        supervisor: flattenUser(sup),
+        employees:  sup.supervisedUsers.map(flattenUser),
+      })),
+      directReports: directReports.map(flattenUser),
+    }
+  }
+
+  async getDistinctRegions(): Promise<string[]> {
+    const regions = await this.prisma.region.findMany({
+      select: { name: true },
+      orderBy: { name: 'asc' },
     })
+    return regions.map((r) => r.name)
+  }
+
+  async getDistinctJobLevels(): Promise<string[]> {
+    const rows = await this.prisma.user.findMany({
+      select: { jobLevel: true },
+      distinct: ['jobLevel'],
+      orderBy: { jobLevel: 'asc' },
+    })
+    return rows.map((r) => r.jobLevel)
+  }
+
+  async getDistinctJobTitles(): Promise<string[]> {
+    const rows = await this.prisma.user.findMany({
+      select: { jobTitle: true },
+      distinct: ['jobTitle'],
+      orderBy: { jobTitle: 'asc' },
+    })
+    return rows.map((r) => r.jobTitle)
+  }
+
+  async getEmployee(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { region: true, department: true },
+    })
+    if (!user) return null
+    return flattenUser(user)
   }
 }
 
-const userSelectFields = {
-  id: true,
-  employeeId: true,
-  name: true,
-  email: true,
-  role: true,
-  region: true,
-  department: true,
-  jobLevel: true,
-  jobTitle: true,
-  managerId: true,
-  supervisorId: true,
-  createdAt: true,
-  updatedAt: true,
+type UserWithRelations = {
+  id: string; employeeId: string; name: string; email: string; role: string
+  regionId: string; region: { name: string }
+  departmentId: string; department: { name: string }
+  jobLevel: string; jobTitle: string
+  managerId: string | null; supervisorId: string | null
+  createdAt: Date; updatedAt: Date
+  supervisedUsers?: UserWithRelations[]
+}
+
+function flattenUser(user: UserWithRelations) {
+  const { region, department, supervisedUsers: _sup, ...rest } = user
+  return { ...rest, region: region.name, department: department.name }
 }

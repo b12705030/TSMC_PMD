@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, Patch, UseGuards } from '@nestjs/common'
 import { CyclesService } from './cycles.service'
+import { CreateCycleDto } from './dto/create-cycle.dto'
+import { UpdateCycleDto } from './dto/update-cycle.dto'
 import { AuthGuard } from '../../common/guards/auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
@@ -13,26 +15,32 @@ export class CyclesController {
   constructor(private readonly cyclesService: CyclesService) {}
 
   @Get()
-  @Roles(Role.Admin, Role.RegionalHR)
+  @Roles(Role.Admin, Role.RegionalHR, Role.Manager, Role.Supervisor, Role.Employee)
   getCycles(@CurrentUser() user: SessionUser) {
-    return this.cyclesService.getCycles(user.region)
+    return this.cyclesService.getCycles(user)
   }
 
   @Get(':id')
-  @Roles(Role.Admin, Role.RegionalHR)
-  getCycle(@Param('id') id: string) {
-    return this.cyclesService.getCycle(id)
+  @Roles(Role.Admin, Role.RegionalHR, Role.Manager, Role.Supervisor, Role.Employee)
+  getCycle(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.getCycle(id, user)
   }
 
   @Post()
   @Roles(Role.Admin, Role.RegionalHR)
-  createCycle(@Body() dto: unknown) {
-    return this.cyclesService.createCycle(dto)
+  createCycle(@Body() dto: CreateCycleDto, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.createCycle(dto, user)
   }
 
-  @Patch(':id/status')
+  @Patch(':id')
   @Roles(Role.Admin, Role.RegionalHR)
-  updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.cyclesService.updateCycleStatus(id, status)
+  updateCycle(@Param('id') id: string, @Body() dto: UpdateCycleDto, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.updateCycle(id, dto, user)
+  }
+
+  @Patch(':id/advance')
+  @Roles(Role.Admin, Role.RegionalHR)
+  advanceStatus(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.advanceStatus(id, user)
   }
 }

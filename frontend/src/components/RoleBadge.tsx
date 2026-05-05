@@ -1,11 +1,11 @@
 import type { Role } from '@/types'
 
 const ROLE_CONFIG: Record<Role, { label: string; className: string }> = {
-  Admin: { label: 'Admin', className: 'bg-red-100 text-red-700' },
-  RegionalHR: { label: 'Regional HR', className: 'bg-orange-100 text-orange-700' },
-  Manager: { label: 'Manager', className: 'bg-purple-100 text-purple-700' },
-  Supervisor: { label: 'Supervisor', className: 'bg-blue-100 text-blue-700' },
-  Employee: { label: 'Employee', className: 'bg-gray-100 text-gray-600' },
+  Admin:      { label: '系統管理員', className: 'bg-red-100 text-red-700' },
+  RegionalHR: { label: '區域人資',  className: 'bg-orange-100 text-orange-700' },
+  Manager:    { label: '經理',      className: 'bg-purple-100 text-purple-700' },
+  Supervisor: { label: '直屬主管',  className: 'bg-blue-100 text-blue-700' },
+  Employee:   { label: '員工',      className: 'bg-gray-100 text-gray-600' },
 }
 
 interface RoleBadgeProps {

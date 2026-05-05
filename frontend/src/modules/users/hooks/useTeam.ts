@@ -4,6 +4,31 @@ import { useEffect, useState, useCallback } from 'react'
 import { api } from '@/lib/api'
 import type { User, Goal, PerformanceReview } from '@/types'
 
+export interface SupervisorGroup {
+  supervisor: User
+  employees: User[]
+}
+
+export interface TeamHierarchy {
+  groups: SupervisorGroup[]
+  directReports: User[]
+}
+
+export function useTeamHierarchy() {
+  const [hierarchy, setHierarchy] = useState<TeamHierarchy>({ groups: [], directReports: [] })
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    api
+      .get<TeamHierarchy>('/users/team/hierarchy')
+      .then(setHierarchy)
+      .catch(() => setHierarchy({ groups: [], directReports: [] }))
+      .finally(() => setIsLoading(false))
+  }, [])
+
+  return { ...hierarchy, isLoading }
+}
+
 export function useTeam() {
   const [members, setMembers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)

@@ -11,16 +11,16 @@ export default function AppealsPage() {
   const { appeals, isLoading } = useAppeals()
 
   const columns = [
-    { key: 'id', label: 'Appeal ID', render: (row: Appeal) => row.id.slice(0, 8) },
-    { key: 'employeeId', label: 'Employee', sortable: true },
+    { key: 'id', label: '申訴編號', render: (row: Appeal) => row.id.slice(0, 8) },
+    { key: 'employeeId', label: '員工', sortable: true },
     {
       key: 'status',
-      label: 'Status',
+      label: '狀態',
       render: (row: Appeal) => <StatusBadge status={row.status} />,
     },
     {
       key: 'createdAt',
-      label: 'Submitted',
+      label: '提交時間',
       render: (row: Appeal) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
@@ -28,17 +28,17 @@ export default function AppealsPage() {
       label: '',
       render: (row: Appeal) =>
         row.status === 'Pending' ? (
-          <button className="btn-link">Review</button>
+          <button className="btn-link">審閱</button>
         ) : null,
     },
   ]
 
   return (
     <div>
-      <PageHeader title="Appeals" description="Review and respond to employee performance appeals." />
+      <PageHeader title="申訴管理" description="審閱並回應員工的績效申訴。" />
 
       {!isLoading && appeals.length === 0 ? (
-        <EmptyState title="No appeals" description="No appeals have been submitted yet." />
+        <EmptyState title="尚無申訴" description="目前尚無員工提交申訴。" />
       ) : (
         <DataTable columns={columns} data={appeals} isLoading={isLoading} />
       )}

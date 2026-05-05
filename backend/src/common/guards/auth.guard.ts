@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
 
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      include: { user: true },
+      include: { user: { include: { region: true, department: true } } },
     })
 
     if (!session || session.expiresAt < new Date()) {
@@ -33,8 +33,10 @@ export class AuthGuard implements CanActivate {
       name: user.name,
       email: user.email,
       role: user.role as import('../enums/role.enum').Role,
-      region: user.region,
-      department: user.department,
+      regionId: user.regionId,
+      region: user.region.name,
+      departmentId: user.departmentId,
+      department: user.department.name,
       jobLevel: user.jobLevel,
       jobTitle: user.jobTitle,
     }

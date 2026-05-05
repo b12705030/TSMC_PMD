@@ -18,6 +18,30 @@ export class UsersController {
     return this.usersService.getTeamMembers(user)
   }
 
+  @Get('team/hierarchy')
+  @Roles(Role.Manager)
+  getTeamHierarchy(@CurrentUser() user: SessionUser) {
+    return this.usersService.getTeamHierarchy(user)
+  }
+
+  @Get('regions')
+  @Roles(Role.Admin, Role.RegionalHR)
+  getRegions() {
+    return this.usersService.getDistinctRegions()
+  }
+
+  @Get('job-levels')
+  @Roles(Role.Admin, Role.RegionalHR)
+  getJobLevels() {
+    return this.usersService.getDistinctJobLevels()
+  }
+
+  @Get('job-titles')
+  @Roles(Role.Admin, Role.RegionalHR)
+  getJobTitles() {
+    return this.usersService.getDistinctJobTitles()
+  }
+
   @Get(':id')
   @Roles(Role.Manager, Role.Supervisor, Role.RegionalHR, Role.Admin)
   getEmployee(@Param('id') id: string) {

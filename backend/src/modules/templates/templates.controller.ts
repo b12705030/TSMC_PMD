@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { TemplatesService } from './templates.service'
+import { CreateTemplateDto } from './dto/create-template.dto'
+import { AddCustomQuestionDto } from './dto/add-question.dto'
 import { AuthGuard } from '../../common/guards/auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
@@ -15,24 +17,48 @@ export class TemplatesController {
   @Get()
   @Roles(Role.Admin, Role.RegionalHR, Role.Manager)
   getTemplates(@CurrentUser() user: SessionUser) {
-    return this.templatesService.getTemplates(user.region)
+    return this.templatesService.getTemplates(user)
   }
 
   @Get(':id')
   @Roles(Role.Admin, Role.RegionalHR, Role.Manager)
-  getTemplate(@Param('id') id: string) {
-    return this.templatesService.getTemplate(id)
+  getTemplate(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.templatesService.getTemplate(id, user)
   }
 
+  // RegionalHR creates base template with locked questions
   @Post()
-  @Roles(Role.RegionalHR, Role.Manager)
-  createTemplate(@Body() dto: unknown) {
-    return this.templatesService.createTemplate(dto)
+  @Roles(Role.Admin, Role.RegionalHR)
+  createTemplate(@Body() dto: CreateTemplateDto, @CurrentUser() user: SessionUser) {
+    return this.templatesService.createTemplate(dto, user)
   }
 
-  @Put(':id')
+  // Manager adds a custom question to an existing template
+  @Post(':id/questions')
   @Roles(Role.Manager)
-  updateTemplate(@Param('id') id: string, @Body() dto: unknown) {
-    return this.templatesService.updateTemplate(id, dto)
+  addCustomQuestion(
+    @Param('id') id: string,
+    @Body() dto: AddCustomQuestionDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.templatesService.addCustomQuestion(id, dto, user)
+  }
+
+  // Manager deletes their own custom question
+  @Delete(':id/questions/:questionId')
+  @Roles(Role.Manager)
+  deleteCustomQuestion(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.templatesService.deleteCustomQuestion(id, questionId, user)
+  }
+
+  // RegionalHR publishes a template (locks it for use)
+  @Patch(':id/publish')
+  @Roles(Role.Admin, Role.RegionalHR)
+  publishTemplate(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.templatesService.publishTemplate(id, user)
   }
 }

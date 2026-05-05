@@ -11,28 +11,28 @@ export default function AuditLogPage() {
   const columns = [
     {
       key: 'createdAt',
-      label: 'Time',
+      label: '時間',
       render: (row: AuditLog) => new Date(row.createdAt).toLocaleString(),
       sortable: true,
     },
-    { key: 'userName', label: 'User', sortable: true },
-    { key: 'action', label: 'Action', sortable: true },
-    { key: 'resource', label: 'Resource', sortable: true },
-    { key: 'resourceId', label: 'Resource ID', render: (row: AuditLog) => row.resourceId.slice(0, 8) },
-    { key: 'ipAddress', label: 'IP Address' },
+    { key: 'userName', label: '使用者', sortable: true },
+    { key: 'action', label: '操作', sortable: true },
+    { key: 'resource', label: '資源', sortable: true },
+    { key: 'resourceId', label: '資源編號', render: (row: AuditLog) => row.resourceId.slice(0, 8) },
+    { key: 'ipAddress', label: 'IP 位址' },
   ]
 
   return (
     <div>
       <PageHeader
-        title="Audit Log"
-        description="Immutable record of all system operations and data access."
+        title="稽核日誌"
+        description="所有系統操作與資料存取的不可竄改紀錄。"
       />
       <DataTable
         columns={columns}
         data={logs}
         isLoading={isLoading}
-        emptyMessage="No audit records found."
+        emptyMessage="找不到稽核紀錄。"
       />
     </div>
   )
