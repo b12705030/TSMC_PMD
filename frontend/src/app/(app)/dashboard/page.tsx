@@ -2,13 +2,12 @@
 
 import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
-import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import { CycleStepper } from '@/components/CycleStepper'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { useCycles } from '@/modules/cycles/hooks/useCycles'
 import { useGoals } from '@/modules/goals/hooks/useGoals'
-import { useReviews, useTeamReviews } from '@/modules/reviews/hooks/useReviews'
+import { useReviews, useTeamReviews, useReviewStats } from '@/modules/reviews/hooks/useReviews'
 import { useTemplates } from '@/modules/templates/hooks/useTemplates'
 import type { PerformanceCycle, Role } from '@/types'
 
@@ -21,41 +20,43 @@ const CYCLE_TYPE_LABEL: Record<string, string> = {
 }
 
 const CYCLE_STATUS_DESC: Record<string, string> = {
-  GoalSetting: '目標設定中 — 員工填寫 SMART 目標，主管核准',
-  InProgress:  '執行中 — 目標追蹤進行中，績效評核表單已開放填寫',
-  UnderReview: '評核中 — 主管正在進行初評，經理進行校準',
-  Completed:   '已完成 — 結果已發布',
+  GoalSetting:      '目標設定中 — 員工填寫 SMART 目標，同時 HR 準備評核模板',
+  InProgress:       '執行中 — 目標追蹤進行中，Manager 可補充自訂題目',
+  EmployeeReview:   '員工自評期 — 所有員工填寫績效自評表單',
+  SupervisorReview: '主管初評期 — 主管閱讀自評、填寫評語與等第',
+  Calibration:      '校準發布期 — 經理調整等第排名，確認後一次發布',
+  Completed:        '已完成 — 結果已發布',
 }
 
 const FLOW_STEPS: Record<Role, string[]> = {
   Employee: [
-    '【GoalSetting】HR 建立週期後，你填寫個人 SMART 目標並提交',
-    '【InProgress】HR 推進週期，系統自動產生你的績效評核表單，你填寫自評',
+    '【目標設定】HR 建立週期後，填寫個人 SMART 目標並提交主管審核',
+    '【員工自評】HR 推進進入員工自評期，系統產生績效表單，你填寫自評',
     '填完後按「送出」，轉由直屬主管進行初評',
-    '【UnderReview → Published】主管初評 → 經理校準後發布，你可查看最終等第',
-    '若對結果有異議，可提出申訴（Appealed）',
+    '【主管初評 → 校準發布】主管評核完成後，經理校準並發布，你可查看最終等第',
+    '若對結果有異議，可提出申訴',
   ],
   Supervisor: [
-    '【GoalSetting】員工填寫目標後，你負責核准下屬的目標',
-    '【InProgress】員工填好自評送出後，輪到你進行初評（PendingSupervisorReview）',
-    '初評：閱讀員工自評、填寫評語、選擇等第（O/S+/S/S-/I/U）',
-    '你送出後，進入經理校準階段，結果由經理決定是否調整並發布',
+    '【目標設定】員工填寫目標後，你負責核准下屬的目標',
+    '【主管初評】員工自評送出後，輪到你進行初評',
+    '閱讀員工自評、填寫評語、選擇等第（O/S+/S/S-/I/U）',
+    '你送出後，進入校準發布階段，由經理決定是否調整並發布',
   ],
   Manager: [
-    '【建立前】可在已發布的模板中為部門新增自訂問題',
-    '【InProgress】等員工自評、主管初評完成後，進入你的校準階段',
-    '校準：比較所有員工等第、必要時調整排名（前往「團隊評核」頁）',
-    '全部確認後，按「發布」，所有結果一次公開給員工',
+    '【目標設定 / 執行中】可在已發布模板中為部門新增自訂題目',
+    '【校準發布】員工自評與主管初評完成後，進入你的校準階段',
+    '比較所有員工等第，必要時調整排名（前往「團隊評核」→「進入校準」）',
+    '全部確認後，按「發布全部」，所有結果一次公開給員工',
   ],
   RegionalHR: [
     '建立績效週期，設定地區、類型（Annual/Quarterly/Probation）與日期範圍',
-    '建立表單模板：設定適用職等與職稱，Managers 可再補充自訂題目',
-    '確認所有模板就緒後，Publish 模板（Published 後才能在推進時自動套用）',
-    '將週期推進至 InProgress → 系統自動比對模板為所有員工建立評核',
-    '等評核流程完成後，依序推進至 UnderReview → Completed',
+    '建立表單模板：設定適用職等與職稱，Manager 可補充自訂題目',
+    '確認模板就緒後 Publish，再將週期推進至「員工自評」',
+    '推進前系統會檢查是否有已發布模板，並自動為所有員工建立評核單',
+    '後續依序推進：主管初評 → 校準發布 → 完成',
   ],
   Admin: [
-    '管理所有地區的績效週期（可在 GoalSetting 階段編輯週期資訊）',
+    '管理所有地區的績效週期（可在目標設定階段編輯週期資訊）',
     '監控各地區評核進度，確認模板發布與週期推進時間',
     '查閱稽核日誌（Audit Log）確認系統操作記錄',
   ],
@@ -405,7 +406,60 @@ function TeamReviewSection({ role }: { role: Role }) {
           </div>
         )}
       </section>
+
+      {role === 'Manager' && (
+        <section className="mb-8">
+          <h2 className="section-heading">等第分布</h2>
+          <div className="card">
+            <GradeDistributionChart />
+          </div>
+        </section>
+      )}
     </>
+  )
+}
+
+// ─── Grade Distribution Chart ─────────────────────────────────────────────────
+
+const GRADE_ORDER  = ['O', 'S_Plus', 'S', 'S_Minus', 'I', 'U'] as const
+const GRADE_LABEL: Record<string, string> = { O: 'O', S_Plus: 'S+', S: 'S', S_Minus: 'S-', I: 'I', U: 'U' }
+const GRADE_BAR_COLOR: Record<string, string> = {
+  O: 'bg-green-400', S_Plus: 'bg-indigo-400', S: 'bg-indigo-300',
+  S_Minus: 'bg-indigo-200', I: 'bg-amber-400', U: 'bg-red-400',
+}
+
+function GradeDistributionChart() {
+  const { stats, isLoading } = useReviewStats()
+
+  if (isLoading) return <p className="text-muted text-sm">載入中...</p>
+  if (!stats || stats.total === 0) return <p className="text-muted text-sm">尚無評核資料。</p>
+
+  const graded = GRADE_ORDER.map((g) => ({ grade: g, count: stats.gradeDistribution[g] ?? 0 }))
+  const gradedTotal = graded.reduce((s, g) => s + g.count, 0)
+  const pending = stats.total - gradedTotal
+
+  return (
+    <div className="space-y-2">
+      {graded.map(({ grade, count }) => {
+        const pct = gradedTotal > 0 ? (count / gradedTotal) * 100 : 0
+        return (
+          <div key={grade} className="flex items-center gap-3">
+            <span className="w-6 text-xs font-semibold text-gray-600">{GRADE_LABEL[grade]}</span>
+            <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className={`h-2 rounded-full transition-all ${GRADE_BAR_COLOR[grade]}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="w-6 text-right text-xs text-gray-500">{count}</span>
+          </div>
+        )
+      })}
+      <p className="pt-1 text-xs text-gray-400">
+        共 {stats.total} 份評核・已評等第 {gradedTotal} 份
+        {pending > 0 && `・尚待 ${pending} 份`}
+      </p>
+    </div>
   )
 }
 
@@ -455,6 +509,13 @@ function HRSection() {
           </div>
         )}
       </section>
+
+      <section className="mb-8">
+        <h2 className="section-heading">全局等第分布</h2>
+        <div className="card">
+          <GradeDistributionChart />
+        </div>
+      </section>
     </>
   )
 }
@@ -497,15 +558,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader
-        title={`歡迎，${user.name}`}
-        description="以下是你目前的績效週期概況與待處理事項。"
-      />
-
-      <div className="mb-6 flex items-center gap-2">
-        <RoleBadge role={user.role} />
-        <span className="text-sm text-gray-500">{user.department} · {user.region}</span>
-      </div>
+      <PageHeader title="儀表板" />
 
       <FlowGuide role={user.role} />
 

@@ -135,6 +135,29 @@ export class ReviewsService {
     })
   }
 
+  // Supervisor / Manager: reviews for a specific employee
+  async getReviewsByEmployee(employeeId: string, user: SessionUser) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+      throw new ForbiddenException()
+    }
+    const employee = await this.prisma.user.findUnique({
+      where:   { id: employeeId },
+      include: { supervisor: true },
+    })
+    if (!employee) throw new NotFoundException('Employee not found')
+    if (user.role === Role.Supervisor && employee.supervisorId !== user.id) throw new ForbiddenException()
+    if (user.role === Role.Manager) {
+      const isDirectReport = employee.managerId === user.id && !employee.supervisorId
+      const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+      if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
+    }
+    return this.prisma.performanceReview.findMany({
+      where:   { employeeId },
+      include: REVIEW_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
   // Manager: publish all PendingManagerApproval reviews in a cycle
   async publishAll(cycleId: string, user: SessionUser) {
     if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
@@ -155,6 +178,34 @@ export class ReviewsService {
       where: { id: { in: ids.map((r) => r.id) } },
       data:  { status: ReviewStatus.Published, publishedAt: new Date() },
     })
+  }
+
+  async getReviewStats(user: SessionUser) {
+    let where: Record<string, unknown> = {}
+    if (user.role === Role.Supervisor) {
+      where = { supervisorId: user.id }
+    } else if (user.role === Role.Manager) {
+      where = {
+        OR: [
+          { employee: { supervisor: { managerId: user.id } } },
+          { employee: { managerId: user.id, supervisorId: null } },
+        ],
+      }
+    }
+
+    const reviews = await this.prisma.performanceReview.findMany({
+      where: where as any,
+      select: { status: true, grade: true },
+    })
+
+    const gradeDistribution: Record<string, number> = {}
+    const statusCount: Record<string, number> = {}
+    for (const r of reviews) {
+      if (r.grade) gradeDistribution[r.grade] = (gradeDistribution[r.grade] ?? 0) + 1
+      statusCount[r.status] = (statusCount[r.status] ?? 0) + 1
+    }
+
+    return { total: reviews.length, gradeDistribution, statusCount }
   }
 
   private async findAndCheck(id: string) {

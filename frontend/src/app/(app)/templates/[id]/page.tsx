@@ -31,8 +31,9 @@ export default function TemplateDetailPage() {
   const [error, setError] = useState('')
 
   const [newQuestion, setNewQuestion] = useState<AddQuestionPayload>({
-    questionText: '', questionType: 'Text', required: true,
+    questionText: '', questionType: 'Text', required: true, options: [],
   })
+  const [optionInputs, setOptionInputs] = useState<string[]>(['', ''])
 
   useEffect(() => {
     api.get<ReviewTemplate>(`/templates/${id}`)
@@ -46,13 +47,24 @@ export default function TemplateDetailPage() {
   async function handleAddQuestion(e: React.SyntheticEvent) {
     e.preventDefault()
     if (!newQuestion.questionText.trim()) { setError('題目內容不得為空'); return }
+    if (newQuestion.questionType === 'MultipleChoice') {
+      const validOpts = optionInputs.filter((o) => o.trim())
+      if (validOpts.length < 2) { setError('多選題至少需要 2 個選項'); return }
+    }
     setError('')
     setSubmitting(true)
     try {
-      const q = await addCustomQuestion(id, newQuestion)
+      const payload: AddQuestionPayload = {
+        ...newQuestion,
+        options: newQuestion.questionType === 'MultipleChoice'
+          ? optionInputs.filter((o) => o.trim())
+          : [],
+      }
+      const q = await addCustomQuestion(id, payload)
       setTemplate((prev) => prev ? { ...prev, questions: [...prev.questions, q] } : prev)
       setShowAddModal(false)
-      setNewQuestion({ questionText: '', questionType: 'Text', required: true })
+      setNewQuestion({ questionText: '', questionType: 'Text', required: true, options: [] })
+      setOptionInputs(['', ''])
     } catch {
       setError('新增失敗，請稍後再試。')
     } finally {
@@ -164,11 +176,53 @@ export default function TemplateDetailPage() {
                 <select
                   className="input"
                   value={newQuestion.questionType}
-                  onChange={(e) => setNewQuestion((p) => ({ ...p, questionType: e.target.value as AddQuestionPayload['questionType'] }))}
+                  onChange={(e) => {
+                    const qt = e.target.value as AddQuestionPayload['questionType']
+                    setNewQuestion((p) => ({ ...p, questionType: qt }))
+                    if (qt === 'MultipleChoice') setOptionInputs(['', ''])
+                  }}
                 >
                   {QUESTION_TYPES.map((t) => <option key={t} value={t}>{QUESTION_TYPE_LABEL[t]}</option>)}
                 </select>
               </div>
+
+              {newQuestion.questionType === 'MultipleChoice' && (
+                <div>
+                  <label className="label">選項（至少 2 個）</label>
+                  <div className="space-y-2">
+                    {optionInputs.map((opt, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          className="input flex-1"
+                          value={opt}
+                          onChange={(e) => {
+                            const updated = [...optionInputs]
+                            updated[i] = e.target.value
+                            setOptionInputs(updated)
+                          }}
+                          placeholder={`選項 ${i + 1}`}
+                        />
+                        {optionInputs.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() => setOptionInputs(optionInputs.filter((_, j) => j !== i))}
+                            className="text-gray-400 hover:text-red-500 text-lg leading-none px-1"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setOptionInputs([...optionInputs, ''])}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                    >
+                      + 新增選項
+                    </button>
+                  </div>
+                </div>
+              )}
               <label className="flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"

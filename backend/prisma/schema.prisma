@@ -30,7 +30,9 @@ enum CycleType {
 enum CycleStatus {
   GoalSetting
   InProgress
-  UnderReview
+  EmployeeReview
+  SupervisorReview
+  Calibration
   Completed
 }
 
@@ -52,6 +54,11 @@ enum ReviewStatus {
   PendingManagerApproval
   Published
   Appealed
+}
+
+enum AppealStatus {
+  Pending
+  Resolved
 }
 
 enum ReviewGrade {
@@ -124,6 +131,8 @@ model User {
 
   reviewsAsEmployee   PerformanceReview[] @relation("ReviewEmployee")
   reviewsAsSupervisor PerformanceReview[] @relation("ReviewSupervisor")
+  appealsAsEmployee   Appeal[]            @relation("AppealEmployee")
+  appealsAsManager    Appeal[]            @relation("AppealManager")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -277,10 +286,33 @@ model PerformanceReview {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
+  appeal            Appeal?
+
   @@unique([cycleId, employeeId])
   @@index([cycleId])
   @@index([employeeId])
   @@index([supervisorId])
+}
+
+// ─── Appeal ───────────────────────────────────────────────────────────────────
+
+model Appeal {
+  id              String       @id @default(uuid())
+  reviewId        String       @unique
+  review          PerformanceReview @relation(fields: [reviewId], references: [id])
+  employeeId      String
+  employee        User         @relation("AppealEmployee", fields: [employeeId], references: [id])
+  managerId       String
+  manager         User         @relation("AppealManager",  fields: [managerId],  references: [id])
+  reason          String
+  status          AppealStatus @default(Pending)
+  managerResponse String?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([employeeId])
+  @@index([managerId])
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────

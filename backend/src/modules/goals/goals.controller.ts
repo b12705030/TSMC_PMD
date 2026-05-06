@@ -124,4 +124,22 @@ export class GoalsController {
   ) {
     return this.goalsService.getGoalsByEmployee(employeeId, user)
   }
+
+  @Patch(':id/approve')
+  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
+  approveGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.goalsService.approveGoal(id, user)
+  }
+
+  @Patch(':id/reject')
+  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
+  rejectGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.goalsService.rejectGoal(id, user)
+  }
+
+  @Patch(':id/submit')
+  @Roles(Role.Employee, Role.Supervisor, Role.Manager)
+  submitGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.goalsService.submitGoal(id, user)
+  }
 }

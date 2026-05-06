@@ -1,6 +1,7 @@
 'use client'
 
 import { use } from 'react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
 import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -57,13 +58,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="mb-6 space-y-2">
           {goals.map((goal) => (
-            <div key={goal.id} className="card-sm flex items-center justify-between">
+            <Link key={goal.id} href={`/goals/${goal.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
               <div>
                 <p className="text-sm font-medium text-gray-900">{goal.title}</p>
                 <p className="text-xs text-gray-400">截止日期：{new Date(goal.dueDate).toLocaleDateString()}</p>
               </div>
               <StatusBadge status={goal.status} />
-            </div>
+            </Link>
           ))}
         </div>
       )}
@@ -75,15 +76,15 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="space-y-2">
           {reviews.map((review) => (
-            <div key={review.id} className="card-sm flex items-center justify-between">
-              <p className="text-sm text-gray-700">週期：{review.cycleId}</p>
+            <Link key={review.id} href={`/reviews/${review.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+              <p className="text-sm text-gray-700">{(review as any).cycle?.name ?? review.cycleId}</p>
               <div className="flex items-center gap-3">
                 {review.grade && (
-                  <span className="text-sm font-bold text-gray-900">等第：{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>
+                  <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>
                 )}
                 <StatusBadge status={review.status} />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

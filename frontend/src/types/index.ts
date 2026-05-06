@@ -25,7 +25,7 @@ export interface User {
 // ─── Performance Cycle ────────────────────────────────────────────────────────
 
 export type CycleType = 'Annual' | 'Quarterly' | 'Probation'
-export type CycleStatus = 'GoalSetting' | 'InProgress' | 'UnderReview' | 'Completed'
+export type CycleStatus = 'GoalSetting' | 'InProgress' | 'EmployeeReview' | 'SupervisorReview' | 'Calibration' | 'Completed'
 
 export interface PerformanceCycle {
   id: string
@@ -155,7 +155,7 @@ export interface PerformanceReviewDetail extends PerformanceReview {
 
 // ─── Appeal ───────────────────────────────────────────────────────────────────
 
-export type AppealStatus = 'Pending' | 'UnderReview' | 'Resolved'
+export type AppealStatus = 'Pending' | 'Resolved'
 
 export interface Appeal {
   id: string
@@ -166,6 +166,15 @@ export interface Appeal {
   status: AppealStatus
   managerResponse?: string
   resolvedAt?: string
+  employee?: { id: string; name: string; employeeId: string; jobTitle?: string; jobLevel?: string }
+  manager?:  { id: string; name: string }
+  review?: {
+    id: string
+    grade?: ReviewGrade
+    supervisorComment?: string
+    cycle:    { id: string; name: string }
+    template?: { id: string; name: string; questions: TemplateQuestion[] }
+  }
   createdAt: string
   updatedAt: string
 }

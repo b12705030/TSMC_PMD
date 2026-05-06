@@ -57,3 +57,44 @@ export function useTeamReviews() {
 
   return { reviews, isLoading, refetch: fetch }
 }
+
+export interface ReviewStats {
+  total: number
+  gradeDistribution: Record<string, number>
+  statusCount: Record<string, number>
+}
+
+export function useReviewStats() {
+  const [stats, setStats] = useState<ReviewStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetch = useCallback(() => {
+    setIsLoading(true)
+    api.get<ReviewStats>('/reviews/stats')
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setIsLoading(false))
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { stats, isLoading }
+}
+
+export function useCycleReviews(cycleId: string) {
+  const [reviews, setReviews] = useState<PerformanceReviewDetail[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetch = useCallback(() => {
+    setIsLoading(true)
+    api
+      .get<PerformanceReviewDetail[]>(`/reviews/calibrate/${cycleId}`)
+      .then(setReviews)
+      .catch(() => setReviews([]))
+      .finally(() => setIsLoading(false))
+  }, [cycleId])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { reviews, isLoading, refetch: fetch }
+}

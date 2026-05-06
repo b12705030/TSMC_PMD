@@ -1,5 +1,7 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
 import { UsersService } from './users.service'
+import { GoalsService } from '../goals/goals.service'
+import { ReviewsService } from '../reviews/reviews.service'
 import { AuthGuard } from '../../common/guards/auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
@@ -10,7 +12,11 @@ import type { SessionUser } from '../../common/types/request.types'
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly goalsService: GoalsService,
+    private readonly reviewsService: ReviewsService,
+  ) {}
 
   @Get('team')
   @Roles(Role.Manager, Role.Supervisor)
@@ -50,15 +56,13 @@ export class UsersController {
 
   @Get(':id/goals')
   @Roles(Role.Manager, Role.Supervisor)
-  getEmployeeGoals(@Param('id') _id: string) {
-    // TODO: delegate to GoalsService
-    return []
+  getEmployeeGoals(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.goalsService.getGoalsByEmployee(id, user)
   }
 
   @Get(':id/reviews')
   @Roles(Role.Manager, Role.Supervisor)
-  getEmployeeReviews(@Param('id') _id: string) {
-    // TODO: delegate to ReviewsService
-    return []
+  getEmployeeReviews(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.reviewsService.getReviewsByEmployee(id, user)
   }
 }

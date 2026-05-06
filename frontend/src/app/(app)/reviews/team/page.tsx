@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
 import { useTeamReviews } from '@/modules/reviews/hooks/useReviews'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { PerformanceReviewDetail, ReviewGrade, ReviewStatus } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
@@ -28,17 +29,54 @@ const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
 
 export default function TeamReviewsPage() {
   const { reviews, isLoading } = useTeamReviews()
+  const { user } = useAuth()
+  const isManager = user?.role === 'Manager'
 
   const pendingCount = reviews.filter((r) => r.status === 'PendingSupervisorReview').length
+
+  // Group by cycle for Manager calibration links
+  const cycleMap = new Map<string, { id: string; name: string; pendingApproval: number }>()
+  if (isManager) {
+    for (const r of reviews) {
+      if (!cycleMap.has(r.cycleId)) {
+        cycleMap.set(r.cycleId, { id: r.cycleId, name: r.cycle.name, pendingApproval: 0 })
+      }
+      if (r.status === 'PendingManagerApproval') {
+        cycleMap.get(r.cycleId)!.pendingApproval++
+      }
+    }
+  }
 
   return (
     <div>
       <PageHeader
         title="團隊評核"
-        description="查看並完成您的下屬績效評核。"
+        description={isManager ? '查看下屬評核狀況，並進行等第校準後發布。' : '查看並完成您的下屬績效評核。'}
       />
 
-      {!isLoading && pendingCount > 0 && (
+      {/* Manager: calibration entry per cycle */}
+      {isManager && cycleMap.size > 0 && (
+        <div className="mb-5 space-y-2">
+          {Array.from(cycleMap.values()).map((cycle) => (
+            <div key={cycle.id} className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-indigo-800">{cycle.name}</p>
+                {cycle.pendingApproval > 0 && (
+                  <p className="text-xs text-indigo-600">{cycle.pendingApproval} 份待校準後發布</p>
+                )}
+              </div>
+              <Link
+                href={`/reviews/calibrate/${cycle.id}`}
+                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 transition-colors"
+              >
+                進入校準
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !isManager && pendingCount > 0 && (
         <div className="mb-5 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="text-sm font-medium text-amber-700">
             您有 {pendingCount} 份評核待處理

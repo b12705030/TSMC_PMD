@@ -20,6 +20,12 @@ export class CyclesController {
     return this.cyclesService.getCycles(user)
   }
 
+  @Get(':id/manager-questionnaire-status')
+  @Roles(Role.Admin, Role.RegionalHR)
+  getManagerQuestionnaireStatus(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.getManagerQuestionnaireStatus(id, user)
+  }
+
   @Get(':id')
   @Roles(Role.Admin, Role.RegionalHR, Role.Manager, Role.Supervisor, Role.Employee)
   getCycle(@Param('id') id: string, @CurrentUser() user: SessionUser) {

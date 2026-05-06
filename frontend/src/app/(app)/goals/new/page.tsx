@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import type { GoalType } from '@/types'
+import type { GoalType, PerformanceCycle } from '@/types'
 
 // ─── Monochrome icons ────────────────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ export default function NewGoalPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [cycles, setCycles] = useState<PerformanceCycle[]>([])
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -37,7 +38,14 @@ export default function NewGoalPage() {
     relevance: '',
     dueDate: '',
     type: 'Personal' as GoalType,
+    cycleId: '',
   })
+
+  useEffect(() => {
+    api.get<PerformanceCycle[]>('/cycles')
+      .then((data) => setCycles(data.filter((c) => c.status === 'GoalSetting' || c.status === 'InProgress')))
+      .catch(() => {})
+  }, [])
 
   function handleChange(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -53,7 +61,8 @@ export default function NewGoalPage() {
     setLoading(true)
     setError('')
     try {
-      const data = await api.post<{ id: string }>('/goals', form)
+      const payload = { ...form, cycleId: form.cycleId || undefined }
+      const data = await api.post<{ id: string }>('/goals', payload)
       router.push(`/goals/${data.id}?m=1`)
     } catch {
       setError('儲存失敗，請稍後再試。')
@@ -125,6 +134,18 @@ export default function NewGoalPage() {
                   </button>
                 ))}
               </div>
+              {cycles.length > 0 && (
+                <select
+                  value={form.cycleId}
+                  onChange={(e) => handleChange('cycleId', e.target.value)}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs text-gray-500 outline-none hover:bg-gray-100 focus:border-indigo-300"
+                >
+                  <option value="">不關聯週期</option>
+                  {cycles.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

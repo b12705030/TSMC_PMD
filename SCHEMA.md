@@ -57,6 +57,19 @@
 - 陣列讀取簡單，不需要 JOIN；Prisma `hasSome`/`has` 可直接篩選
 - 若未來需要 per-region 狀態機（不同 region 不同進度），再考慮 junction table
 
+### CycleStatus 狀態機（6 步，migration `20260506_refine_cycle_status`）
+
+| 狀態 | 前端顯示 | 觸發動作 |
+|------|----------|----------|
+| `GoalSetting` | 目標設定 | 初始狀態 |
+| `InProgress` | 執行中 | HR 手動推進 |
+| `EmployeeReview` | 員工自評 | HR 推進；系統檢查已發布模板 + 自動建立 PerformanceReview |
+| `SupervisorReview` | 主管初評 | HR 手動推進 |
+| `Calibration` | 校準發布 | HR 手動推進 |
+| `Completed` | 已完成 | HR 手動推進 |
+
+原 `UnderReview` 已拆為三個獨立狀態，現有 `UnderReview` 資料在 migration 時轉換為 `EmployeeReview`。
+
 ---
 
 ## FormTemplate

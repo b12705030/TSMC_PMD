@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CycleStepper } from '@/components/CycleStepper'
@@ -8,18 +9,39 @@ import { EmptyState } from '@/components/EmptyState'
 import { useCycles, type CreateCyclePayload, type UpdateCyclePayload } from '@/modules/cycles/hooks/useCycles'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
-import type { PerformanceCycle } from '@/types'
+import type { PerformanceCycle, ReviewTemplate } from '@/types'
 
 const NEXT_STATUS_LABEL: Record<string, string> = {
-  GoalSetting: '進入執行中',
-  InProgress:  '開始評核',
-  UnderReview: '完成週期',
+  GoalSetting:      '進入執行中',
+  InProgress:       '開始員工自評',
+  EmployeeReview:   '開始主管初評',
+  SupervisorReview: '開始校準發布',
+  Calibration:      '完成週期',
 }
 
 const CYCLE_TYPES = ['Annual', 'Quarterly', 'Probation'] as const
 
 function fmt(date: string) {
   return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+// ─── Shared icon helpers ──────────────────────────────────────────────────────
+
+function WarnIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    </svg>
+  )
+}
+
+function WarnText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
+      <WarnIcon />
+      {children}
+    </p>
+  )
 }
 
 // ─── Region Checkboxes ────────────────────────────────────────────────────────
@@ -61,14 +83,19 @@ export default function CyclesPage() {
   const { user } = useAuth()
   const isAdmin  = user?.role === 'Admin'
   const isHR     = user?.role === 'RegionalHR'
+  const isManager = user?.role === 'Manager'
   const canEdit  = isAdmin || isHR   // 只有 Admin / HR 可以建立、推進週期
 
-  const [allRegions, setAllRegions] = useState<string[]>([])
-  const [showModal, setShowModal]   = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError]           = useState('')
+  const [allRegions, setAllRegions]   = useState<string[]>([])
+  const [showModal, setShowModal]     = useState(false)
+  const [submitting, setSubmitting]   = useState(false)
+  const [error, setError]             = useState('')
   const [pendingAdvance, setPendingAdvance] = useState<PerformanceCycle | null>(null)
   const [editingCycle, setEditingCycle]     = useState<PerformanceCycle | null>(null)
+  const [managerQStatus, setManagerQStatus] = useState<{ complete: {id:string;name:string}[]; pending: {id:string;name:string}[] } | null>(null)
+  // Templates — loaded only for roles that can see/manage them
+  const [templates, setTemplates] = useState<ReviewTemplate[]>([])
+  const showTemplatTrack = canEdit || isManager
 
   const [form, setForm] = useState<CreateCyclePayload>({
     name:             '',
@@ -85,6 +112,12 @@ export default function CyclesPage() {
       api.get<string[]>('/users/regions').then(setAllRegions).catch(() => {})
     }
   }, [isAdmin])
+
+  useEffect(() => {
+    if (showTemplatTrack) {
+      api.get<ReviewTemplate[]>('/templates').then(setTemplates).catch(() => {})
+    }
+  }, [showTemplatTrack])
 
   function updateForm<K extends keyof CreateCyclePayload>(field: K, value: CreateCyclePayload[K]) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -110,10 +143,25 @@ export default function CyclesPage() {
     }
   }
 
+  async function handleAdvanceClick(cycle: PerformanceCycle) {
+    setManagerQStatus(null)
+    setPendingAdvance(cycle)
+    if (cycle.status === 'InProgress') {
+      try {
+        const status = await api.get<{ complete: {id:string;name:string}[]; pending: {id:string;name:string}[] }>(
+          `/cycles/${cycle.id}/manager-questionnaire-status`
+        )
+        setManagerQStatus(status)
+      } catch {
+        // non-critical, proceed without status
+      }
+    }
+  }
+
   async function handleAdvanceConfirmed() {
     if (!pendingAdvance) return
     try { await advanceStatus(pendingAdvance.id) }
-    finally { setPendingAdvance(null) }
+    finally { setPendingAdvance(null); setManagerQStatus(null) }
   }
 
   return (
@@ -144,7 +192,8 @@ export default function CyclesPage() {
               cycle={cycle}
               canEdit={canEdit}
               isAdmin={isAdmin}
-              onAdvance={canEdit ? () => setPendingAdvance(cycle) : undefined}
+              cycleTemplates={showTemplatTrack ? templates.filter((t) => t.cycleId === cycle.id) : null}
+              onAdvance={canEdit ? () => handleAdvanceClick(cycle) : undefined}
               onEdit={isAdmin ? () => setEditingCycle(cycle) : undefined}
             />
           ))}
@@ -155,11 +204,29 @@ export default function CyclesPage() {
       <ConfirmDialog
         open={!!pendingAdvance}
         title="確認推進至下一階段？"
-        description={`"${pendingAdvance?.name}" 將推進至：${NEXT_STATUS_LABEL[pendingAdvance?.status ?? '']}。此操作無法復原。`}
+        description={`【${pendingAdvance?.name}】將推進至：${NEXT_STATUS_LABEL[pendingAdvance?.status ?? '']}。此操作無法復原。`}
         confirmLabel="確認推進"
         onConfirm={handleAdvanceConfirmed}
-        onCancel={() => setPendingAdvance(null)}
-      />
+        onCancel={() => { setPendingAdvance(null); setManagerQStatus(null) }}
+      >
+        {managerQStatus && managerQStatus.pending.length > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+              <WarnIcon />
+              以下 {managerQStatus.pending.length} 位經理尚未補充自訂問卷：
+            </p>
+            <ul className="space-y-0.5">
+              {managerQStatus.pending.map((m) => (
+                <li key={m.id} className="text-xs text-amber-700">· {m.name}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-amber-600">確認推進後，員工將以現有問卷開始自評。</p>
+          </div>
+        )}
+        {managerQStatus && managerQStatus.pending.length === 0 && (
+          <p className="text-xs text-green-700">✓ 所有經理均已完成問卷補充。</p>
+        )}
+      </ConfirmDialog>
 
       {/* Edit Cycle Modal（Admin only） */}
       {editingCycle && (
@@ -258,18 +325,145 @@ export default function CyclesPage() {
   )
 }
 
+// ─── Template Prep Track ─────────────────────────────────────────────────────
+
+// STATUS_ORDER 用來判斷「是否已越過某個階段」
+const STATUS_ORDER: Record<string, number> = {
+  GoalSetting: 0, InProgress: 1, EmployeeReview: 2,
+  SupervisorReview: 3, Calibration: 4, Completed: 5,
+}
+
+function TemplatePrepTrack({
+  cycleTemplates,
+  cycleStatus,
+  canEdit,
+}: {
+  cycleTemplates: ReviewTemplate[]
+  cycleStatus: string
+  canEdit: boolean
+}) {
+  const hasTemplate   = cycleTemplates.length > 0
+  const anyPublished  = cycleTemplates.some((t) => t.status === 'Published')
+  const hasCustomQ    = cycleTemplates.some((t) => t.questions.some((q) => q.isCustom))
+  const reviewStarted = STATUS_ORDER[cycleStatus] >= STATUS_ORDER['EmployeeReview']
+
+  const isAboutToStart = cycleStatus === 'InProgress' && canEdit
+
+  // 8 格佈局（對齊主 stepper 的 8 格）
+  // 格 0：HR 建立模板
+  // 格 1：模板已發布
+  // 格 2：主管補充問卷
+  // 格 3：◆ 績效評核期開始（匯合點）
+  // 格 4-7：空白佔位
+  const preNodes = [
+    {
+      label:       'HR 建立模板',
+      description: '確保評核表單內容完整',
+      done:        hasTemplate,
+      detail:      hasTemplate ? `${cycleTemplates.length} 份` : '',
+    },
+    {
+      label:       '模板已發布',
+      description: '員工與主管可存取表單',
+      done:        anyPublished,
+      detail:      '',
+    },
+    {
+      label:       '經理補充問卷',
+      description: '各部門經理新增自訂問題',
+      done:        hasCustomQ,
+      detail:      '',
+    },
+  ]
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">模板準備</p>
+        {canEdit && !hasTemplate && (
+          <Link href="/templates" className="text-xs text-indigo-500 hover:text-indigo-700">
+            前往建立 →
+          </Link>
+        )}
+      </div>
+
+      <div className="flex items-start gap-0">
+        {/* 格 0-2：HR建立 / 模板發布 / 主管補充問卷 */}
+        {preNodes.map((node, i) => (
+          <div key={i} className="flex flex-1 items-start">
+            <div className="flex flex-1 flex-col items-center">
+              <div className="flex w-full items-center">
+                <div className={[
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                  node.done ? 'bg-green-500 text-white' : 'border-2 border-gray-200 text-gray-300 bg-white',
+                ].join(' ')}>
+                  {node.done ? '✓' : i + 1}
+                </div>
+                <div className={['h-0.5 flex-1', node.done ? 'bg-green-200' : 'bg-gray-100'].join(' ')} />
+              </div>
+              <div className="mt-2 pr-2 w-full">
+                <p className={['text-xs font-medium', node.done ? 'text-gray-700' : 'text-gray-400'].join(' ')}>
+                  {node.label}
+                </p>
+                <p className="text-xs text-gray-400 leading-tight">{node.description}</p>
+                {node.detail && <p className="text-xs text-gray-400 leading-tight">{node.detail}</p>}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* 格 3：◆ 績效評核期開始（匯合點，對齊主 stepper 的 ◆） */}
+        <div className="flex flex-1 items-start">
+          <div className="flex flex-1 flex-col items-center">
+            <div className="flex w-full items-center">
+              <div className={[
+                'flex h-7 w-7 shrink-0 rotate-45 items-center justify-center text-xs font-semibold',
+                reviewStarted ? 'bg-indigo-500 text-white' : 'border-2 border-gray-200 text-gray-300 bg-white',
+              ].join(' ')}>
+                <span className="-rotate-45">{reviewStarted ? '✓' : ''}</span>
+              </div>
+            </div>
+            <div className="mt-2 pr-2 w-full">
+              <p className={['text-xs font-medium', reviewStarted ? 'text-indigo-600' : 'text-gray-400'].join(' ')}>
+                績效評核期開始
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 格 4-7：空白佔位 */}
+        {[4, 5, 6, 7].map((i) => (
+          <div key={i} className="flex flex-1" />
+        ))}
+      </div>
+
+      {/* 推進前警告 */}
+      {isAboutToStart && !hasTemplate && (
+        <WarnText>尚未建立模板，推進前請先至「評核模板」建立並發布</WarnText>
+      )}
+      {isAboutToStart && hasTemplate && !anyPublished && (
+        <WarnText>模板尚未發布，推進前請先發布模板</WarnText>
+      )}
+      {isAboutToStart && anyPublished && !hasCustomQ && (
+        <WarnText>經理尚未補充問卷，請確認各部門經理已新增自訂問題</WarnText>
+      )}
+    </div>
+  )
+}
+
 // ─── Cycle Card ───────────────────────────────────────────────────────────────
 
 function CycleCard({
-  cycle, canEdit, isAdmin, onAdvance, onEdit,
+  cycle, canEdit, isAdmin, cycleTemplates, onAdvance, onEdit,
 }: {
   cycle: PerformanceCycle
   canEdit: boolean
   isAdmin: boolean
+  cycleTemplates: ReviewTemplate[] | null
   onAdvance?: () => void
   onEdit?: () => void
 }) {
-  const nextLabel = NEXT_STATUS_LABEL[cycle.status]
+  const nextLabel  = NEXT_STATUS_LABEL[cycle.status]
   const regionTags = (cycle.regions ?? []).join(' · ')
 
   return (
@@ -291,7 +485,20 @@ function CycleCard({
         </div>
       </div>
 
-      <CycleStepper status={cycle.status} />
+      {cycleTemplates !== null && cycle.status !== 'Completed' ? (
+        <>
+          <TemplatePrepTrack
+            cycleTemplates={cycleTemplates}
+            cycleStatus={cycle.status}
+            canEdit={canEdit}
+          />
+          <div className="my-4 border-t border-dashed border-gray-100" />
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-400">評核流程</p>
+          <CycleStepper status={cycle.status} />
+        </>
+      ) : (
+        <CycleStepper status={cycle.status} />
+      )}
 
       <div className="mt-4 flex gap-6 border-t border-gray-100 pt-3 text-xs text-gray-500">
         <span>目標設定：{fmt(cycle.goalSettingStart)} – {fmt(cycle.goalSettingEnd)}</span>

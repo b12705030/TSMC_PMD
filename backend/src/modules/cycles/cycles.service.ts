@@ -7,10 +7,12 @@ import type { UpdateCycleDto } from './dto/update-cycle.dto'
 
 // Valid forward-only status transitions
 const NEXT_STATUS: Record<CycleStatus, CycleStatus | null> = {
-  GoalSetting: CycleStatus.InProgress,
-  InProgress:  CycleStatus.UnderReview,
-  UnderReview: CycleStatus.Completed,
-  Completed:   null,
+  GoalSetting:      CycleStatus.InProgress,
+  InProgress:       CycleStatus.EmployeeReview,
+  EmployeeReview:   CycleStatus.SupervisorReview,
+  SupervisorReview: CycleStatus.Calibration,
+  Calibration:      CycleStatus.Completed,
+  Completed:        null,
 }
 
 @Injectable()
@@ -72,14 +74,62 @@ export class CyclesService {
     const cycle = await this.getCycle(id, user)
     const next = NEXT_STATUS[cycle.status]
     if (!next) throw new BadRequestException('Cycle is already completed')
+
+    // Before starting employee review, ensure a published template exists
+    if (next === CycleStatus.EmployeeReview) {
+      const publishedTemplate = await this.prisma.formTemplate.findFirst({
+        where: { cycleId: id, status: TemplateStatus.Published },
+      })
+      if (!publishedTemplate) {
+        throw new BadRequestException('此週期尚未有已發布的評核模板，請先發布模板後再開始員工自評期。')
+      }
+    }
+
     const updated = await this.prisma.performanceCycle.update({
       where: { id },
       data:  { status: next },
     })
-    if (next === CycleStatus.InProgress) {
+
+    // Auto-create PerformanceReview records when employee review period starts
+    if (next === CycleStatus.EmployeeReview) {
       await this.autoCreateReviews(cycle.id, cycle.regions)
     }
+
     return updated
+  }
+
+  async getManagerQuestionnaireStatus(id: string, user: SessionUser) {
+    const cycle = await this.prisma.performanceCycle.findUnique({ where: { id } })
+    if (!cycle) throw new NotFoundException('Cycle not found')
+    if (user.role !== Role.Admin && !cycle.regions.includes(user.region as string)) {
+      throw new ForbiddenException()
+    }
+
+    // Departments that have already added custom questions to this cycle's templates
+    const customQuestions = await this.prisma.templateQuestion.findMany({
+      where: {
+        isCustom: true,
+        template: { cycleId: id },
+        scopeDepartmentId: { not: null },
+      },
+      select:   { scopeDepartmentId: true },
+      distinct: ['scopeDepartmentId'],
+    })
+    const activeDeptIds = new Set(customQuestions.map((q) => q.scopeDepartmentId!))
+
+    // All managers in this cycle's regions
+    const managers = await this.prisma.user.findMany({
+      where: {
+        role:   Role.Manager,
+        region: { name: { in: cycle.regions } },
+      },
+      select: { id: true, name: true, departmentId: true },
+    })
+
+    return {
+      complete: managers.filter((m) => activeDeptIds.has(m.departmentId)),
+      pending:  managers.filter((m) => !activeDeptIds.has(m.departmentId)),
+    }
   }
 
   // When cycle moves to InProgress: create one PerformanceReview per employee that

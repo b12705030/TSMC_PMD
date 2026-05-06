@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
 import { useGoal } from '@/modules/goals/hooks/useGoals'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
 import type { GoalMilestone, GoalStatus } from '@/types'
 
@@ -24,12 +25,15 @@ const SMART_LABELS = [
 export default function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { goal, isLoading, refetch } = useGoal(id)
+  const { user } = useAuth()
 
   const [newTitle, setNewTitle]           = useState('')
   const [adding, setAdding]               = useState(false)
   const [showInput, setShowInput]         = useState(false)
   const [draggedId, setDraggedId]         = useState<string | null>(null)
   const [localMilestones, setLocalMilestones] = useState<GoalMilestone[]>([])
+  const [approving, setApproving]         = useState(false)
+  const [submitting, setSubmitting]        = useState(false)
 
   // Auto-open milestone input when redirected from goal creation (?m=1)
   useEffect(() => {
@@ -64,6 +68,24 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
   const dueDate   = new Date(goal.dueDate)
   const isOverdue = dueDate < new Date() && goal.status !== 'Completed'
+  const canApprove = (user?.role === 'Supervisor' || user?.role === 'Manager') && goal.status === 'PendingApproval'
+  const isOwner    = user?.id === goal.userId
+  const canSubmit  = isOwner && goal.status === 'Draft'
+
+  async function handleSubmitForApproval() {
+    setSubmitting(true)
+    try { await api.patch(`/goals/${id}/submit`, {}); refetch() } finally { setSubmitting(false) }
+  }
+
+  async function handleApprove() {
+    setApproving(true)
+    try { await api.patch(`/goals/${id}/approve`, {}); refetch() } finally { setApproving(false) }
+  }
+
+  async function handleReject() {
+    setApproving(true)
+    try { await api.patch(`/goals/${id}/reject`, {}); refetch() } finally { setApproving(false) }
+  }
 
   async function handleAddMilestone(e: React.FormEvent) {
     e.preventDefault()
@@ -221,6 +243,41 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           ))}
         </div>
+
+        {/* Employee: submit draft for approval */}
+        {canSubmit && (
+          <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+            <p className="text-xs text-gray-400">草稿尚未提交，主管看不到此目標</p>
+            <button
+              onClick={handleSubmitForApproval}
+              disabled={submitting}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {submitting ? '提交中...' : '提交審核'}
+            </button>
+          </div>
+        )}
+
+        {/* Supervisor / Manager approval actions */}
+        {canApprove && (
+          <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
+            <p className="flex-1 text-xs text-yellow-700">此目標正在等待您審核</p>
+            <button
+              onClick={handleReject}
+              disabled={approving}
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            >
+              退回草稿
+            </button>
+            <button
+              onClick={handleApprove}
+              disabled={approving}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {approving ? '處理中...' : '核准目標'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Milestones */}

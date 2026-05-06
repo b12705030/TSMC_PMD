@@ -74,7 +74,6 @@ export class GoalsService {
   }
 
   async getGoalsByEmployee(employeeId: string, user: SessionUser) {
-    // Supervisor can see their direct reports; Manager can see their team
     const isSupervisor = user.role === Role.Supervisor
     const isManager    = user.role === Role.Manager
 
@@ -82,17 +81,52 @@ export class GoalsService {
       throw new ForbiddenException()
     }
 
-    const employee = await this.prisma.user.findUnique({ where: { id: employeeId } })
+    const employee = await this.prisma.user.findUnique({
+      where:   { id: employeeId },
+      include: { supervisor: true },
+    })
     if (!employee) throw new NotFoundException('Employee not found')
 
     if (isSupervisor && employee.supervisorId !== user.id) throw new ForbiddenException()
-    if (isManager    && employee.managerId    !== user.id) throw new ForbiddenException()
+    if (isManager) {
+      const isDirectReport = employee.managerId === user.id && !employee.supervisorId
+      const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+      if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
+    }
 
     return this.prisma.goal.findMany({
       where:   { userId: employeeId },
       include: GOAL_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })
+  }
+
+  async approveGoal(id: string, user: SessionUser) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+      throw new ForbiddenException()
+    }
+    const goal = await this.prisma.goal.findUnique({ where: { id } })
+    if (!goal) throw new NotFoundException('Goal not found')
+    if (goal.status !== 'PendingApproval') throw new ForbiddenException('Goal is not pending approval')
+    return this.prisma.goal.update({ where: { id }, data: { status: 'Approved' }, include: GOAL_INCLUDE })
+  }
+
+  async rejectGoal(id: string, user: SessionUser) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+      throw new ForbiddenException()
+    }
+    const goal = await this.prisma.goal.findUnique({ where: { id } })
+    if (!goal) throw new NotFoundException('Goal not found')
+    if (goal.status !== 'PendingApproval') throw new ForbiddenException('Goal is not pending approval')
+    return this.prisma.goal.update({ where: { id }, data: { status: 'Draft' }, include: GOAL_INCLUDE })
+  }
+
+  async submitGoal(id: string, user: SessionUser) {
+    const goal = await this.prisma.goal.findUnique({ where: { id } })
+    if (!goal) throw new NotFoundException('Goal not found')
+    if (goal.userId !== user.id) throw new ForbiddenException()
+    if (goal.status !== 'Draft') throw new ForbiddenException('Goal must be in Draft status to submit')
+    return this.prisma.goal.update({ where: { id }, data: { status: 'PendingApproval' }, include: GOAL_INCLUDE })
   }
 
   async addMilestone(goalId: string, user: SessionUser, title: string) {

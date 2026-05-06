@@ -26,9 +26,10 @@
 |------|------|------|
 | HR 建立週期（Annual / Quarterly / Probation）| ✅ 完成 | `POST /api/cycles` |
 | 週期列表（依 region 隔離）| ✅ 完成 | `GET /api/cycles`，RegionalHR 只看自己 region |
-| 狀態機單向推進 GoalSetting → InProgress → UnderReview → Completed | ✅ 完成 | `PATCH /api/cycles/:id/advance` |
+| 狀態機 6 步驟單向推進 | ✅ 完成 | `GoalSetting → InProgress → EmployeeReview → SupervisorReview → Calibration → Completed`；`PATCH /api/cycles/:id/advance` |
+| 推進至 EmployeeReview 前強制檢查已發布模板 | ✅ 完成 | 無 Published 模板時 backend 拋 400，阻擋推進 |
 | 推進前確認 Dialog | ✅ 完成 | 使用 `ConfirmDialog` 元件 |
-| 前端 Pipeline Stepper（讓使用者看到目前在哪個階段）| ✅ 完成 | `CycleStepper` 元件，card 式列表顯示 |
+| 雙軌道 Pipeline UI | ✅ 完成 | 上軌道「模板準備」（HR建立→模板發布→主管補充問卷→◆）；下軌道「評核流程」（公司/部門目標公布→目標設定→執行中→◆→員工自評→主管初評→校準→已完成）；◆ 在第 4 格垂直對齊 |
 | 週期可跨多個 Region（regions String[]）| ✅ 完成 | migration `20260505082410`，Admin 用 checkbox 多選 |
 | Admin 在 GoalSetting 期間可編輯週期（名稱、地區、日期）| ✅ 完成 | `PATCH /api/cycles/:id`，僅限 Admin |
 | Region 選單由 DB 實際資料驅動 | ✅ 完成 | `GET /api/users/regions` |
@@ -45,7 +46,7 @@
 | HR Publish 模板 | ✅ 完成 | `PATCH /api/templates/:id/publish`，含確認 Dialog |
 | 經理依職稱新增自訂題目 | ✅ 完成 | `POST /api/templates/:id/questions`，isCustom=true |
 | 必答題鎖定（HR 題目經理不可刪改）| ✅ 完成 | Service 層阻擋，前端 UI 不顯示刪除按鈕 |
-| 依職等 / 職稱自動套用模板 | ⬜ 待做 | 待績效評核流程實作時串接 |
+| 依職等 / 職稱自動套用模板 | ✅ 完成 | 推進至 EmployeeReview 時，依 jobLevel + jobTitle 自動匹配並建立 PerformanceReview |
 | 題目類型：Text / Rating / MultipleChoice | ✅ 完成 | DTO + 前端 select |
 
 ---
@@ -63,9 +64,9 @@
 | 里程碑順序可拖拉調整 | ✅ 完成 | `PUT /api/goals/:id/milestones/reorder`，左側 ⠿ drag handle，hover 顯示 |
 | 進度條依里程碑比例動態計算 | ✅ 完成 | 無里程碑時 fallback 至 status 預設值 |
 | 建立目標後直接進入里程碑設定 | ✅ 完成 | 建立成功 redirect 至詳情頁並自動展開新增輸入框 |
-| 主管 / 經理可查看下屬目標 | ✅ 完成 | `GET /api/goals/employee/:id`，RBAC 控管 |
-| 主管審核 / 核准目標 | ⬜ 待做 | 目前員工可自行改 status，待加 workflow |
-| 目標與績效週期關聯 | ⬜ 待做 | `cycleId` 欄位已預留，待週期選擇 UI |
+| 主管 / 經理可查看下屬目標 | ✅ 完成 | `GET /api/goals/employee/:id`，RBAC 控管；Manager 支援跨 Supervisor 傳遞存取 |
+| 主管審核 / 核准目標 | ✅ 完成 | `PATCH /goals/:id/approve`（核准→Approved）、`PATCH /goals/:id/reject`（退回→Draft）；目標詳情頁在 PendingApproval 狀態下對 Supervisor/Manager 顯示審核按鈕 |
+| 目標與績效週期關聯 | ✅ 完成 | 新增目標時可選進行中週期（GoalSetting/InProgress），dropdown 顯示，選填 |
 
 ---
 
@@ -75,16 +76,18 @@
 
 **草稿機制：** 員工和主管各自的階段可以反覆存草稿；按「送出」才推進到下一個狀態，送出後鎖定。
 
+**自動建立：** 週期推進至 `EmployeeReview` 時觸發（非 InProgress），依 jobLevel + jobTitle 匹配已發布模板。
+
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| 週期推進 InProgress 時自動建立評核 | ✅ 完成 | `cycles.service.ts` `advanceStatus()` 觸發，依 jobLevel + jobTitle 匹配 Published 模板 |
+| 週期推進 EmployeeReview 時自動建立評核 | ✅ 完成 | `cycles.service.ts` `advanceStatus()` 觸發；無匹配模板的員工跳過（log 警告）|
 | 員工填寫績效表單（自評）| ✅ 完成 | `PUT /reviews/:id/answers`（草稿）+ `POST /reviews/:id/submit`（送出鎖定）|
 | 主管初評（附文字說明）| ✅ 完成 | `PUT /reviews/:id/supervisor`（草稿）+ `POST /reviews/:id/supervisor/submit`；含等第選擇 |
 | 等第制評分（O/S+/S/S-/I/U）| ✅ 完成 | 對應 TSMC 實際制度；O 和 U 各自顯示 soft warning（非硬限制）|
 | 員工 / 主管各端表單（前端）| ✅ 完成 | Text / Rating / MultipleChoice 三種題型；主管見員工自評（read-only）後填評核 |
 | 團隊評核列表（主管側）| ✅ 完成 | `GET /reviews/team`，前端 `/reviews/team` 頁面 |
-| 經理校準排名並發布結果 | ⬜ 待做 | `PUT /reviews/:id/calibrate`、`POST /reviews/cycle/:cycleId/publish` 後端已實作，前端 UI 待建 |
-| 主管比較介面（多員工並排）| ⬜ 待做 | 方便主管做相對比較 |
+| 經理校準排名並發布結果 | ✅ 完成 | 前端 `/reviews/calibrate/[cycleId]` 頁面；等第按鈕選取 + 排名輸入 + 一鍵發布；Manager 在 `/reviews/team` 頁面可看到各週期的「進入校準」入口 |
+| 主管比較介面（多員工並排）| ✅ 完成 | 前端 `/reviews/compare/[cycleId]`；水平卡片並排，依等第排序；從校準頁「並排比較 →」進入 |
 
 ---
 
@@ -92,9 +95,12 @@
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| 員工向經理提出申訴（越過主管）| ⬜ 待做 | 依賴：績效評核 |
-| 直屬主管不可見申訴內容 | ⬜ 待做 | Row-level security |
-| 經理審核並回覆申訴 | ⬜ 待做 | |
+| 員工向經理提出申訴（越過主管）| ✅ 完成 | `POST /api/appeals`；員工在 Published 評核頁點「提出申訴」，輸入原因後送出 |
+| 直屬主管不可見申訴內容 | ✅ 完成 | `getAppealById` 只允許當事員工和 Manager 存取，Supervisor 呼叫會拋 403 |
+| 經理審核並回覆申訴 | ✅ 完成 | `PATCH /api/appeals/:id/respond`；Manager 在 `/appeals/:id` 頁填寫回覆並解決 |
+| 申訴列表頁（經理側）| ✅ 完成 | `/appeals` 頁面顯示所有收到的申訴，可點入詳情 |
+| 申訴結果通知員工 | ⬜ 待做 | 目前需員工主動查看評核頁或申訴頁，未實作推播通知 |
+| 前端 `/appeals` 頁面串接真實資料 | ✅ 完成 | `useAppeals` hook 已串接 `GET /appeals` |
 
 ---
 
@@ -103,7 +109,7 @@
 | 項目 | 狀態 | 備註 |
 |------|------|------|
 | 登入 / 登出事件寫入 | ✅ 完成 | 非同步寫入，目前存 PostgreSQL |
-| 所有 CRUD 操作記錄 | ⬜ 待做 | |
+| 所有 CRUD 操作記錄 | ⬜ 待做 | `AuditService` 為 TODO stub |
 | Elasticsearch Append-only 儲存 | ⬜ 待做 | 目前 ES 未串接 |
 | 前端 Audit Log 查閱頁 | ⬜ 待做 | 骨架已建，資料未串 |
 
@@ -115,7 +121,7 @@
 |------|------|------|
 | 各角色對應 Dashboard 內容 | ✅ 完成 | Employee / Supervisor / Manager / HR / Admin 各自顯示待辦事項與數據 |
 | 全年週期行程（Gantt 圖）| ✅ 完成 | 固定顯示當年度 1–12 月，目標設定期（藍）/ 評核期（紫）/ 今日標線（琥珀色）|
-| 填寫完成率、評分分布圖表 | ⬜ 待做 | |
+| 填寫完成率、評分分布圖表 | ✅ 完成 | `GET /reviews/stats`（後端）；Dashboard Manager 端顯示等第分布橫條圖，HR/Admin 端顯示全局等第分布 |
 
 ---
 
@@ -125,7 +131,61 @@
 |------|------|------|
 | Supervisor 看直屬員工列表 | ✅ 完成 | `GET /users/team`，DataTable |
 | Manager 看階層分組視圖 | ✅ 完成 | `GET /users/team/hierarchy`，依 Supervisor 分組；直屬員工（無 Supervisor）獨立顯示 |
-| 點入員工詳情頁 | ✅ 完成 | 顯示基本資料、目標列表、評核歷史（目標 / 評核目前回傳空，待串接）|
+| 點入員工詳情頁 | ✅ 完成 | 顯示基本資料、目標列表（可點入詳情）、評核歷史（可點入評核）；`GET /users/:id/goals` 和 `GET /users/:id/reviews` 已串接真實資料 |
+
+---
+
+## 待辦事項
+
+### 立即需要執行
+
+- [ ] **跑 migration**：`cd backend && npx prisma migrate dev --name refine-cycle-status`（CycleStatus 6 步驟才會生效）
+- [ ] **重啟後端**：UsersModule 注入 GoalsModule/ReviewsModule 的 DI 改動需重啟
+
+### 功能待做（建議優先順序）
+
+- [x] **申訴機制** — 已完成（schema + backend + frontend）
+- [x] **目標與週期關聯 UI** — 已完成
+- [x] **主管多員工並排比較介面** — 已完成
+- [x] **Dashboard 等第分布圖表** — 已完成
+- [ ] **Audit Log CRUD** — 目前只記錄登入/登出
+
+### 模板設計優化（已討論，待實作）
+
+| # | 功能 | 說明 | 優先度 |
+|---|------|------|--------|
+| T1 | **Manager 自訂題目跨週期複用** | 模板詳情頁加「從上個週期複製自訂題目」按鈕；找到同 Manager 在前一週期同模板下的自訂題，一次匯入 | 高 |
+| T2 | **MultipleChoice 新增「其他（請說明）」選項** | 新增 `OpenEndedChoice` 選項類型，員工選「其他」時出現文字輸入框；或在題型層面支援 fallback text | 中 |
+| T3 | **Manager 不可修改 HR 基礎題選項** | 維持現況（設計決策：基礎題鎖定以確保跨部門可比性，Manager 若需部門特定選項應新增自訂題） | ✅ 確認不做 |
+| T4 | **自訂題目排序可插入基礎題之間** | 目前自訂題永遠排在基礎題後面；需支援 Manager 調整 orderIndex 至任意位置 | 低 |
+
+### 技術債
+
+- [x] 員工可直接透過 `PUT /goals/:id` body `{ status }` 把目標改為 `PendingApproval`，已改為獨立 endpoint `PATCH /goals/:id/submit`；目標詳情頁草稿狀態下顯示「提交審核」按鈕
+- [ ] `AppealsService` / `AuditService` 全部為 TODO stub，前端對應頁面回傳假資料
+- [ ] Session 閒置 30 分鐘自動登出尚未實作（目前固定 8 小時 TTL）
+
+---
+
+## UX 問題追蹤（測試回饋）
+
+| # | 問題 | 解法 | 狀態 |
+|---|------|------|------|
+| 1 | "我的評核" vs "團隊評核" 差異不清楚 | Sidebar nav item 加 subtitle 說明（前者=自己的表單，後者=下屬的評核） | ✅ 已修 |
+| 2 | 主管點進尚未填寫的評核，畫面空白無說明 | 偵測 PendingEmployeeSubmit 狀態時顯示 banner：「等待員工填寫自評，目前無法操作」 | ✅ 已修 |
+| 3 | 評核頁面版面只有一半寬 | 移除 `max-w-2xl`，改為全寬 | ✅ 已修 |
+| 4 | MultipleChoice 題型沒有地方填選項 | 模板新增題目 modal 選 MultipleChoice 時顯示動態選項輸入 UI | ✅ 已修 |
+| 5 | 主管評核員工的分界不清楚，且主管回答應為文字 | 改為左右分欄：左側員工自評（唯讀），右側主管逐題文字評語 | ✅ 已修 |
+| 6 | O/S+/S/S-/I/U 等第無說明，新主管不懂含義 | 加 ⓘ tooltip 說明各等第定義；員工端結果頁也加等第說明 | ✅ 已修 |
+| 7 | 主管看到 "待您填寫" badge 容易誤解 | 改成 "待員工自評"，語意更準確 | ✅ 已修 |
+| 8 | 校準頁調整排名後整頁重新載入 | 改為 Optimistic Update，本地狀態更新，失敗才 refetch | ✅ 已修 |
+| 9 | 員工發布後看不到主管逐題評語 | 發布後在員工端增加「評核詳情」區塊，左右並排呈現員工自評與主管評語 | ✅ 已修 |
+| 10 | 員工不知道 S- 在等第中算高還低 | 員工端結果頁加等第排名說明（O 最高 → U 最低） | ✅ 已修（同 #6） |
+| 11 | Manager 申訴詳情只能回覆，不能調整等第 | 回覆表單加等第選擇器（選填）；後端 respondToAppeal 支援 newGrade | ✅ 已修 |
+| 12 | 左側導覽列占用固定空間，無法收合 | Sidebar 全面重寫：可收合（localStorage 記憶狀態）、每個導覽項目加一致 icon（h-4 w-4）、收合時顯示 tooltip | ✅ 已修 |
+| 13 | Dashboard 歡迎標題含角色 badge，佔用視覺空間 | 移除歡迎標語與角色 badge，標題改為「儀表板」；角色資訊移至 Sidebar 底部用 RoleBadge 呈現 | ✅ 已修 |
+| 14 | 週期推進 Dialog 語氣偏口語，icon 有顏色 | 採用【週期名稱】格式、icon 改為純色 SVG；新增 Manager 補充問卷完成率提示（後端 `GET /cycles/:id/manager-questionnaire-status`） | ✅ 已修 |
+| 15 | 模板詳情頁（Manager 自訂題）選 MultipleChoice 題型，無法填選項 | templates/[id]/page.tsx 自訂題 modal 補上動態選項輸入 UI（與 templates/page.tsx 一致） | ✅ 已修 |
 
 ---
 
@@ -134,11 +194,3 @@
 ```
 績效週期 → 表單模板 → 目標管理 → 績效評核 → 申訴 → Dashboard → Audit Log（ES）
 ```
-
----
-
-## 已知技術債
-
-- `AppealsService` / `AuditService` 全部為 TODO stub，尚未實作
-- 績效評核經理校準頁面（`/cycles/:id/calibrate` 或類似路徑）前端尚未建立；後端 `calibrate` + `publishAll` endpoints 已就緒
-- Frontend appeals / audit-log 頁面 hooks 仍回傳假資料，待 backend 對應功能實作後串接

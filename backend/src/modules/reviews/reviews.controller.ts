@@ -42,6 +42,13 @@ export class ReviewsController {
     return this.reviewsService.publishAll(cycleId, user)
   }
 
+  // Manager / HR / Admin: grade distribution + status counts
+  @Get('stats')
+  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
+  getReviewStats(@CurrentUser() user: SessionUser) {
+    return this.reviewsService.getReviewStats(user)
+  }
+
   // Any role with access: single review
   @Get(':id')
   @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.Admin)

@@ -4,10 +4,12 @@ type BadgeStatus = CycleStatus | ReviewStatus | GoalStatus | AppealStatus
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   // Cycle
-  GoalSetting: { label: '目標設定', className: 'bg-blue-100 text-blue-700' },
-  InProgress:  { label: '執行中',   className: 'bg-yellow-100 text-yellow-700' },
-  UnderReview: { label: '評核中',   className: 'bg-purple-100 text-purple-700' },
-  Completed:   { label: '已完成',   className: 'bg-green-100 text-green-700' },
+  GoalSetting:      { label: '目標設定', className: 'bg-blue-100 text-blue-700' },
+  InProgress:       { label: '執行中',   className: 'bg-yellow-100 text-yellow-700' },
+  EmployeeReview:   { label: '員工自評', className: 'bg-indigo-100 text-indigo-700' },
+  SupervisorReview: { label: '主管初評', className: 'bg-purple-100 text-purple-700' },
+  Calibration:      { label: '校準發布', className: 'bg-violet-100 text-violet-700' },
+  Completed:        { label: '已完成',   className: 'bg-green-100 text-green-700' },
 
   // Goal
   Draft:           { label: '草稿',   className: 'bg-gray-100 text-gray-600' },
@@ -15,7 +17,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   Approved:        { label: '已核准', className: 'bg-green-100 text-green-700' },
 
   // Review
-  PendingEmployeeSubmit:   { label: '待您填寫', className: 'bg-blue-100 text-blue-700' },
+  PendingEmployeeSubmit:   { label: '待員工自評', className: 'bg-blue-100 text-blue-700' },
   PendingSupervisorReview: { label: '待主管初評', className: 'bg-yellow-100 text-yellow-700' },
   PendingManagerApproval:  { label: '待校準',   className: 'bg-purple-100 text-purple-700' },
   Published:               { label: '已發布',   className: 'bg-green-100 text-green-700' },

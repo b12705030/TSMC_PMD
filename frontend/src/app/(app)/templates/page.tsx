@@ -68,7 +68,14 @@ export default function TemplatesPage() {
   }
 
   function updateQuestion(index: number, field: string, value: unknown) {
-    setQuestions((prev) => prev.map((q, i) => i === index ? { ...q, [field]: value } : q))
+    setQuestions((prev) => prev.map((q, i) => {
+      if (i !== index) return q
+      const updated = { ...q, [field]: value }
+      if (field === 'questionType') {
+        updated.options = value === 'MultipleChoice' ? ['', ''] : []
+      }
+      return updated
+    }))
   }
 
   function addQuestion() {
@@ -92,6 +99,9 @@ export default function TemplatesPage() {
     if (form.appliesGrades.length === 0) { setError('請選擇至少一個職等'); return }
     if (form.applyTitles.length === 0)   { setError('請選擇至少一個職稱'); return }
     if (questions.some((q) => !q.questionText.trim())) { setError('題目內容不得為空'); return }
+    if (questions.some((q) => q.questionType === 'MultipleChoice' && q.options.filter((o) => o.trim()).length < 2)) {
+      setError('多選題至少需要 2 個有效選項'); return
+    }
     setError('')
     setSubmitting(true)
     try {
@@ -295,6 +305,37 @@ export default function TemplatesPage() {
                             必填
                           </label>
                         </div>
+                        {q.questionType === 'MultipleChoice' && (
+                          <div className="space-y-1.5 rounded-lg bg-gray-50 p-3">
+                            <p className="text-xs font-medium text-gray-500">選項（至少 2 個）</p>
+                            {q.options.map((opt, oi) => (
+                              <div key={oi} className="flex gap-2">
+                                <input
+                                  className="input flex-1"
+                                  value={opt}
+                                  onChange={(e) => {
+                                    const opts = [...q.options]
+                                    opts[oi] = e.target.value
+                                    updateQuestion(i, 'options', opts)
+                                  }}
+                                  placeholder={`選項 ${oi + 1}`}
+                                />
+                                {q.options.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuestion(i, 'options', q.options.filter((_, j) => j !== oi))}
+                                    className="px-1 text-lg leading-none text-gray-400 hover:text-red-500"
+                                  >×</button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => updateQuestion(i, 'options', [...q.options, ''])}
+                              className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                            >+ 新增選項</button>
+                          </div>
+                        )}
                       </div>
                       {questions.length > 1 && (
                         <button
