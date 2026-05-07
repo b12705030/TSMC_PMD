@@ -98,7 +98,7 @@ cd TSMC_PMD
 
 # 2. Setup backend
 cd backend
-cp .env.example .env        # 填入 Neon DATABASE_URL / DIRECT_URL
+# 自行建立 .env 檔，完整版在 notion 上
 npm install
 npx prisma migrate deploy   # 套用 DB migrations（第一次）
 npx prisma db seed          # 建立測試帳號（第一次）
@@ -106,7 +106,7 @@ npm run start:dev
 
 # 3. Setup frontend（開新 terminal）
 cd frontend
-cp .env.local.example .env.local
+# 自行建立 .env 檔，完整版在 notion 上
 npm install
 npm run dev
 ```
