@@ -115,6 +115,7 @@ cd TSMC_PMD
 cd backend
 # 自行建立 .env 檔，完整版在 notion 上
 npm install
+npx prisma generate         # 產生 Prisma client 型別（必須在 seed 前跑）
 npx prisma migrate deploy   # 套用 DB migrations（第一次）
 npx prisma db seed          # 建立測試帳號（第一次）
 npm run start:dev
