@@ -10,6 +10,10 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write ."
   },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "dependencies": {
     "next": "15.1.7",
     "react": "^19.0.0",

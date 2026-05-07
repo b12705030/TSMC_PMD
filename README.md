@@ -73,8 +73,23 @@ npx prisma db seed
 ## Local Development
 
 ### Prerequisites
-- Node.js 20+
-- npm 10+
+
+**必須版本（版本不對 `npm install` 會失敗）：**
+- Node.js **20 或以上**（建議 LTS，目前為 22.x）
+- npm **10 或以上**（隨 Node.js 20+ 自動附帶）
+
+確認目前版本：
+```bash
+node --version   # 應顯示 v20.x.x 或以上
+npm --version    # 應顯示 10.x.x 或以上
+```
+
+版本不符時，請至 [https://nodejs.org](https://nodejs.org) 下載最新 LTS，或使用 [nvm](https://github.com/nvm-sh/nvm) 切換版本：
+```bash
+# 使用 nvm（Mac/Linux）
+nvm install 22
+nvm use 22
+```
 
 ### Environment Variables
 
