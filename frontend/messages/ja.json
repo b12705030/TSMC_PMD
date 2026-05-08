@@ -138,6 +138,12 @@
       "goalRange": "目標設定：{start} – {end}",
       "reviewRange": "評価期間：{start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "目標設定期は {date} に終了予定です（残り {days} 日）。前倒しで進みますか？",
+      "reviewStartEarly": "評価期間は {date} に開始予定です（残り {days} 日）。前倒しで進みますか？",
+      "reviewStartLate": "評価期間の開始予定日は {date} でしたが、{days} 日超過しています。今すぐ進みますか？",
+      "reviewEndEarly": "評価期間は {date} に終了予定です（残り {days} 日）。前倒しで完了しますか？"
+    },
     "templateTrack": {
       "title": "テンプレート準備",
       "goCreate": "作成へ →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "目標設定",
       "reviewBar": "レビュー期間",
       "todayMarker": "今日",
-      "legendGoal": "目標設定",
+      "legendGoal": "目標設定 & 実行期間",
       "legendReview": "レビュー期間",
-      "goalRange": "目標設定：{start} – {end}",
-      "reviewRange": "レビュー期間：{start} – {end}"
+      "legendPublish": "結果公開",
+      "goalRange": "目標設定 & 実行：{start} – {end}",
+      "reviewRange": "レビュー期間：{start} – {end}",
+      "publishRange": "結果公開：{date}"
     },
     "activeCycles": { "title": "進行中のサイクル" },
     "goals": {

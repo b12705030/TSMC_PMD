@@ -23,6 +23,7 @@ function fmtDate(iso: string, locale: string) {
 const BAR_COLORS = {
   goalSetting: { bg: 'bg-blue-300',   label: 'text-blue-900' },
   review:      { bg: 'bg-violet-300', label: 'text-violet-900' },
+  publish:     { bg: 'bg-emerald-400', label: 'text-emerald-900' },
 }
 
 function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
@@ -53,6 +54,16 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
     const s = Math.max(new Date(start).getTime(), tlStart.getTime())
     const e = Math.min(new Date(end).getTime(), tlEnd.getTime())
     return `${Math.max(0, ((e - s) / totalMs) * 100).toFixed(2)}%`
+  }
+  function dayBefore(date: string): string {
+    const d = new Date(date)
+    d.setDate(d.getDate() - 1)
+    return d.toISOString()
+  }
+  function dayAfter(date: string): string {
+    const d = new Date(date)
+    d.setDate(d.getDate() + 1)
+    return d.toISOString()
   }
 
   const ticks: { label: string; pct: number }[] = []
@@ -113,10 +124,11 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                     <StatusBadge status={cycle.status} />
                   </div>
                   <div className="relative h-8 rounded bg-gray-50">
+                    {/* Goal setting + execution bar (goalSettingStart → dayBefore(reviewStart)) */}
                     <div
                       className={`absolute top-1 bottom-1 rounded ${BAR_COLORS.goalSetting.bg} flex items-center overflow-hidden`}
-                      style={{ left: pctLeft(cycle.goalSettingStart), width: pctWidth(cycle.goalSettingStart, cycle.goalSettingEnd) }}
-                      title={t('timeline.goalRange', { start: fmtDate(cycle.goalSettingStart, locale), end: fmtDate(cycle.goalSettingEnd, locale) })}
+                      style={{ left: pctLeft(cycle.goalSettingStart), width: pctWidth(cycle.goalSettingStart, dayBefore(cycle.reviewStart)) }}
+                      title={t('timeline.goalRange', { start: fmtDate(cycle.goalSettingStart, locale), end: fmtDate(dayBefore(cycle.reviewStart), locale) })}
                     >
                       <span className={`px-1.5 text-[10px] font-medium whitespace-nowrap ${BAR_COLORS.goalSetting.label}`}>
                         {t('timeline.goalSettingBar')}
@@ -131,6 +143,16 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                         {t('timeline.reviewBar')}
                       </span>
                     </div>
+                    {/* Publish bar (reviewEnd + 1 day) */}
+                    <div
+                      className={`absolute top-1 bottom-1 rounded ${BAR_COLORS.publish.bg} flex items-center overflow-hidden`}
+                      style={{ left: pctLeft(dayAfter(cycle.reviewEnd)), width: pctWidth(dayAfter(cycle.reviewEnd), dayAfter(dayAfter(cycle.reviewEnd))), minWidth: '6px' }}
+                      title={t('timeline.publishRange', { date: fmtDate(dayAfter(cycle.reviewEnd), locale) })}
+                    >
+                      <span className={`px-1.5 text-[10px] font-medium whitespace-nowrap ${BAR_COLORS.publish.label}`}>
+                        {t('timeline.legendPublish')}
+                      </span>
+                    </div>
                     {showToday && (
                       <div
                         className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10"
@@ -140,9 +162,11 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                     )}
                   </div>
                   <div className="mt-0.5 text-[10px] text-gray-400">
-                    {t('timeline.goalRange', { start: fmtDate(cycle.goalSettingStart, locale), end: fmtDate(cycle.goalSettingEnd, locale) })}
+                    {t('timeline.goalRange', { start: fmtDate(cycle.goalSettingStart, locale), end: fmtDate(dayBefore(cycle.reviewStart), locale) })}
                     &nbsp;·&nbsp;
                     {t('timeline.reviewRange', { start: fmtDate(cycle.reviewStart, locale), end: fmtDate(cycle.reviewEnd, locale) })}
+                    &nbsp;·&nbsp;
+                    {t('timeline.publishRange', { date: fmtDate(dayAfter(cycle.reviewEnd), locale) })}
                   </div>
                 </div>
               ))}
@@ -155,6 +179,9 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded bg-violet-300" />{t('timeline.legendReview')}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded bg-emerald-400" />{t('timeline.legendPublish')}
               </span>
               {showToday && (
                 <span className="flex items-center gap-1.5">

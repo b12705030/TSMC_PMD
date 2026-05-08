@@ -138,6 +138,12 @@
       "goalRange": "Objectifs : {start} – {end}",
       "reviewRange": "Évaluation : {start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "La phase de définition des objectifs est prévue pour se terminer le {date} (encore {days} jours). Avancer quand même ?",
+      "reviewStartEarly": "La période d'évaluation est prévue pour commencer le {date} (encore {days} jours). Avancer maintenant ?",
+      "reviewStartLate": "La période d'évaluation aurait dû commencer le {date} – {days} jours de retard. Avancer maintenant ?",
+      "reviewEndEarly": "La période d'évaluation est prévue pour se terminer le {date} (encore {days} jours). Terminer le cycle en avance ?"
+    },
     "templateTrack": {
       "title": "Préparation des modèles",
       "goCreate": "Créer →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "Définition des objectifs",
       "reviewBar": "Période d'évaluation",
       "todayMarker": "Aujourd'hui",
-      "legendGoal": "Définition des objectifs",
+      "legendGoal": "Objectifs & Exécution",
       "legendReview": "Période d'évaluation",
-      "goalRange": "Objectifs : {start} – {end}",
-      "reviewRange": "Évaluation : {start} – {end}"
+      "legendPublish": "Résultats publiés",
+      "goalRange": "Objectifs & Exécution : {start} – {end}",
+      "reviewRange": "Évaluation : {start} – {end}",
+      "publishRange": "Publié : {date}"
     },
     "activeCycles": { "title": "Cycles actifs" },
     "goals": {

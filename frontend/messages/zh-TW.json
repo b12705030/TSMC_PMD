@@ -138,6 +138,12 @@
       "goalRange": "目標設定：{start} – {end}",
       "reviewRange": "評核期間：{start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "目標設定期計劃於 {date} 結束，距今還有 {days} 天，確定提前推進？",
+      "reviewStartEarly": "評核期計劃於 {date} 開始，距今還有 {days} 天，確定提前推進？",
+      "reviewStartLate": "評核期計劃開始日為 {date}，目前已逾期 {days} 天，確定現在推進？",
+      "reviewEndEarly": "評核期計劃於 {date} 結束，距今還有 {days} 天，確定提前完成週期？"
+    },
     "templateTrack": {
       "title": "模板準備",
       "goCreate": "前往建立 →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "目標設定",
       "reviewBar": "評核期",
       "todayMarker": "今天",
-      "legendGoal": "目標設定期",
+      "legendGoal": "目標設定 & 執行期",
       "legendReview": "評核期",
-      "goalRange": "目標設定：{start} – {end}",
-      "reviewRange": "評核期：{start} – {end}"
+      "legendPublish": "結果發布",
+      "goalRange": "目標設定 & 執行：{start} – {end}",
+      "reviewRange": "評核期：{start} – {end}",
+      "publishRange": "結果發布：{date}"
     },
     "activeCycles": { "title": "進行中的週期" },
     "goals": {

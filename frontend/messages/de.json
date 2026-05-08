@@ -138,6 +138,12 @@
       "goalRange": "Zielsetzung: {start} – {end}",
       "reviewRange": "Bewertungszeitraum: {start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "Zielsetzungsphase endet planmäßig am {date} (noch {days} Tage). Trotzdem vorzeitig fortschreiten?",
+      "reviewStartEarly": "Bewertungszeitraum beginnt planmäßig am {date} (noch {days} Tage). Vorzeitig fortschreiten?",
+      "reviewStartLate": "Bewertungszeitraum hätte am {date} beginnen sollen – {days} Tage überfällig. Jetzt fortschreiten?",
+      "reviewEndEarly": "Bewertungszeitraum endet planmäßig am {date} (noch {days} Tage). Zyklus vorzeitig abschließen?"
+    },
     "templateTrack": {
       "title": "Vorlagenvorbereitung",
       "goCreate": "Erstellen →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "Zielsetzung",
       "reviewBar": "Bewertungszeitraum",
       "todayMarker": "Heute",
-      "legendGoal": "Zielsetzung",
+      "legendGoal": "Zielsetzung & Ausführung",
       "legendReview": "Bewertungszeitraum",
-      "goalRange": "Zielsetzung: {start} – {end}",
-      "reviewRange": "Bewertungszeitraum: {start} – {end}"
+      "legendPublish": "Ergebnisse veröffentlicht",
+      "goalRange": "Zielsetzung & Ausführung: {start} – {end}",
+      "reviewRange": "Bewertungszeitraum: {start} – {end}",
+      "publishRange": "Veröffentlicht: {date}"
     },
     "activeCycles": { "title": "Aktive Zyklen" },
     "goals": {

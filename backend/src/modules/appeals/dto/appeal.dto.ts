@@ -1,4 +1,5 @@
-import { IsOptional, IsString, MinLength } from 'class-validator'
+import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator'
+import { ReviewGrade } from '@prisma/client'
 
 export class CreateAppealDto {
   @IsString() reviewId: string
@@ -7,5 +8,5 @@ export class CreateAppealDto {
 
 export class RespondAppealDto {
   @IsString() @MinLength(5) response: string
-  @IsOptional() @IsString() newGrade?: string
+  @IsOptional() @IsEnum(ReviewGrade) newGrade?: ReviewGrade
 }

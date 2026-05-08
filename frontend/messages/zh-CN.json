@@ -138,6 +138,12 @@
       "goalRange": "目标设定：{start} – {end}",
       "reviewRange": "考核期间：{start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "目标设定期计划于 {date} 结束，距今还有 {days} 天，确定提前推进？",
+      "reviewStartEarly": "考核期计划于 {date} 开始，距今还有 {days} 天，确定提前推进？",
+      "reviewStartLate": "考核期计划开始日为 {date}，目前已逾期 {days} 天，确定现在推进？",
+      "reviewEndEarly": "考核期计划于 {date} 结束，距今还有 {days} 天，确定提前完成周期？"
+    },
     "templateTrack": {
       "title": "模板准备",
       "goCreate": "前往创建 →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "目标设定",
       "reviewBar": "评核期",
       "todayMarker": "今天",
-      "legendGoal": "目标设定期",
+      "legendGoal": "目标设定 & 执行期",
       "legendReview": "评核期",
-      "goalRange": "目标设定：{start} – {end}",
-      "reviewRange": "评核期：{start} – {end}"
+      "legendPublish": "结果发布",
+      "goalRange": "目标设定 & 执行：{start} – {end}",
+      "reviewRange": "评核期：{start} – {end}",
+      "publishRange": "结果发布：{date}"
     },
     "activeCycles": { "title": "进行中的周期" },
     "goals": {

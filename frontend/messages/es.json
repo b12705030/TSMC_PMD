@@ -138,6 +138,12 @@
       "goalRange": "Objetivos: {start} – {end}",
       "reviewRange": "Evaluación: {start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "El establecimiento de objetivos está planificado para terminar el {date} ({days} días restantes). ¿Avanzar antes?",
+      "reviewStartEarly": "El período de evaluación está planificado para comenzar el {date} ({days} días restantes). ¿Avanzar antes?",
+      "reviewStartLate": "El período de evaluación debía comenzar el {date} – {days} días de retraso. ¿Avanzar ahora?",
+      "reviewEndEarly": "El período de evaluación está planificado para terminar el {date} ({days} días restantes). ¿Completar el ciclo antes?"
+    },
     "templateTrack": {
       "title": "Preparación de plantillas",
       "goCreate": "Crear →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "Establecimiento de objetivos",
       "reviewBar": "Período de revisión",
       "todayMarker": "Hoy",
-      "legendGoal": "Objetivos",
+      "legendGoal": "Objetivos & Ejecución",
       "legendReview": "Período de revisión",
-      "goalRange": "Objetivos: {start} – {end}",
-      "reviewRange": "Revisión: {start} – {end}"
+      "legendPublish": "Resultados publicados",
+      "goalRange": "Objetivos & Ejecución: {start} – {end}",
+      "reviewRange": "Revisión: {start} – {end}",
+      "publishRange": "Publicado: {date}"
     },
     "activeCycles": { "title": "Ciclos activos" },
     "goals": {

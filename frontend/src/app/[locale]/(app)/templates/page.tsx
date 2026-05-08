@@ -13,9 +13,9 @@ import { api } from '@/lib/api'
 import type { ReviewTemplate } from '@/types'
 
 const QUESTION_TYPES = ['Text', 'Rating', 'MultipleChoice'] as const
-type QuestionType = (typeof QUESTION_TYPES)[number]
-interface QuestionDraft { questionText: string; questionType: QuestionType; required: boolean; options: string[] }
-const EMPTY_QUESTION: QuestionDraft = { questionText: '', questionType: 'Text', required: true, options: [] }
+type QuestionType = typeof QUESTION_TYPES[number]
+type QuestionDraft = { questionText: string; questionType: QuestionType; required: boolean; options: string[]; orderIndex: number }
+const EMPTY_QUESTION: Omit<QuestionDraft, 'orderIndex'> = { questionText: '', questionType: 'Text', required: true, options: [] }
 
 export default function TemplatesPage() {
   const { user } = useAuth()
@@ -43,7 +43,7 @@ export default function TemplatesPage() {
     name: '', cycleId: '', appliesGrades: [], applyTitles: [],
   })
   const [titleSearch, setTitleSearch] = useState('')
-  const [questions, setQuestions] = useState([{ ...EMPTY_QUESTION, orderIndex: 0 }])
+  const [questions, setQuestions] = useState<QuestionDraft[]>([{ ...EMPTY_QUESTION, orderIndex: 0 }])
 
   const filteredTitles = jobTitles.filter((t) =>
     t.toLowerCase().includes(titleSearch.toLowerCase())

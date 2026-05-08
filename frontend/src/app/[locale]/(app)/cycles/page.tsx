@@ -76,6 +76,7 @@ function RegionCheckboxes({
 export default function CyclesPage() {
   const t       = useTranslations('cycles')
   const tCommon = useTranslations('common')
+  const locale  = useLocale()
   const { cycles, isLoading, createCycle, updateCycle, advanceStatus } = useCycles()
   const { user } = useAuth()
   const isAdmin   = user?.role === 'Admin'
@@ -102,6 +103,37 @@ export default function CyclesPage() {
     reviewStart:      '',
     reviewEnd:        '',
   })
+
+  function getDateWarning(cycle: PerformanceCycle): string | null {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+
+    if (cycle.status === 'GoalSetting') {
+      const goalEnd = new Date(cycle.goalSettingEnd)
+      if (today < goalEnd) {
+        const days = Math.ceil((goalEnd.getTime() - today.getTime()) / 86400000)
+        return t('dateWarning.goalEndEarly', { date: fmt(cycle.goalSettingEnd, locale), days })
+      }
+    }
+    if (cycle.status === 'InProgress') {
+      const reviewStart = new Date(cycle.reviewStart)
+      if (today < reviewStart) {
+        const days = Math.ceil((reviewStart.getTime() - today.getTime()) / 86400000)
+        return t('dateWarning.reviewStartEarly', { date: fmt(cycle.reviewStart, locale), days })
+      }
+      if (today > reviewStart) {
+        const days = Math.ceil((today.getTime() - reviewStart.getTime()) / 86400000)
+        return t('dateWarning.reviewStartLate', { date: fmt(cycle.reviewStart, locale), days })
+      }
+    }
+    if (cycle.status === 'Calibration') {
+      const reviewEnd = new Date(cycle.reviewEnd)
+      if (today < reviewEnd) {
+        const days = Math.ceil((reviewEnd.getTime() - today.getTime()) / 86400000)
+        return t('dateWarning.reviewEndEarly', { date: fmt(cycle.reviewEnd, locale), days })
+      }
+    }
+    return null
+  }
 
   const nextStatusLabel: Record<string, string> = {
     GoalSetting:      t('advance.GoalSetting'),
@@ -217,6 +249,14 @@ export default function CyclesPage() {
         onConfirm={handleAdvanceConfirmed}
         onCancel={() => { setPendingAdvance(null); setManagerQStatus(null) }}
       >
+        {pendingAdvance && getDateWarning(pendingAdvance) && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="flex items-center gap-1.5 text-xs text-amber-700">
+              <WarnIcon />
+              {getDateWarning(pendingAdvance)}
+            </p>
+          </div>
+        )}
         {managerQStatus && managerQStatus.pending.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-700">

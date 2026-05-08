@@ -138,6 +138,12 @@
       "goalRange": "Goals: {start} – {end}",
       "reviewRange": "Review: {start} – {end}"
     },
+    "dateWarning": {
+      "goalEndEarly": "Goal setting is planned to end on {date} ({days} days remaining). Advance early?",
+      "reviewStartEarly": "Review period is planned to start on {date} ({days} days remaining). Advance early?",
+      "reviewStartLate": "Review period was scheduled to start on {date} ({days} days overdue). Advance now?",
+      "reviewEndEarly": "Review period is planned to end on {date} ({days} days remaining). Complete cycle early?"
+    },
     "templateTrack": {
       "title": "Template Preparation",
       "goCreate": "Go create →",
@@ -218,10 +224,12 @@
       "goalSettingBar": "Goal Setting",
       "reviewBar": "Review Period",
       "todayMarker": "Today",
-      "legendGoal": "Goal Setting",
+      "legendGoal": "Goal Setting & Execution",
       "legendReview": "Review Period",
-      "goalRange": "Goal Setting: {start} – {end}",
-      "reviewRange": "Review Period: {start} – {end}"
+      "legendPublish": "Results Published",
+      "goalRange": "Goal Setting & Execution: {start} – {end}",
+      "reviewRange": "Review Period: {start} – {end}",
+      "publishRange": "Published: {date}"
     },
     "activeCycles": { "title": "Active Cycles" },
     "goals": {
