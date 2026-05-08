@@ -27,7 +27,7 @@ export class GoalsService {
       include: GOAL_INCLUDE,
     })
     if (!goal) throw new NotFoundException('Goal not found')
-    this.assertAccess(goal.userId, user)
+    await this.assertAccess(goal.userId, user)
     return goal
   }
 
@@ -51,7 +51,7 @@ export class GoalsService {
   async updateGoal(id: string, user: SessionUser, dto: UpdateGoalDto) {
     const goal = await this.prisma.goal.findUnique({ where: { id } })
     if (!goal) throw new NotFoundException('Goal not found')
-    this.assertAccess(goal.userId, user)
+    await this.assertAccess(goal.userId, user)
 
     return this.prisma.goal.update({
       where: { id },
@@ -66,7 +66,7 @@ export class GoalsService {
   async addProgressUpdate(goalId: string, user: SessionUser, content: string) {
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
-    this.assertAccess(goal.userId, user)
+    await this.assertAccess(goal.userId, user)
 
     return this.prisma.progressUpdate.create({
       data: { goalId, userId: user.id, content },
@@ -108,6 +108,7 @@ export class GoalsService {
     const goal = await this.prisma.goal.findUnique({ where: { id } })
     if (!goal) throw new NotFoundException('Goal not found')
     if (goal.status !== 'PendingApproval') throw new ForbiddenException('Goal is not pending approval')
+    await this.assertAccess(goal.userId, user)
     return this.prisma.goal.update({ where: { id }, data: { status: 'Approved' }, include: GOAL_INCLUDE })
   }
 
@@ -118,6 +119,7 @@ export class GoalsService {
     const goal = await this.prisma.goal.findUnique({ where: { id } })
     if (!goal) throw new NotFoundException('Goal not found')
     if (goal.status !== 'PendingApproval') throw new ForbiddenException('Goal is not pending approval')
+    await this.assertAccess(goal.userId, user)
     return this.prisma.goal.update({ where: { id }, data: { status: 'Draft' }, include: GOAL_INCLUDE })
   }
 
@@ -132,7 +134,7 @@ export class GoalsService {
   async addMilestone(goalId: string, user: SessionUser, title: string) {
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
-    this.assertAccess(goal.userId, user)
+    await this.assertAccess(goal.userId, user)
 
     const last = await this.prisma.goalMilestone.findFirst({
       where:   { goalId },
@@ -148,7 +150,7 @@ export class GoalsService {
     if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
 
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
-    this.assertAccess(goal!.userId, user)
+    await this.assertAccess(goal!.userId, user)
 
     const isCompleting = !milestone.completedAt
     return this.prisma.goalMilestone.update({
@@ -164,7 +166,7 @@ export class GoalsService {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
     if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
-    this.assertAccess(goal!.userId, user)
+    await this.assertAccess(goal!.userId, user)
     return this.prisma.goalMilestone.update({ where: { id: milestoneId }, data: { note } })
   }
 
@@ -172,14 +174,14 @@ export class GoalsService {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
     if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
-    this.assertAccess(goal!.userId, user)
+    await this.assertAccess(goal!.userId, user)
     return this.prisma.goalMilestone.update({ where: { id: milestoneId }, data: { url } })
   }
 
   async reorderMilestones(goalId: string, ids: string[], user: SessionUser) {
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
-    this.assertAccess(goal.userId, user)
+    await this.assertAccess(goal.userId, user)
 
     await this.prisma.$transaction(
       ids.map((id, index) =>
@@ -196,18 +198,30 @@ export class GoalsService {
     if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
 
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
-    this.assertAccess(goal!.userId, user)
+    await this.assertAccess(goal!.userId, user)
 
     await this.prisma.goalMilestone.delete({ where: { id: milestoneId } })
   }
 
-  private assertAccess(goalOwnerId: string, user: SessionUser) {
+  private async assertAccess(goalOwnerId: string, user: SessionUser) {
     if (user.role === Role.Admin) return
-    // Owner can always access their own goal
     if (goalOwnerId === user.id) return
-    // Supervisor and Manager can read their team's goals (checked in getGoalsByEmployee)
-    // For single-goal access, check the relation
-    if (user.role === Role.Supervisor || user.role === Role.Manager) return
+
+    if (user.role === Role.Supervisor || user.role === Role.Manager) {
+      const employee = await this.prisma.user.findUnique({
+        where:   { id: goalOwnerId },
+        include: { supervisor: true },
+      })
+      if (!employee) throw new ForbiddenException()
+
+      if (user.role === Role.Supervisor && employee.supervisorId === user.id) return
+      if (user.role === Role.Manager) {
+        const isDirectReport = employee.managerId === user.id && !employee.supervisorId
+        const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+        if (isDirectReport || isViaSuper) return
+      }
+    }
+
     throw new ForbiddenException()
   }
 }
