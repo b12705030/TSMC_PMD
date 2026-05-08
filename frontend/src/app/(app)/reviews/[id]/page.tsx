@@ -7,7 +7,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useReview } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
-import type { PerformanceReviewDetail, TemplateQuestion, ReviewGrade } from '@/types'
+import type { TemplateQuestion, ReviewGrade } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
   O:       'O',

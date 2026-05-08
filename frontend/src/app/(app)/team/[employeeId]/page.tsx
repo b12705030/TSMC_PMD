@@ -77,7 +77,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
         <div className="space-y-2">
           {reviews.map((review) => (
             <Link key={review.id} href={`/reviews/${review.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
-              <p className="text-sm text-gray-700">{(review as any).cycle?.name ?? review.cycleId}</p>
+              <p className="text-sm text-gray-700">{(review as { cycle?: { name: string } }).cycle?.name ?? review.cycleId}</p>
               <div className="flex items-center gap-3">
                 {review.grade && (
                   <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>

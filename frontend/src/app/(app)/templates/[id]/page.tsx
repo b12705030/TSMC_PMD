@@ -42,7 +42,6 @@ export default function TemplateDetailPage() {
   }, [id])
 
   const isManager = user?.role === 'Manager'
-  const isHR      = user?.role === 'RegionalHR' || user?.role === 'Admin'
 
   async function handleAddQuestion(e: React.SyntheticEvent) {
     e.preventDefault()
