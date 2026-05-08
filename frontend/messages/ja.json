@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "myGoals": "マイゴール",
+    "myReviews": "マイレビュー",
+    "myReviewsSub": "自分のパフォーマンスフォーム",
+    "teamReviews": "チームレビュー",
+    "teamReviewsSub": "部下のレビュー状況",
+    "myTeam": "マイチーム",
+    "cycles": "サイクル管理",
+    "templates": "テンプレート",
+    "appeals": "異議申請",
+    "auditLog": "監査ログ"
+  },
+  "sidebar": {
+    "logout": "ログアウト",
+    "expand": "サイドバーを展開",
+    "collapse": "サイドバーを折りたたむ"
+  },
+  "status": {
+    "GoalSetting": "目標設定",
+    "InProgress": "進行中",
+    "EmployeeReview": "従業員レビュー",
+    "SupervisorReview": "上司レビュー",
+    "Calibration": "調整・発布",
+    "Completed": "完了",
+    "Draft": "下書き",
+    "PendingApproval": "承認待ち",
+    "Approved": "承認済み",
+    "PendingEmployeeSubmit": "従業員提出待ち",
+    "PendingSupervisorReview": "上司レビュー待ち",
+    "PendingManagerApproval": "調整待ち",
+    "Published": "公開済み",
+    "Appealed": "異議申請中",
+    "Pending": "保留中",
+    "Resolved": "解決済み"
+  },
+  "roles": {
+    "Admin": "システム管理者",
+    "RegionalHR": "地域HR",
+    "Manager": "マネージャー",
+    "Supervisor": "スーパーバイザー",
+    "Employee": "従業員"
+  },
+  "language": {
+    "label": "言語",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "cancel": "キャンセル"
+  },
+  "login": {
+    "title": "PMS",
+    "subtitle": "Unleash Innovation — パフォーマンス管理",
+    "signIn": "サインイン",
+    "employeeId": "社員ID",
+    "employeeIdPlaceholder": "例: emp001",
+    "password": "パスワード",
+    "signingIn": "サインイン中...",
+    "invalidCredentials": "認証情報が無効です。もう一度お試しください。"
+  },
+  "cycleStepper": {
+    "companyGoal":        "会社/部門目標の公表",
+    "companyGoalDesc":    "従業員が目標を設定するための方向性を提供",
+    "goalSetting":        "目標設定",
+    "goalSettingDesc":    "従業員がSMART目標を設定",
+    "inProgress":         "進行中",
+    "inProgressDesc":     "目標追跡中",
+    "reviewStart":        "レビュー期間開始",
+    "employeeReview":     "従業員レビュー",
+    "employeeReviewDesc": "パフォーマンスフォームを記入",
+    "supervisorReview":     "上司レビュー",
+    "supervisorReviewDesc": "上司が評価を実施",
+    "calibration":        "調整・発布",
+    "calibrationDesc":    "マネージャーが結果を調整・発布",
+    "completed":          "完了",
+    "completedDesc":      "結果が発布されました"
+  },
+  "auditLog": {
+    "pageTitle": "監査ログ",
+    "pageDesc": "すべてのシステム操作とデータアクセスの改ざん不可能な記録。",
+    "colTime": "日時",
+    "colUser": "ユーザー",
+    "colAction": "操作",
+    "colResource": "リソース",
+    "colResourceId": "リソースID",
+    "colIpAddress": "IPアドレス",
+    "empty": "監査記録が見つかりません。"
+  },
+  "cycles": {
+    "pageTitle": "パフォーマンスサイクル",
+    "pageDesc": "全地域のパフォーマンス評価サイクルを管理します。",
+    "addCycle": "+ 新規サイクル",
+    "emptyTitle": "パフォーマンスサイクルなし",
+    "emptyDescAdmin": "最初のパフォーマンスサイクルを作成してください。",
+    "emptyDescUser": "この地域にはまだサイクルがありません。HRに連絡してください。",
+    "advance": {
+      "GoalSetting": "進行中へ移行",
+      "InProgress": "従業員レビュー開始",
+      "EmployeeReview": "上司レビュー開始",
+      "SupervisorReview": "調整・発布開始",
+      "Calibration": "サイクル完了"
+    },
+    "confirmAdvanceTitle": "次のフェーズへ進みますか？",
+    "confirmAdvanceDesc": "【{name}】は{nextLabel}へ進みます。この操作は元に戻せません。",
+    "confirmAdvanceLabel": "確認して進む",
+    "pendingManagersWarning": "{count}名のマネージャーがカスタム質問を追加していません：",
+    "pendingManagersNote": "確認後、従業員は現在の質問で自己評価を開始します。",
+    "allManagersDone": "✓ すべてのマネージャーがカスタム質問を完了しました。",
+    "modal": {
+      "newTitle": "新規パフォーマンスサイクル",
+      "editTitle": "サイクルを編集",
+      "cycleName": "サイクル名",
+      "cycleNamePlaceholder": "例：2025年度パフォーマンス評価",
+      "cycleType": "タイプ",
+      "regions": "適用地域",
+      "autoRegion": "（あなたの地域が自動的に適用されます）",
+      "goalPeriod": "目標設定期間",
+      "reviewPeriod": "評価期間",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "creating": "作成中...",
+      "createBtn": "サイクル作成",
+      "saving": "保存中...",
+      "saveBtn": "変更を保存",
+      "errorRegion": "少なくとも1つの地域を選択してください"
+    },
+    "card": {
+      "edit": "編集",
+      "reviewProcess": "評価プロセス",
+      "goalRange": "目標設定：{start} – {end}",
+      "reviewRange": "評価期間：{start} – {end}"
+    },
+    "templateTrack": {
+      "title": "テンプレート準備",
+      "goCreate": "作成へ →",
+      "node0Label": "HRがテンプレート作成",
+      "node0Desc": "評価フォームの内容を確保",
+      "node1Label": "テンプレート公開済み",
+      "node1Desc": "従業員・上司がフォームにアクセス可能",
+      "node2Label": "マネージャーが質問追加",
+      "node2Desc": "部門マネージャーがカスタム質問を追加",
+      "reviewStart": "評価期間開始",
+      "warnNoTemplate": "テンプレートが未作成です。進める前にテンプレートページで作成・公開してください。",
+      "warnNotPublished": "テンプレートがまだ公開されていません。進める前に公開してください。",
+      "warnNoCustomQ": "マネージャーがカスタム質問を追加していません。各部門のマネージャーが完了しているか確認してください。"
+    }
+  },
+  "dashboard": {
+    "pageTitle": "ダッシュボード",
+    "loading": "読み込み中...",
+    "loadingCycles": "サイクルデータを読み込み中...",
+    "viewAll": "すべて表示 →",
+    "goTo": "進む →",
+    "fillNow": "今すぐ記入 →",
+    "manageTemplates": "テンプレート管理 →",
+    "actionsRequired": "あなたの対応が必要",
+    "flowGuide": {
+      "toggle": "年次パフォーマンスフロー説明（クリックして展開）",
+      "stepsEmployee": [
+        "【目標設定】HRがサイクルを作成後、個人のSMART目標を記入し上司に承認申請",
+        "【従業員レビュー】HRが期間を進めると、システムがパフォーマンスフォームを作成。自己評価を記入",
+        "提出後は直属の上司が初期レビューを実施",
+        "【上司レビュー → 調整・発布】マネージャーが調整して発布。最終評価を確認可能",
+        "結果に異議がある場合は申請を提出できます"
+      ],
+      "stepsSupervisor": [
+        "【目標設定】従業員が目標を記入後、あなたが部下の目標を承認",
+        "【上司レビュー】従業員の自己評価提出後、あなたが初期レビューを実施",
+        "自己評価を読み、フィードバックを記入し、評価を選択（O/S+/S/S-/I/U）",
+        "提出後は調整フェーズに入り、マネージャーが調整・発布を決定"
+      ],
+      "stepsManager": [
+        "【目標設定 / 進行中】公開済みテンプレートに部門のカスタム問題を追加可能",
+        "【調整・発布】従業員自己評価と上司レビュー完了後、調整フェーズに入る",
+        "全従業員の評価を比較し、必要に応じてランキングを調整（「チームレビュー」→「調整に入る」）",
+        "確認後「すべて発布」をクリックし、全結果を一括公開"
+      ],
+      "stepsRegionalHR": [
+        "パフォーマンスサイクルを作成：地域・タイプ（Annual/Quarterly/Probation）・日程を設定",
+        "フォームテンプレートを作成：適用職等・職名を設定。マネージャーはカスタム問題を追加可能",
+        "テンプレートをPublish後、サイクルを「従業員レビュー」に進める",
+        "進める前にシステムが公開済みテンプレートを確認し、全従業員のフォームを自動作成",
+        "順次進める：上司レビュー → 調整・発布 → 完了"
+      ],
+      "stepsAdmin": [
+        "全地域のパフォーマンスサイクルを管理（目標設定フェーズ中はサイクル情報を編集可能）",
+        "各地域のレビュー進捗を監視し、テンプレート発布・サイクル進行タイミングを確認",
+        "監査ログ（Audit Log）を確認してシステム操作記録を検証"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "年度評価",
+      "Quarterly": "四半期評価",
+      "Probation": "試用期評価"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "目標設定中 — 従業員がSMART目標を記入中；HRがレビューテンプレートを準備中",
+      "InProgress": "進行中 — 目標追跡中；マネージャーはカスタム問題を追加可能",
+      "EmployeeReview": "従業員レビュー期間 — 全従業員がパフォーマンス自己評価フォームを記入中",
+      "SupervisorReview": "上司レビュー期間 — 上司が自己評価を読み、評価を記入中",
+      "Calibration": "調整・発布期間 — マネージャーが評価を調整中；確認後に一括発布",
+      "Completed": "完了 — 結果が発布されました"
+    },
+    "timeline": {
+      "yearTitle": "{year}年 サイクルタイムライン",
+      "subtitle": "スケジュールはHR / Adminがサイクル作成時に設定",
+      "emptyTitle": "年次サイクルタイムライン",
+      "emptyDesc": "パフォーマンスサイクルデータがありません。",
+      "emptyDescSub": "HR / Adminがサイクルを作成するとここに表示されます。",
+      "goalSettingBar": "目標設定",
+      "reviewBar": "レビュー期間",
+      "todayMarker": "今日",
+      "legendGoal": "目標設定",
+      "legendReview": "レビュー期間",
+      "goalRange": "目標設定：{start} – {end}",
+      "reviewRange": "レビュー期間：{start} – {end}"
+    },
+    "activeCycles": { "title": "進行中のサイクル" },
+    "goals": {
+      "title": "マイゴール",
+      "empty": "目標がまだ設定されていません",
+      "setGoal": "目標を設定",
+      "draft": "下書き",
+      "pendingApproval": "承認待ち",
+      "approved": "承認済み",
+      "completed": "完了"
+    },
+    "myReviews": {
+      "title": "マイレビュー",
+      "pendingTitle": "パフォーマンスレビュー提出待ち",
+      "empty": "レビュー記録がありません。"
+    },
+    "teamReviews": {
+      "title": "チームレビュー概要",
+      "pendingEmployee": "従業員提出待ち",
+      "pendingSupervisor": "上司レビュー待ち",
+      "pendingCalibration": "調整待ち",
+      "actionLabelManager": "調整・発布待ち",
+      "actionLabelOther": "初期レビュー待ち",
+      "actionCount": "{count}件の従業員レビューが{action}",
+      "actionDesc": "チームレビューページで対応",
+      "empty": "チームレビュー記録がありません。",
+      "emptyDesc": "HRがサイクルを「進行中」に進めると、システムが全従業員のフォームを自動作成します。"
+    },
+    "gradeChart": {
+      "title": "グローバル評価分布",
+      "titleTeam": "評価分布",
+      "empty": "レビューデータがありません。",
+      "summary": "合計{total}件のレビュー・評価済み{graded}件",
+      "summaryPending": "・未評価{pending}件"
+    },
+    "templates": {
+      "title": "フォームテンプレート",
+      "draft": "下書き",
+      "published": "公開済み",
+      "draftWarning": "{count}件のテンプレート下書きが未公開",
+      "draftWarningDesc": "サイクルを進める際に自動適用されるには、テンプレートを事前にPublishする必要があります"
+    }
+  }
+}

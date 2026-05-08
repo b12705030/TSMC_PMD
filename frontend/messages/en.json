@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "myGoals": "My Goals",
+    "myReviews": "My Reviews",
+    "myReviewsSub": "My performance forms",
+    "teamReviews": "Team Reviews",
+    "teamReviewsSub": "Direct reports review status",
+    "myTeam": "My Team",
+    "cycles": "Cycles",
+    "templates": "Templates",
+    "appeals": "Appeals",
+    "auditLog": "Audit Log"
+  },
+  "sidebar": {
+    "logout": "Logout",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar"
+  },
+  "status": {
+    "GoalSetting": "Goal Setting",
+    "InProgress": "In Progress",
+    "EmployeeReview": "Employee Review",
+    "SupervisorReview": "Supervisor Review",
+    "Calibration": "Calibration",
+    "Completed": "Completed",
+    "Draft": "Draft",
+    "PendingApproval": "Pending Approval",
+    "Approved": "Approved",
+    "PendingEmployeeSubmit": "Pending Employee Submit",
+    "PendingSupervisorReview": "Pending Supervisor Review",
+    "PendingManagerApproval": "Pending Calibration",
+    "Published": "Published",
+    "Appealed": "Appealed",
+    "Pending": "Pending",
+    "Resolved": "Resolved"
+  },
+  "roles": {
+    "Admin": "System Admin",
+    "RegionalHR": "Regional HR",
+    "Manager": "Manager",
+    "Supervisor": "Supervisor",
+    "Employee": "Employee"
+  },
+  "language": {
+    "label": "Language",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel"
+  },
+  "login": {
+    "title": "PMS",
+    "subtitle": "Unleash Innovation — Performance Management",
+    "signIn": "Sign in",
+    "employeeId": "Employee ID",
+    "employeeIdPlaceholder": "e.g. emp001",
+    "password": "Password",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid credentials. Please try again."
+  },
+  "cycleStepper": {
+    "companyGoal":        "Company/Dept. Goals Published",
+    "companyGoalDesc":    "Provides direction for employees to set their goals",
+    "goalSetting":        "Goal Setting",
+    "goalSettingDesc":    "Employees set their SMART goals",
+    "inProgress":         "In Progress",
+    "inProgressDesc":     "Goal tracking underway",
+    "reviewStart":        "Review Period Begins",
+    "employeeReview":     "Employee Review",
+    "employeeReviewDesc": "Complete performance form",
+    "supervisorReview":     "Supervisor Review",
+    "supervisorReviewDesc": "Supervisor conducts evaluation",
+    "calibration":        "Calibration",
+    "calibrationDesc":    "Manager adjusts and publishes results",
+    "completed":          "Completed",
+    "completedDesc":      "Results published"
+  },
+  "auditLog": {
+    "pageTitle": "Audit Log",
+    "pageDesc": "An immutable record of all system operations and data access.",
+    "colTime": "Time",
+    "colUser": "User",
+    "colAction": "Action",
+    "colResource": "Resource",
+    "colResourceId": "Resource ID",
+    "colIpAddress": "IP Address",
+    "empty": "No audit records found."
+  },
+  "cycles": {
+    "pageTitle": "Performance Cycles",
+    "pageDesc": "Manage performance review cycles across all regions.",
+    "addCycle": "+ New Cycle",
+    "emptyTitle": "No Performance Cycles",
+    "emptyDescAdmin": "Create your first performance cycle.",
+    "emptyDescUser": "No cycles in your region yet. Contact HR to create one.",
+    "advance": {
+      "GoalSetting": "Start Execution",
+      "InProgress": "Start Employee Reviews",
+      "EmployeeReview": "Start Supervisor Reviews",
+      "SupervisorReview": "Start Calibration",
+      "Calibration": "Complete Cycle"
+    },
+    "confirmAdvanceTitle": "Confirm Advance to Next Stage?",
+    "confirmAdvanceDesc": "[{name}] will advance to: {nextLabel}. This action cannot be undone.",
+    "confirmAdvanceLabel": "Confirm Advance",
+    "pendingManagersWarning": "{count} manager(s) have not yet added custom questions:",
+    "pendingManagersNote": "After confirming, employees will begin self-reviews with the current questions.",
+    "allManagersDone": "✓ All managers have completed their custom questions.",
+    "modal": {
+      "newTitle": "New Performance Cycle",
+      "editTitle": "Edit Cycle",
+      "cycleName": "Cycle Name",
+      "cycleNamePlaceholder": "e.g. 2025 Annual Performance Review",
+      "cycleType": "Type",
+      "regions": "Applicable Regions",
+      "autoRegion": "(Your region is applied automatically)",
+      "goalPeriod": "Goal Setting Period",
+      "reviewPeriod": "Review Period",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "creating": "Creating...",
+      "createBtn": "Create Cycle",
+      "saving": "Saving...",
+      "saveBtn": "Save Changes",
+      "errorRegion": "Please select at least one region"
+    },
+    "card": {
+      "edit": "Edit",
+      "reviewProcess": "Review Process",
+      "goalRange": "Goals: {start} – {end}",
+      "reviewRange": "Review: {start} – {end}"
+    },
+    "templateTrack": {
+      "title": "Template Preparation",
+      "goCreate": "Go create →",
+      "node0Label": "HR Creates Template",
+      "node0Desc": "Ensures review form content is complete",
+      "node1Label": "Template Published",
+      "node1Desc": "Employees & supervisors can access the form",
+      "node2Label": "Managers Add Questions",
+      "node2Desc": "Department managers add custom questions",
+      "reviewStart": "Review Period Begins",
+      "warnNoTemplate": "No template created. Please go to Templates to create and publish one before advancing.",
+      "warnNotPublished": "Template not yet published. Please publish the template before advancing.",
+      "warnNoCustomQ": "Managers have not added custom questions. Please confirm all department managers have done so."
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Dashboard",
+    "loading": "Loading...",
+    "loadingCycles": "Loading cycle data...",
+    "viewAll": "View All →",
+    "goTo": "Go →",
+    "fillNow": "Fill Now →",
+    "manageTemplates": "Manage Templates →",
+    "actionsRequired": "Action Required",
+    "flowGuide": {
+      "toggle": "Annual Performance Flow Guide (click to expand)",
+      "stepsEmployee": [
+        "[Goal Setting] After HR creates the cycle, fill in your personal SMART goals and submit for manager approval",
+        "[Employee Review] When HR advances the cycle, the system generates your performance form — complete your self-review",
+        "After submitting, your direct supervisor will conduct the initial review",
+        "[Supervisor Review → Calibration] After calibration, the manager publishes results — you can view your final rating",
+        "If you disagree with the result, you may submit an appeal"
+      ],
+      "stepsSupervisor": [
+        "[Goal Setting] After employees fill in their goals, approve your direct reports' goals",
+        "[Supervisor Review] After employees submit their self-review, conduct the initial review",
+        "Read the self-review, write feedback, and select a rating (O/S+/S/S-/I/U)",
+        "After you submit, the manager enters the calibration phase to adjust and publish"
+      ],
+      "stepsManager": [
+        "[Goal Setting / In Progress] Add custom questions to the department's published template",
+        "[Calibration] After employee self-reviews and supervisor reviews are complete, enter the calibration phase",
+        "Compare all employee ratings, adjust rankings as needed (go to 'Team Reviews' → 'Enter Calibration')",
+        "After confirming, click 'Publish All' to release all results at once"
+      ],
+      "stepsRegionalHR": [
+        "Create performance cycles: set region, type (Annual/Quarterly/Probation), and date ranges",
+        "Create form templates: set applicable grades and titles; Managers can add custom questions",
+        "Publish the template, then advance the cycle to 'Employee Review'",
+        "The system checks for published templates and auto-creates review forms for all employees",
+        "Continue advancing: Supervisor Review → Calibration → Completed"
+      ],
+      "stepsAdmin": [
+        "Manage performance cycles for all regions (editable during the goal-setting phase)",
+        "Monitor review progress across regions; confirm template publishing and cycle advancement",
+        "Review the Audit Log to verify system operation records"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "Annual Review",
+      "Quarterly": "Quarterly Review",
+      "Probation": "Probation Review"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "Goal Setting — Employees are filling in SMART goals; HR is preparing review templates",
+      "InProgress": "In Progress — Goal tracking underway; Managers may add custom questions",
+      "EmployeeReview": "Employee Review — All employees are completing their self-review forms",
+      "SupervisorReview": "Supervisor Review — Supervisors are reading self-reviews and writing evaluations",
+      "Calibration": "Calibration — Managers are adjusting ratings; results will be published all at once",
+      "Completed": "Completed — Results have been published"
+    },
+    "timeline": {
+      "yearTitle": "{year} Cycle Timeline",
+      "subtitle": "Schedule set when HR / Admin creates cycles",
+      "emptyTitle": "Annual Cycle Timeline",
+      "emptyDesc": "No performance cycles found.",
+      "emptyDescSub": "Cycles will appear here once HR / Admin creates them.",
+      "goalSettingBar": "Goal Setting",
+      "reviewBar": "Review Period",
+      "todayMarker": "Today",
+      "legendGoal": "Goal Setting",
+      "legendReview": "Review Period",
+      "goalRange": "Goal Setting: {start} – {end}",
+      "reviewRange": "Review Period: {start} – {end}"
+    },
+    "activeCycles": { "title": "Active Cycles" },
+    "goals": {
+      "title": "My Goals",
+      "empty": "No goals set yet",
+      "setGoal": "Set Goals",
+      "draft": "Draft",
+      "pendingApproval": "Pending Approval",
+      "approved": "Approved",
+      "completed": "Completed"
+    },
+    "myReviews": {
+      "title": "My Reviews",
+      "pendingTitle": "Performance Review Pending",
+      "empty": "No review records found."
+    },
+    "teamReviews": {
+      "title": "Team Review Overview",
+      "pendingEmployee": "Pending Employee",
+      "pendingSupervisor": "Pending Supervisor",
+      "pendingCalibration": "Pending Calibration",
+      "actionLabelManager": "Pending Calibration / Publish",
+      "actionLabelOther": "Pending Initial Review",
+      "actionCount": "{count} employee review(s) {action}",
+      "actionDesc": "Go to the Team Reviews page to handle",
+      "empty": "No team review records found.",
+      "emptyDesc": "Once HR advances the cycle to 'In Progress', the system will automatically create review forms for all employees."
+    },
+    "gradeChart": {
+      "title": "Global Grade Distribution",
+      "titleTeam": "Grade Distribution",
+      "empty": "No review data yet.",
+      "summary": "{total} reviews total · {graded} rated",
+      "summaryPending": " · {pending} pending"
+    },
+    "templates": {
+      "title": "Form Templates",
+      "draft": "Draft",
+      "published": "Published",
+      "draftWarning": "{count} template draft(s) not yet published",
+      "draftWarningDesc": "Templates must be published before they are automatically applied when advancing the cycle"
+    }
+  }
+}

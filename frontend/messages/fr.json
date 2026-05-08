@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "myGoals": "Mes Objectifs",
+    "myReviews": "Mes Évaluations",
+    "myReviewsSub": "Mes formulaires de performance",
+    "teamReviews": "Évaluations d'équipe",
+    "teamReviewsSub": "Statut des évaluations des subordonnés",
+    "myTeam": "Mon Équipe",
+    "cycles": "Cycles",
+    "templates": "Modèles",
+    "appeals": "Appels",
+    "auditLog": "Journal d'audit"
+  },
+  "sidebar": {
+    "logout": "Déconnexion",
+    "expand": "Développer la barre latérale",
+    "collapse": "Réduire la barre latérale"
+  },
+  "status": {
+    "GoalSetting": "Définition des objectifs",
+    "InProgress": "En cours",
+    "EmployeeReview": "Évaluation employé",
+    "SupervisorReview": "Évaluation superviseur",
+    "Calibration": "Calibration",
+    "Completed": "Terminé",
+    "Draft": "Brouillon",
+    "PendingApproval": "En attente d'approbation",
+    "Approved": "Approuvé",
+    "PendingEmployeeSubmit": "En attente soumission employé",
+    "PendingSupervisorReview": "En attente évaluation superviseur",
+    "PendingManagerApproval": "Calibration en attente",
+    "Published": "Publié",
+    "Appealed": "En appel",
+    "Pending": "En attente",
+    "Resolved": "Résolu"
+  },
+  "roles": {
+    "Admin": "Administrateur",
+    "RegionalHR": "RH Régional",
+    "Manager": "Manager",
+    "Supervisor": "Superviseur",
+    "Employee": "Employé"
+  },
+  "language": {
+    "label": "Langue",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "cancel": "Annuler"
+  },
+  "login": {
+    "title": "PMS",
+    "subtitle": "Unleash Innovation — Gestion de la performance",
+    "signIn": "Se connecter",
+    "employeeId": "Identifiant employé",
+    "employeeIdPlaceholder": "ex. emp001",
+    "password": "Mot de passe",
+    "signingIn": "Connexion en cours...",
+    "invalidCredentials": "Identifiants invalides. Veuillez réessayer."
+  },
+  "cycleStepper": {
+    "companyGoal":        "Objectifs entreprise/dép. publiés",
+    "companyGoalDesc":    "Fournit une direction pour la définition des objectifs",
+    "goalSetting":        "Définition des objectifs",
+    "goalSettingDesc":    "Les employés définissent leurs objectifs SMART",
+    "inProgress":         "En cours",
+    "inProgressDesc":     "Suivi des objectifs actif",
+    "reviewStart":        "Début de la période d'évaluation",
+    "employeeReview":     "Évaluation employé",
+    "employeeReviewDesc": "Remplir le formulaire de performance",
+    "supervisorReview":     "Évaluation superviseur",
+    "supervisorReviewDesc": "Le superviseur conduit l'évaluation",
+    "calibration":        "Calibration",
+    "calibrationDesc":    "Le manager ajuste et publie les résultats",
+    "completed":          "Terminé",
+    "completedDesc":      "Résultats publiés"
+  },
+  "auditLog": {
+    "pageTitle": "Journal d'audit",
+    "pageDesc": "Un enregistrement immuable de toutes les opérations système et accès aux données.",
+    "colTime": "Heure",
+    "colUser": "Utilisateur",
+    "colAction": "Action",
+    "colResource": "Ressource",
+    "colResourceId": "ID ressource",
+    "colIpAddress": "Adresse IP",
+    "empty": "Aucun enregistrement d'audit trouvé."
+  },
+  "cycles": {
+    "pageTitle": "Cycles de performance",
+    "pageDesc": "Gérez les cycles d'évaluation de toutes les régions.",
+    "addCycle": "+ Nouveau cycle",
+    "emptyTitle": "Aucun cycle de performance",
+    "emptyDescAdmin": "Créez votre premier cycle de performance.",
+    "emptyDescUser": "Aucun cycle dans votre région pour l'instant. Contactez les RH.",
+    "advance": {
+      "GoalSetting": "Démarrer l'exécution",
+      "InProgress": "Démarrer les évaluations employés",
+      "EmployeeReview": "Démarrer les évaluations superviseurs",
+      "SupervisorReview": "Démarrer la calibration",
+      "Calibration": "Terminer le cycle"
+    },
+    "confirmAdvanceTitle": "Confirmer le passage à la prochaine étape ?",
+    "confirmAdvanceDesc": "[{name}] sera avancé vers : {nextLabel}. Cette action est irréversible.",
+    "confirmAdvanceLabel": "Confirmer",
+    "pendingManagersWarning": "{count} manager(s) n'ont pas encore ajouté de questions personnalisées :",
+    "pendingManagersNote": "Après confirmation, les employés commenceront leur auto-évaluation avec les questions actuelles.",
+    "allManagersDone": "✓ Tous les managers ont complété leurs questions personnalisées.",
+    "modal": {
+      "newTitle": "Nouveau cycle de performance",
+      "editTitle": "Modifier le cycle",
+      "cycleName": "Nom du cycle",
+      "cycleNamePlaceholder": "ex. Évaluation annuelle 2025",
+      "cycleType": "Type",
+      "regions": "Régions applicables",
+      "autoRegion": "(Votre région est appliquée automatiquement)",
+      "goalPeriod": "Période de définition des objectifs",
+      "reviewPeriod": "Période d'évaluation",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "creating": "Création en cours...",
+      "createBtn": "Créer le cycle",
+      "saving": "Enregistrement...",
+      "saveBtn": "Enregistrer les modifications",
+      "errorRegion": "Veuillez sélectionner au moins une région"
+    },
+    "card": {
+      "edit": "Modifier",
+      "reviewProcess": "Processus d'évaluation",
+      "goalRange": "Objectifs : {start} – {end}",
+      "reviewRange": "Évaluation : {start} – {end}"
+    },
+    "templateTrack": {
+      "title": "Préparation des modèles",
+      "goCreate": "Créer →",
+      "node0Label": "RH crée le modèle",
+      "node0Desc": "Assure le contenu complet du formulaire",
+      "node1Label": "Modèle publié",
+      "node1Desc": "Employés et superviseurs peuvent accéder au formulaire",
+      "node2Label": "Managers ajoutent des questions",
+      "node2Desc": "Les managers ajoutent des questions personnalisées",
+      "reviewStart": "Début de la période d'évaluation",
+      "warnNoTemplate": "Aucun modèle créé. Allez dans Modèles pour en créer un avant d'avancer.",
+      "warnNotPublished": "Modèle pas encore publié. Veuillez le publier avant d'avancer.",
+      "warnNoCustomQ": "Les managers n'ont pas ajouté de questions personnalisées. Vérifiez que tous les managers ont terminé."
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Tableau de bord",
+    "loading": "Chargement...",
+    "loadingCycles": "Chargement des données de cycle...",
+    "viewAll": "Voir tout →",
+    "goTo": "Aller →",
+    "fillNow": "Remplir maintenant →",
+    "manageTemplates": "Gérer les modèles →",
+    "actionsRequired": "Action requise",
+    "flowGuide": {
+      "toggle": "Guide du processus de performance annuel (cliquer pour développer)",
+      "stepsEmployee": [
+        "[Définition des objectifs] Renseignez vos objectifs SMART personnels et soumettez-les pour approbation",
+        "[Évaluation employé] Le système génère votre formulaire d'auto-évaluation — complétez-le",
+        "Après soumission, votre supérieur direct effectuera l'évaluation initiale",
+        "[Évaluation superviseur → Calibration] Après calibration, consultez votre note finale",
+        "En cas de désaccord, vous pouvez soumettre un appel"
+      ],
+      "stepsSupervisor": [
+        "[Définition des objectifs] Approuvez les objectifs de vos subordonnés directs",
+        "[Évaluation superviseur] Effectuez l'évaluation initiale après la soumission des auto-évaluations",
+        "Lisez l'auto-évaluation, rédigez vos commentaires et sélectionnez une note (O/S+/S/S-/I/U)",
+        "Après votre soumission, la phase de calibration commence"
+      ],
+      "stepsManager": [
+        "[Définition des objectifs / En cours] Ajoutez des questions personnalisées au modèle du département",
+        "[Calibration] Entrez en phase de calibration après les auto-évaluations et évaluations superviseur",
+        "Comparez les notes de tous les employés, ajustez les classements si nécessaire",
+        "Après confirmation, cliquez sur 'Tout publier' pour diffuser les résultats"
+      ],
+      "stepsRegionalHR": [
+        "Créez des cycles de performance : définissez la région, le type et les plages de dates",
+        "Créez des modèles de formulaires ; les managers peuvent ajouter des questions personnalisées",
+        "Publiez le modèle, puis faites avancer le cycle vers 'Évaluation employé'",
+        "Le système vérifie les modèles publiés et crée automatiquement les formulaires",
+        "Continuez : Évaluation superviseur → Calibration → Terminé"
+      ],
+      "stepsAdmin": [
+        "Gérez les cycles de performance pour toutes les régions",
+        "Surveillez l'avancement des évaluations ; confirmez la publication des modèles",
+        "Consultez le journal d'audit pour vérifier les opérations système"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "Évaluation annuelle",
+      "Quarterly": "Évaluation trimestrielle",
+      "Probation": "Évaluation de période d'essai"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "Définition des objectifs — Les employés saisissent leurs objectifs ; les RH préparent les modèles",
+      "InProgress": "En cours — Suivi des objectifs actif ; les managers peuvent ajouter des questions",
+      "EmployeeReview": "Évaluation employé — Tous les employés remplissent leur formulaire d'auto-évaluation",
+      "SupervisorReview": "Évaluation superviseur — Les superviseurs lisent les auto-évaluations et rédigent leurs évaluations",
+      "Calibration": "Calibration — Les managers ajustent les notes ; les résultats seront publiés ensemble",
+      "Completed": "Terminé — Les résultats ont été publiés"
+    },
+    "timeline": {
+      "yearTitle": "Calendrier des cycles {year}",
+      "subtitle": "Planning défini lors de la création des cycles par les RH / Admin",
+      "emptyTitle": "Calendrier des cycles annuels",
+      "emptyDesc": "Aucun cycle de performance trouvé.",
+      "emptyDescSub": "Les cycles apparaîtront ici une fois créés par les RH / Admin.",
+      "goalSettingBar": "Définition des objectifs",
+      "reviewBar": "Période d'évaluation",
+      "todayMarker": "Aujourd'hui",
+      "legendGoal": "Définition des objectifs",
+      "legendReview": "Période d'évaluation",
+      "goalRange": "Objectifs : {start} – {end}",
+      "reviewRange": "Évaluation : {start} – {end}"
+    },
+    "activeCycles": { "title": "Cycles actifs" },
+    "goals": {
+      "title": "Mes Objectifs",
+      "empty": "Aucun objectif défini",
+      "setGoal": "Définir des objectifs",
+      "draft": "Brouillon",
+      "pendingApproval": "En attente d'approbation",
+      "approved": "Approuvé",
+      "completed": "Terminé"
+    },
+    "myReviews": {
+      "title": "Mes Évaluations",
+      "pendingTitle": "Évaluation de performance en attente",
+      "empty": "Aucun enregistrement d'évaluation."
+    },
+    "teamReviews": {
+      "title": "Vue d'ensemble des évaluations d'équipe",
+      "pendingEmployee": "En attente employé",
+      "pendingSupervisor": "En attente superviseur",
+      "pendingCalibration": "Calibration en attente",
+      "actionLabelManager": "Calibration / Publication en attente",
+      "actionLabelOther": "Évaluation initiale en attente",
+      "actionCount": "{count} évaluation(s) d'employé {action}",
+      "actionDesc": "Accéder à la page d'évaluations d'équipe",
+      "empty": "Aucun enregistrement d'évaluation d'équipe.",
+      "emptyDesc": "Une fois le cycle avancé par les RH, le système crée automatiquement les formulaires pour tous les employés."
+    },
+    "gradeChart": {
+      "title": "Distribution globale des notes",
+      "titleTeam": "Distribution des notes",
+      "empty": "Aucune donnée d'évaluation.",
+      "summary": "{total} évaluations au total · {graded} notées",
+      "summaryPending": " · {pending} en attente"
+    },
+    "templates": {
+      "title": "Modèles de formulaires",
+      "draft": "Brouillon",
+      "published": "Publié",
+      "draftWarning": "{count} brouillon(s) de modèle non publié(s)",
+      "draftWarningDesc": "Les modèles doivent être publiés avant d'être appliqués automatiquement"
+    }
+  }
+}

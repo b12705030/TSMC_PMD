@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "儀表板",
+    "myGoals": "我的目標",
+    "myReviews": "我的評核",
+    "myReviewsSub": "自己的績效表單",
+    "teamReviews": "團隊評核",
+    "teamReviewsSub": "下屬的評核狀況",
+    "myTeam": "我的團隊",
+    "cycles": "週期管理",
+    "templates": "評核模板",
+    "appeals": "申訴管理",
+    "auditLog": "稽核日誌"
+  },
+  "sidebar": {
+    "logout": "登出",
+    "expand": "展開側欄",
+    "collapse": "收合側欄"
+  },
+  "status": {
+    "GoalSetting": "目標設定",
+    "InProgress": "執行中",
+    "EmployeeReview": "員工自評",
+    "SupervisorReview": "主管初評",
+    "Calibration": "校準發布",
+    "Completed": "已完成",
+    "Draft": "草稿",
+    "PendingApproval": "待審核",
+    "Approved": "已核准",
+    "PendingEmployeeSubmit": "待員工自評",
+    "PendingSupervisorReview": "待主管初評",
+    "PendingManagerApproval": "待校準",
+    "Published": "已發布",
+    "Appealed": "申訴中",
+    "Pending": "待處理",
+    "Resolved": "已解決"
+  },
+  "roles": {
+    "Admin": "系統管理員",
+    "RegionalHR": "區域人資",
+    "Manager": "經理",
+    "Supervisor": "直屬主管",
+    "Employee": "員工"
+  },
+  "language": {
+    "label": "語言",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "載入中...",
+    "cancel": "取消"
+  },
+  "login": {
+    "title": "績效管理系統",
+    "subtitle": "Unleash Innovation — 績效管理",
+    "signIn": "登入",
+    "employeeId": "員工編號",
+    "employeeIdPlaceholder": "例如 emp001",
+    "password": "密碼",
+    "signingIn": "登入中...",
+    "invalidCredentials": "帳號或密碼錯誤，請再試一次。"
+  },
+  "cycleStepper": {
+    "companyGoal":        "公司/部門目標公布",
+    "companyGoalDesc":    "提供員工設定目標的方向",
+    "goalSetting":        "目標設定",
+    "goalSettingDesc":    "員工設定 SMART 目標",
+    "inProgress":         "執行中",
+    "inProgressDesc":     "目標追蹤進行中",
+    "reviewStart":        "績效評核期開始",
+    "employeeReview":     "員工自評",
+    "employeeReviewDesc": "填寫績效表單",
+    "supervisorReview":     "主管初評",
+    "supervisorReviewDesc": "主管進行評核",
+    "calibration":        "校準發布",
+    "calibrationDesc":    "經理調整並發布結果",
+    "completed":          "已完成",
+    "completedDesc":      "結果已發布"
+  },
+  "auditLog": {
+    "pageTitle": "稽核日誌",
+    "pageDesc": "所有系統操作與資料存取的不可竄改紀錄。",
+    "colTime": "時間",
+    "colUser": "使用者",
+    "colAction": "操作",
+    "colResource": "資源",
+    "colResourceId": "資源編號",
+    "colIpAddress": "IP 位址",
+    "empty": "找不到稽核紀錄。"
+  },
+  "cycles": {
+    "pageTitle": "績效週期管理",
+    "pageDesc": "管理各地區的績效考核週期。",
+    "addCycle": "+ 新增週期",
+    "emptyTitle": "尚無績效週期",
+    "emptyDescAdmin": "建立第一個績效考核週期。",
+    "emptyDescUser": "目前此地區尚無績效週期，請聯繫 HR 建立。",
+    "advance": {
+      "GoalSetting": "進入執行中",
+      "InProgress": "開始員工自評",
+      "EmployeeReview": "開始主管初評",
+      "SupervisorReview": "開始校準發布",
+      "Calibration": "完成週期"
+    },
+    "confirmAdvanceTitle": "確認推進至下一階段？",
+    "confirmAdvanceDesc": "【{name}】將推進至：{nextLabel}。此操作無法復原。",
+    "confirmAdvanceLabel": "確認推進",
+    "pendingManagersWarning": "以下 {count} 位經理尚未補充自訂問卷：",
+    "pendingManagersNote": "確認推進後，員工將以現有問卷開始自評。",
+    "allManagersDone": "✓ 所有經理均已完成問卷補充。",
+    "modal": {
+      "newTitle": "新增績效週期",
+      "editTitle": "編輯週期",
+      "cycleName": "週期名稱",
+      "cycleNamePlaceholder": "例：2025 年度績效考核",
+      "cycleType": "類型",
+      "regions": "適用地區",
+      "autoRegion": "（自動套用你的 Region）",
+      "goalPeriod": "目標設定期間",
+      "reviewPeriod": "評核期間",
+      "startDate": "開始日期",
+      "endDate": "結束日期",
+      "creating": "建立中...",
+      "createBtn": "建立週期",
+      "saving": "儲存中...",
+      "saveBtn": "儲存變更",
+      "errorRegion": "請至少選擇一個 Region"
+    },
+    "card": {
+      "edit": "編輯",
+      "reviewProcess": "評核流程",
+      "goalRange": "目標設定：{start} – {end}",
+      "reviewRange": "評核期間：{start} – {end}"
+    },
+    "templateTrack": {
+      "title": "模板準備",
+      "goCreate": "前往建立 →",
+      "node0Label": "HR 建立模板",
+      "node0Desc": "確保評核表單內容完整",
+      "node1Label": "模板已發布",
+      "node1Desc": "員工與主管可存取表單",
+      "node2Label": "經理補充問卷",
+      "node2Desc": "各部門經理新增自訂問題",
+      "reviewStart": "績效評核期開始",
+      "warnNoTemplate": "尚未建立模板，推進前請先至「評核模板」建立並發布",
+      "warnNotPublished": "模板尚未發布，推進前請先發布模板",
+      "warnNoCustomQ": "經理尚未補充問卷，請確認各部門經理已新增自訂問題"
+    }
+  },
+  "dashboard": {
+    "pageTitle": "儀表板",
+    "loading": "載入中...",
+    "loadingCycles": "載入週期資料中...",
+    "viewAll": "查看全部 →",
+    "goTo": "前往 →",
+    "fillNow": "立即填寫 →",
+    "manageTemplates": "管理模板 →",
+    "actionsRequired": "需要您的操作",
+    "flowGuide": {
+      "toggle": "年度績效流程說明（點擊展開）",
+      "stepsEmployee": [
+        "【目標設定】HR 建立週期後，填寫個人 SMART 目標並提交主管審核",
+        "【員工自評】HR 推進進入員工自評期，系統產生績效表單，你填寫自評",
+        "填完後按「送出」，轉由直屬主管進行初評",
+        "【主管初評 → 校準發布】主管評核完成後，經理校準並發布，你可查看最終等第",
+        "若對結果有異議，可提出申訴"
+      ],
+      "stepsSupervisor": [
+        "【目標設定】員工填寫目標後，你負責核准下屬的目標",
+        "【主管初評】員工自評送出後，輪到你進行初評",
+        "閱讀員工自評、填寫評語、選擇等第（O/S+/S/S-/I/U）",
+        "你送出後，進入校準發布階段，由經理決定是否調整並發布"
+      ],
+      "stepsManager": [
+        "【目標設定 / 執行中】可在已發布模板中為部門新增自訂題目",
+        "【校準發布】員工自評與主管初評完成後，進入你的校準階段",
+        "比較所有員工等第，必要時調整排名（前往「團隊評核」→「進入校準」）",
+        "全部確認後，按「發布全部」，所有結果一次公開給員工"
+      ],
+      "stepsRegionalHR": [
+        "建立績效週期，設定地區、類型（Annual/Quarterly/Probation）與日期範圍",
+        "建立表單模板：設定適用職等與職稱，Manager 可補充自訂題目",
+        "確認模板就緒後 Publish，再將週期推進至「員工自評」",
+        "推進前系統會檢查是否有已發布模板，並自動為所有員工建立評核單",
+        "後續依序推進：主管初評 → 校準發布 → 完成"
+      ],
+      "stepsAdmin": [
+        "管理所有地區的績效週期（可在目標設定階段編輯週期資訊）",
+        "監控各地區評核進度，確認模板發布與週期推進時間",
+        "查閱稽核日誌（Audit Log）確認系統操作記錄"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "年度考核",
+      "Quarterly": "季度考核",
+      "Probation": "試用期考核"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "目標設定中 — 員工填寫 SMART 目標，同時 HR 準備評核模板",
+      "InProgress": "執行中 — 目標追蹤進行中，Manager 可補充自訂題目",
+      "EmployeeReview": "員工自評期 — 所有員工填寫績效自評表單",
+      "SupervisorReview": "主管初評期 — 主管閱讀自評、填寫評語與等第",
+      "Calibration": "校準發布期 — 經理調整等第排名，確認後一次發布",
+      "Completed": "已完成 — 結果已發布"
+    },
+    "timeline": {
+      "yearTitle": "{year} 年週期行程",
+      "subtitle": "時程由 HR / Admin 建立週期時設定",
+      "emptyTitle": "全年週期行程",
+      "emptyDesc": "尚無績效週期資料。",
+      "emptyDescSub": "週期由 HR / Admin 建立後將顯示於此。",
+      "goalSettingBar": "目標設定",
+      "reviewBar": "評核期",
+      "todayMarker": "今天",
+      "legendGoal": "目標設定期",
+      "legendReview": "評核期",
+      "goalRange": "目標設定：{start} – {end}",
+      "reviewRange": "評核期：{start} – {end}"
+    },
+    "activeCycles": { "title": "進行中的週期" },
+    "goals": {
+      "title": "我的目標",
+      "empty": "尚未設定任何目標",
+      "setGoal": "設定目標",
+      "draft": "草稿",
+      "pendingApproval": "待審核",
+      "approved": "已核准",
+      "completed": "已完成"
+    },
+    "myReviews": {
+      "title": "我的評核",
+      "pendingTitle": "績效評核待填寫",
+      "empty": "目前沒有評核記錄。"
+    },
+    "teamReviews": {
+      "title": "團隊評核總覽",
+      "pendingEmployee": "待員工填寫",
+      "pendingSupervisor": "待主管初評",
+      "pendingCalibration": "待校準/發布",
+      "actionLabelManager": "待校準 / 發布",
+      "actionLabelOther": "待初評",
+      "actionCount": "{count} 份員工評核{action}",
+      "actionDesc": "前往團隊評核頁面處理",
+      "empty": "目前沒有團隊評核記錄。",
+      "emptyDesc": "HR 將週期推進至「執行中」後，系統會自動為員工建立評核表單。"
+    },
+    "gradeChart": {
+      "title": "全局等第分布",
+      "titleTeam": "等第分布",
+      "empty": "尚無評核資料。",
+      "summary": "共 {total} 份評核・已評等第 {graded} 份",
+      "summaryPending": "・尚待 {pending} 份"
+    },
+    "templates": {
+      "title": "表單模板",
+      "draft": "草稿",
+      "published": "已發布",
+      "draftWarning": "{count} 份模板草稿尚未發布",
+      "draftWarningDesc": "模板需要先 Publish 才能在週期推進時自動套用至員工"
+    }
+  }
+}

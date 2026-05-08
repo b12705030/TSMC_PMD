@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "myGoals": "Mis Objetivos",
+    "myReviews": "Mis Evaluaciones",
+    "myReviewsSub": "Mis formularios de desempeño",
+    "teamReviews": "Revisiones del equipo",
+    "teamReviewsSub": "Estado de evaluaciones de subordinados",
+    "myTeam": "Mi Equipo",
+    "cycles": "Ciclos",
+    "templates": "Plantillas",
+    "appeals": "Apelaciones",
+    "auditLog": "Registro de auditoría"
+  },
+  "sidebar": {
+    "logout": "Cerrar sesión",
+    "expand": "Expandir barra lateral",
+    "collapse": "Contraer barra lateral"
+  },
+  "status": {
+    "GoalSetting": "Establecimiento de objetivos",
+    "InProgress": "En progreso",
+    "EmployeeReview": "Revisión del empleado",
+    "SupervisorReview": "Revisión del supervisor",
+    "Calibration": "Calibración",
+    "Completed": "Completado",
+    "Draft": "Borrador",
+    "PendingApproval": "Pendiente de aprobación",
+    "Approved": "Aprobado",
+    "PendingEmployeeSubmit": "Pendiente envío del empleado",
+    "PendingSupervisorReview": "Pendiente revisión del supervisor",
+    "PendingManagerApproval": "Calibración pendiente",
+    "Published": "Publicado",
+    "Appealed": "Apelado",
+    "Pending": "Pendiente",
+    "Resolved": "Resuelto"
+  },
+  "roles": {
+    "Admin": "Administrador",
+    "RegionalHR": "RRHH Regional",
+    "Manager": "Gerente",
+    "Supervisor": "Supervisor",
+    "Employee": "Empleado"
+  },
+  "language": {
+    "label": "Idioma",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "cancel": "Cancelar"
+  },
+  "login": {
+    "title": "PMS",
+    "subtitle": "Unleash Innovation — Gestión del desempeño",
+    "signIn": "Iniciar sesión",
+    "employeeId": "ID de empleado",
+    "employeeIdPlaceholder": "ej. emp001",
+    "password": "Contraseña",
+    "signingIn": "Iniciando sesión...",
+    "invalidCredentials": "Credenciales inválidas. Por favor, inténtelo de nuevo."
+  },
+  "cycleStepper": {
+    "companyGoal":        "Objetivos empresa/dpto. publicados",
+    "companyGoalDesc":    "Proporciona dirección para el establecimiento de objetivos",
+    "goalSetting":        "Establecimiento de objetivos",
+    "goalSettingDesc":    "Los empleados establecen sus objetivos SMART",
+    "inProgress":         "En progreso",
+    "inProgressDesc":     "Seguimiento de objetivos activo",
+    "reviewStart":        "Inicio del período de revisión",
+    "employeeReview":     "Revisión del empleado",
+    "employeeReviewDesc": "Completar formulario de rendimiento",
+    "supervisorReview":     "Revisión del supervisor",
+    "supervisorReviewDesc": "El supervisor conduce la evaluación",
+    "calibration":        "Calibración",
+    "calibrationDesc":    "El manager ajusta y publica resultados",
+    "completed":          "Completado",
+    "completedDesc":      "Resultados publicados"
+  },
+  "auditLog": {
+    "pageTitle": "Registro de auditoría",
+    "pageDesc": "Un registro inmutable de todas las operaciones del sistema y accesos a datos.",
+    "colTime": "Hora",
+    "colUser": "Usuario",
+    "colAction": "Acción",
+    "colResource": "Recurso",
+    "colResourceId": "ID de recurso",
+    "colIpAddress": "Dirección IP",
+    "empty": "No se encontraron registros de auditoría."
+  },
+  "cycles": {
+    "pageTitle": "Ciclos de rendimiento",
+    "pageDesc": "Gestione los ciclos de evaluación de rendimiento en todas las regiones.",
+    "addCycle": "+ Nuevo ciclo",
+    "emptyTitle": "Sin ciclos de rendimiento",
+    "emptyDescAdmin": "Cree su primer ciclo de rendimiento.",
+    "emptyDescUser": "Aún no hay ciclos en su región. Contacte a RRHH para crear uno.",
+    "advance": {
+      "GoalSetting": "Iniciar ejecución",
+      "InProgress": "Iniciar autoevaluaciones",
+      "EmployeeReview": "Iniciar evaluaciones supervisor",
+      "SupervisorReview": "Iniciar calibración",
+      "Calibration": "Completar ciclo"
+    },
+    "confirmAdvanceTitle": "¿Confirmar avance a la siguiente etapa?",
+    "confirmAdvanceDesc": "[{name}] avanzará a: {nextLabel}. Esta acción no se puede deshacer.",
+    "confirmAdvanceLabel": "Confirmar avance",
+    "pendingManagersWarning": "{count} gerente(s) aún no han añadido preguntas personalizadas:",
+    "pendingManagersNote": "Tras confirmar, los empleados comenzarán su autoevaluación con las preguntas actuales.",
+    "allManagersDone": "✓ Todos los gerentes han completado sus preguntas personalizadas.",
+    "modal": {
+      "newTitle": "Nuevo ciclo de rendimiento",
+      "editTitle": "Editar ciclo",
+      "cycleName": "Nombre del ciclo",
+      "cycleNamePlaceholder": "ej. Evaluación anual 2025",
+      "cycleType": "Tipo",
+      "regions": "Regiones aplicables",
+      "autoRegion": "(Su región se aplica automáticamente)",
+      "goalPeriod": "Período de establecimiento de objetivos",
+      "reviewPeriod": "Período de evaluación",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "creating": "Creando...",
+      "createBtn": "Crear ciclo",
+      "saving": "Guardando...",
+      "saveBtn": "Guardar cambios",
+      "errorRegion": "Seleccione al menos una región"
+    },
+    "card": {
+      "edit": "Editar",
+      "reviewProcess": "Proceso de evaluación",
+      "goalRange": "Objetivos: {start} – {end}",
+      "reviewRange": "Evaluación: {start} – {end}"
+    },
+    "templateTrack": {
+      "title": "Preparación de plantillas",
+      "goCreate": "Crear →",
+      "node0Label": "RRHH crea plantilla",
+      "node0Desc": "Asegura el contenido completo del formulario",
+      "node1Label": "Plantilla publicada",
+      "node1Desc": "Empleados y supervisores pueden acceder al formulario",
+      "node2Label": "Gerentes añaden preguntas",
+      "node2Desc": "Los gerentes añaden preguntas personalizadas",
+      "reviewStart": "Inicio del período de evaluación",
+      "warnNoTemplate": "No hay plantilla creada. Vaya a Plantillas para crear una antes de avanzar.",
+      "warnNotPublished": "Plantilla aún no publicada. Por favor publíquela antes de avanzar.",
+      "warnNoCustomQ": "Los gerentes no han añadido preguntas personalizadas. Confirme que todos han completado esto."
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Panel",
+    "loading": "Cargando...",
+    "loadingCycles": "Cargando datos del ciclo...",
+    "viewAll": "Ver todo →",
+    "goTo": "Ir →",
+    "fillNow": "Completar ahora →",
+    "manageTemplates": "Gestionar plantillas →",
+    "actionsRequired": "Acción requerida",
+    "flowGuide": {
+      "toggle": "Guía del proceso de rendimiento anual (clic para expandir)",
+      "stepsEmployee": [
+        "[Establecimiento de objetivos] Complete sus objetivos SMART personales y envíelos para aprobación",
+        "[Revisión del empleado] El sistema genera su formulario de autoevaluación — complételo",
+        "Tras enviarlo, su supervisor directo realizará la revisión inicial",
+        "[Revisión del supervisor → Calibración] Tras la calibración, puede ver su calificación final",
+        "Si no está de acuerdo con el resultado, puede presentar una apelación"
+      ],
+      "stepsSupervisor": [
+        "[Establecimiento de objetivos] Apruebe los objetivos de sus subordinados directos",
+        "[Revisión del supervisor] Realice la revisión inicial tras la autoevaluación de los empleados",
+        "Lea la autoevaluación, escriba comentarios y seleccione una calificación (O/S+/S/S-/I/U)",
+        "Tras su envío, comienza la fase de calibración"
+      ],
+      "stepsManager": [
+        "[Establecimiento de objetivos / En progreso] Agregue preguntas personalizadas a la plantilla del departamento",
+        "[Calibración] Entre en la fase de calibración tras las autoevaluaciones y revisiones del supervisor",
+        "Compare las calificaciones de todos los empleados, ajuste el ranking si es necesario",
+        "Tras confirmar, haga clic en 'Publicar todo' para publicar todos los resultados"
+      ],
+      "stepsRegionalHR": [
+        "Cree ciclos de rendimiento: establezca la región, tipo y rangos de fechas",
+        "Cree plantillas de formularios; los managers pueden agregar preguntas personalizadas",
+        "Publique la plantilla, luego avance el ciclo a 'Revisión del empleado'",
+        "El sistema verifica plantillas publicadas y crea automáticamente formularios de revisión",
+        "Continúe: Revisión del supervisor → Calibración → Completado"
+      ],
+      "stepsAdmin": [
+        "Gestione los ciclos de rendimiento para todas las regiones",
+        "Supervise el progreso de revisiones en todas las regiones",
+        "Revise el registro de auditoría para verificar las operaciones del sistema"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "Evaluación anual",
+      "Quarterly": "Evaluación trimestral",
+      "Probation": "Evaluación de período de prueba"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "Establecimiento de objetivos — Los empleados completan objetivos SMART; RRHH prepara plantillas",
+      "InProgress": "En progreso — Seguimiento de objetivos activo; los managers pueden agregar preguntas",
+      "EmployeeReview": "Revisión del empleado — Todos los empleados completan sus formularios de autoevaluación",
+      "SupervisorReview": "Revisión del supervisor — Los supervisores leen las autoevaluaciones y escriben evaluaciones",
+      "Calibration": "Calibración — Los managers ajustan calificaciones; los resultados se publicarán juntos",
+      "Completed": "Completado — Los resultados han sido publicados"
+    },
+    "timeline": {
+      "yearTitle": "Cronograma de ciclos {year}",
+      "subtitle": "Horario establecido cuando RRHH / Admin crea los ciclos",
+      "emptyTitle": "Cronograma de ciclos anuales",
+      "emptyDesc": "No se encontraron ciclos de rendimiento.",
+      "emptyDescSub": "Los ciclos aparecerán aquí una vez que RRHH / Admin los cree.",
+      "goalSettingBar": "Establecimiento de objetivos",
+      "reviewBar": "Período de revisión",
+      "todayMarker": "Hoy",
+      "legendGoal": "Objetivos",
+      "legendReview": "Período de revisión",
+      "goalRange": "Objetivos: {start} – {end}",
+      "reviewRange": "Revisión: {start} – {end}"
+    },
+    "activeCycles": { "title": "Ciclos activos" },
+    "goals": {
+      "title": "Mis Objetivos",
+      "empty": "Aún no hay objetivos establecidos",
+      "setGoal": "Establecer objetivos",
+      "draft": "Borrador",
+      "pendingApproval": "Pendiente de aprobación",
+      "approved": "Aprobado",
+      "completed": "Completado"
+    },
+    "myReviews": {
+      "title": "Mis Evaluaciones",
+      "pendingTitle": "Evaluación de rendimiento pendiente",
+      "empty": "No se encontraron registros de evaluación."
+    },
+    "teamReviews": {
+      "title": "Resumen de revisiones del equipo",
+      "pendingEmployee": "Pendiente empleado",
+      "pendingSupervisor": "Pendiente supervisor",
+      "pendingCalibration": "Calibración pendiente",
+      "actionLabelManager": "Calibración / Publicación pendiente",
+      "actionLabelOther": "Revisión inicial pendiente",
+      "actionCount": "{count} revisión(es) de empleado {action}",
+      "actionDesc": "Ir a la página de revisiones del equipo",
+      "empty": "No se encontraron registros de revisión del equipo.",
+      "emptyDesc": "Una vez que RRHH avance el ciclo, el sistema creará automáticamente formularios para todos los empleados."
+    },
+    "gradeChart": {
+      "title": "Distribución global de calificaciones",
+      "titleTeam": "Distribución de calificaciones",
+      "empty": "Aún no hay datos de evaluación.",
+      "summary": "{total} revisiones en total · {graded} calificadas",
+      "summaryPending": " · {pending} pendientes"
+    },
+    "templates": {
+      "title": "Plantillas de formularios",
+      "draft": "Borrador",
+      "published": "Publicado",
+      "draftWarning": "{count} borrador(es) de plantilla sin publicar",
+      "draftWarningDesc": "Las plantillas deben publicarse antes de que se apliquen automáticamente al avanzar el ciclo"
+    }
+  }
+}

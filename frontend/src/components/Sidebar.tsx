@@ -1,11 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { api } from '@/lib/api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { RoleBadge } from '@/components/RoleBadge'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import type { Role } from '@/types'
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -31,34 +32,38 @@ const ICONS: Record<string, React.ReactNode> = {
   '/audit-log':   <Icon path="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0" />,
 }
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// ─── Nav items (using translation keys) ──────────────────────────────────────
+
+type NavKey = 'dashboard' | 'myGoals' | 'myReviews' | 'myReviewsSub' | 'teamReviews' | 'teamReviewsSub' | 'myTeam' | 'cycles' | 'templates' | 'appeals' | 'auditLog'
 
 interface NavItem {
-  label: string
-  sub?: string
+  labelKey: NavKey
+  subKey?: NavKey
   href: string
   roles: Role[]
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: '儀表板',   href: '/dashboard',    roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { label: '我的目標', href: '/goals',         roles: ['Employee', 'Supervisor'] },
-  { label: '我的評核', sub: '自己的績效表單',  href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'] },
-  { label: '團隊評核', sub: '下屬的評核狀況',  href: '/reviews/team',  roles: ['Supervisor', 'Manager'] },
-  { label: '我的團隊', href: '/team',          roles: ['Supervisor', 'Manager'] },
-  { label: '週期管理', href: '/cycles',        roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { label: '評核模板', href: '/templates',     roles: ['RegionalHR', 'Manager'] },
-  { label: '申訴管理', href: '/appeals',       roles: ['Manager'] },
-  { label: '稽核日誌', href: '/audit-log',     roles: ['Admin', 'RegionalHR'] },
+  { labelKey: 'dashboard',   href: '/dashboard',    roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
+  { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor'] },
+  { labelKey: 'myReviews',   subKey: 'myReviewsSub', href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'] },
+  { labelKey: 'teamReviews', subKey: 'teamReviewsSub', href: '/reviews/team', roles: ['Supervisor', 'Manager'] },
+  { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'] },
+  { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
+  { labelKey: 'templates',   href: '/templates',     roles: ['RegionalHR', 'Manager'] },
+  { labelKey: 'appeals',     href: '/appeals',       roles: ['Manager'] },
+  { labelKey: 'auditLog',    href: '/audit-log',     roles: ['Admin', 'RegionalHR'] },
 ]
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 export function Sidebar() {
-  const pathname = usePathname()
-  const router   = useRouter()
+  const pathname  = usePathname()
+  const router    = useRouter()
   const { user, setUser } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+  const tNav     = useTranslations('nav')
+  const tSidebar = useTranslations('sidebar')
 
   // Persist collapse state
   useEffect(() => {
@@ -83,7 +88,7 @@ export function Sidebar() {
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role))
   const activeHref   = visibleItems
-    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/') || pathname.includes(`/${item.href.split('/')[1]}`))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href
 
   const initials = (user.name ?? '?')[0]
@@ -108,6 +113,8 @@ export function Sidebar() {
           {visibleItems.map((item) => {
             const isActive = item.href === activeHref
             const icon     = ICONS[item.href]
+            const label    = tNav(item.labelKey)
+            const sub      = item.subKey ? tNav(item.subKey) : undefined
             return (
               <li key={item.href}>
                 {collapsed ? (
@@ -125,7 +132,7 @@ export function Sidebar() {
                     </Link>
                     {/* Tooltip */}
                     <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap">
-                      {item.label}
+                      {label}
                     </div>
                   </div>
                 ) : (
@@ -142,10 +149,10 @@ export function Sidebar() {
                       {icon}
                     </span>
                     <span className="flex flex-col min-w-0">
-                      <span className="truncate">{item.label}</span>
-                      {item.sub && (
+                      <span className="truncate">{label}</span>
+                      {sub && (
                         <span className={`text-xs font-normal truncate ${isActive ? 'text-primary-500' : 'text-gray-400'}`}>
-                          {item.sub}
+                          {sub}
                         </span>
                       )}
                     </span>
@@ -161,12 +168,19 @@ export function Sidebar() {
       <button
         onClick={toggleCollapse}
         className="absolute -right-3 top-20 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm hover:bg-gray-50 hover:text-gray-700 transition-colors"
-        title={collapsed ? '展開側欄' : '收合側欄'}
+        title={collapsed ? tSidebar('expand') : tSidebar('collapse')}
       >
         <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d={collapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />
         </svg>
       </button>
+
+      {/* Language switcher */}
+      {!collapsed && (
+        <div className="border-t border-gray-200 px-4 py-2">
+          <LanguageSwitcher />
+        </div>
+      )}
 
       {/* User info + logout */}
       <div className="border-t border-gray-200 p-4">
@@ -178,7 +192,7 @@ export function Sidebar() {
             </div>
             <button
               onClick={handleLogout}
-              title="登出"
+              title={tSidebar('logout')}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
             >
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -190,7 +204,7 @@ export function Sidebar() {
             </div>
           </div>
         ) : (
-          // Expanded: name + role/dept + logout button (original style)
+          // Expanded: name + role/dept + logout button
           <>
             <p className="truncate text-sm font-medium text-gray-900">{user.name}</p>
             <div className="mb-3 flex items-center gap-1.5 flex-wrap">
@@ -203,7 +217,7 @@ export function Sidebar() {
               onClick={handleLogout}
               className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              登出
+              {tSidebar('logout')}
             </button>
           </>
         )}
