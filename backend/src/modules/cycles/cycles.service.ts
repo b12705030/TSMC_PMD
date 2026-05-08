@@ -75,13 +75,21 @@ export class CyclesService {
     const next = NEXT_STATUS[cycle.status]
     if (!next) throw new BadRequestException('Cycle is already completed')
 
-    // Before starting employee review, ensure a published template exists
+    // Before starting employee review: check published template exists, then dry-run for coverage gaps
     if (next === CycleStatus.EmployeeReview) {
       const publishedTemplate = await this.prisma.formTemplate.findFirst({
         where: { cycleId: id, status: TemplateStatus.Published },
       })
       if (!publishedTemplate) {
         throw new BadRequestException('此週期尚未有已發布的評核模板，請先發布模板後再開始員工自評期。')
+      }
+
+      const unmatched = await this.dryRunReviews(cycle.id, cycle.regions)
+      if (unmatched.length > 0) {
+        throw new BadRequestException({
+          message: `有 ${unmatched.length} 位員工找不到匹配的評核模板，推進前請補齊模板覆蓋範圍。`,
+          unmatched,
+        })
       }
     }
 
@@ -130,6 +138,29 @@ export class CyclesService {
       complete: managers.filter((m) => activeDeptIds.has(m.departmentId)),
       pending:  managers.filter((m) => !activeDeptIds.has(m.departmentId)),
     }
+  }
+
+  // Dry-run: return employees that have no matching Published template
+  private async dryRunReviews(cycleId: string, cycleRegions: string[]) {
+    const [employees, templates] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { role: Role.Employee, region: { name: { in: cycleRegions } }, supervisorId: { not: null } },
+        select: { id: true, name: true, jobLevel: true, jobTitle: true, region: { select: { name: true } } },
+      }),
+      this.prisma.formTemplate.findMany({
+        where: { cycleId, status: TemplateStatus.Published },
+        select: { appliesGrades: true, applyTitles: true, region: { select: { name: true } } },
+      }),
+    ])
+
+    return employees
+      .filter((emp) => !templates.some(
+        (t) =>
+          t.region.name === emp.region.name &&
+          t.appliesGrades.includes(emp.jobLevel) &&
+          t.applyTitles.includes(emp.jobTitle),
+      ))
+      .map((emp) => ({ id: emp.id, name: emp.name, jobLevel: emp.jobLevel, jobTitle: emp.jobTitle, region: emp.region.name }))
   }
 
   // When cycle moves to InProgress: create one PerformanceReview per employee that
