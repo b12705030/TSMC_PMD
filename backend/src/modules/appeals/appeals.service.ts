@@ -96,7 +96,7 @@ export class AppealsService {
         where: { id: appeal.reviewId },
         data:  {
           status: 'Published',
-          ...(dto.newGrade && { grade: dto.newGrade as any }),
+          ...(dto.newGrade && { grade: dto.newGrade }),
         },
       }),
     ])
