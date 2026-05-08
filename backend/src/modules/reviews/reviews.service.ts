@@ -29,7 +29,7 @@ export class ReviewsService {
       include: REVIEW_INCLUDE,
     })
     if (!review) throw new NotFoundException('Review not found')
-    this.assertAccess(review, user)
+    await this.assertAccess(review, user)
     return review
   }
 
@@ -214,10 +214,22 @@ export class ReviewsService {
     return review
   }
 
-  private assertAccess(review: { employeeId: string; supervisorId: string }, user: SessionUser) {
-    if (user.role === Role.Admin || user.role === Role.Manager) return
+  private async assertAccess(review: { employeeId: string; supervisorId: string }, user: SessionUser) {
+    if (user.role === Role.Admin) return
     if (review.employeeId === user.id) return
     if (review.supervisorId === user.id) return
+
+    if (user.role === Role.Manager) {
+      const employee = await this.prisma.user.findUnique({
+        where:   { id: review.employeeId },
+        include: { supervisor: true },
+      })
+      if (!employee) throw new ForbiddenException()
+      const isDirectReport = employee.managerId === user.id && !employee.supervisorId
+      const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+      if (isDirectReport || isViaSuper) return
+    }
+
     throw new ForbiddenException()
   }
 }
