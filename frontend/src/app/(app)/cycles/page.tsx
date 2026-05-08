@@ -11,6 +11,40 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
 import type { PerformanceCycle, ReviewTemplate } from '@/types'
 
+function getDateWarning(cycle: PerformanceCycle): string | null {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+
+  if (cycle.status === 'GoalSetting') {
+    const goalEnd = new Date(cycle.goalSettingEnd)
+    if (today < goalEnd) {
+      const days = Math.ceil((goalEnd.getTime() - today.getTime()) / 86400000)
+      return `目標設定期計劃於 ${fmt(cycle.goalSettingEnd)} 結束，距今還有 ${days} 天，確定提前推進？`
+    }
+  }
+
+  if (cycle.status === 'InProgress') {
+    const reviewStart = new Date(cycle.reviewStart)
+    if (today < reviewStart) {
+      const days = Math.ceil((reviewStart.getTime() - today.getTime()) / 86400000)
+      return `評核期計劃於 ${fmt(cycle.reviewStart)} 開始，距今還有 ${days} 天，確定提前推進？`
+    }
+    if (today > reviewStart) {
+      const days = Math.ceil((today.getTime() - reviewStart.getTime()) / 86400000)
+      return `評核期計劃開始日為 ${fmt(cycle.reviewStart)}，目前已逾期 ${days} 天，確定現在推進？`
+    }
+  }
+
+  if (cycle.status === 'Calibration') {
+    const reviewEnd = new Date(cycle.reviewEnd)
+    if (today < reviewEnd) {
+      const days = Math.ceil((reviewEnd.getTime() - today.getTime()) / 86400000)
+      return `評核期計劃於 ${fmt(cycle.reviewEnd)} 結束，距今還有 ${days} 天，確定提前完成週期？`
+    }
+  }
+
+  return null
+}
+
 const NEXT_STATUS_LABEL: Record<string, string> = {
   GoalSetting:      '進入執行中',
   InProgress:       '開始員工自評',
@@ -209,6 +243,14 @@ export default function CyclesPage() {
         onConfirm={handleAdvanceConfirmed}
         onCancel={() => { setPendingAdvance(null); setManagerQStatus(null) }}
       >
+        {pendingAdvance && getDateWarning(pendingAdvance) && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="flex items-center gap-1.5 text-xs text-amber-700">
+              <WarnIcon />
+              {getDateWarning(pendingAdvance)}
+            </p>
+          </div>
+        )}
         {managerQStatus && managerQStatus.pending.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-700">

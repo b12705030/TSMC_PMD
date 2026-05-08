@@ -73,6 +73,7 @@ function fmtDate(iso: string) {
 const BAR_COLORS = {
   goalSetting: { bg: 'bg-blue-300',   label: 'text-blue-900' },
   review:      { bg: 'bg-violet-300', label: 'text-violet-900' },
+  publish:     { bg: 'bg-emerald-400', label: 'text-emerald-900' },
 }
 
 function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
@@ -103,6 +104,16 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
     const e = Math.min(new Date(end).getTime(),   tlEnd.getTime())
     const pct = ((e - s) / totalMs) * 100
     return `${Math.max(0, pct).toFixed(2)}%`
+  }
+  function dayBefore(date: string): string {
+    const d = new Date(date)
+    d.setDate(d.getDate() - 1)
+    return d.toISOString()
+  }
+  function dayAfter(date: string): string {
+    const d = new Date(date)
+    d.setDate(d.getDate() + 1)
+    return d.toISOString()
   }
 
   // Month tick labels — 12 months, Jan shows "1月", others show "2月"..."12月"
@@ -163,11 +174,11 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                     <StatusBadge status={cycle.status} />
                   </div>
                   <div className="relative h-8 rounded bg-gray-50">
-                    {/* Goal setting bar */}
+                    {/* Goal setting + execution bar (goalSettingStart → reviewStart) */}
                     <div
                       className={`absolute top-1 bottom-1 rounded ${BAR_COLORS.goalSetting.bg} flex items-center overflow-hidden`}
-                      style={{ left: left(cycle.goalSettingStart), width: barWidth(cycle.goalSettingStart, cycle.goalSettingEnd) }}
-                      title={`目標設定：${fmtDate(cycle.goalSettingStart)} – ${fmtDate(cycle.goalSettingEnd)}`}
+                      style={{ left: left(cycle.goalSettingStart), width: barWidth(cycle.goalSettingStart, dayBefore(cycle.reviewStart)) }}
+                      title={`目標設定 & 執行：${fmtDate(cycle.goalSettingStart)} – ${fmtDate(dayBefore(cycle.reviewStart))}`}
                     >
                       <span className={`px-1.5 text-[10px] font-medium whitespace-nowrap ${BAR_COLORS.goalSetting.label}`}>
                         目標設定
@@ -183,6 +194,16 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                         評核期
                       </span>
                     </div>
+                    {/* Publish bar (reviewEnd + 1 day) */}
+                    <div
+                      className={`absolute top-1 bottom-1 rounded ${BAR_COLORS.publish.bg} flex items-center overflow-hidden`}
+                      style={{ left: left(dayAfter(cycle.reviewEnd)), width: barWidth(dayAfter(cycle.reviewEnd), dayAfter(dayAfter(cycle.reviewEnd))), minWidth: '6px' }}
+                      title={`結果發布：${fmtDate(dayAfter(cycle.reviewEnd))}`}
+                    >
+                      <span className={`px-1.5 text-[10px] font-medium whitespace-nowrap ${BAR_COLORS.publish.label}`}>
+                        發布
+                      </span>
+                    </div>
                     {/* Today marker */}
                     {showToday && (
                       <div
@@ -193,9 +214,11 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                     )}
                   </div>
                   <div className="mt-0.5 text-[10px] text-gray-400">
-                    目標設定：{fmtDate(cycle.goalSettingStart)} – {fmtDate(cycle.goalSettingEnd)}
+                    目標設定：{fmtDate(cycle.goalSettingStart)} – {fmtDate(dayBefore(cycle.reviewStart))}
                     &nbsp;·&nbsp;
                     評核期：{fmtDate(cycle.reviewStart)} – {fmtDate(cycle.reviewEnd)}
+                    &nbsp;·&nbsp;
+                    結果發布：{fmtDate(dayAfter(cycle.reviewEnd))}
                   </div>
                 </div>
               ))}
@@ -204,10 +227,13 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
             {/* Legend */}
             <div className="mt-2 flex items-center gap-4 border-t border-gray-100 pt-3 text-xs text-gray-500">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded bg-blue-300" />目標設定期
+                <span className="inline-block h-3 w-3 rounded bg-blue-300" />目標設定 & 執行期
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded bg-violet-300" />評核期
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded bg-emerald-400" />結果發布
               </span>
               {showToday && (
                 <span className="flex items-center gap-1.5">
