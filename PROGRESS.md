@@ -164,6 +164,27 @@
 - [x] 員工可直接透過 `PUT /goals/:id` body `{ status }` 把目標改為 `PendingApproval`，已改為獨立 endpoint `PATCH /goals/:id/submit`；目標詳情頁草稿狀態下顯示「提交審核」按鈕
 - [ ] `AppealsService` / `AuditService` 全部為 TODO stub，前端對應頁面回傳假資料
 - [ ] Session 閒置 30 分鐘自動登出尚未實作（目前固定 8 小時 TTL）
+- [ ] ~~PROGRESS.md 說 AuditLog 存 PostgreSQL~~ → 實際上是 Elasticsearch（`audit.service.ts` 直接打 ES），文件已更正
+
+### 待修 Bug（第二輪 Codex Review 確認，尚未處理）
+
+- [ ] **[高] `UpdateGoalDto` 保留 `status` 欄位，`updateGoal()` 直接 spread** → 任何人都可透過 `PUT /goals/:id { status: "Approved" }` 繞過審核流程。修法：從 `UpdateGoalDto` 移除 `status`，狀態只能透過 `submit/approve/reject` 專用 endpoint 改。
+- [ ] **[高] `ReviewsService.calibrate()` 缺管轄權檢查** → 只驗角色與狀態，任何 Manager 可校準不屬於自己的 review。修法：在 status check 後加 `await this.assertAccess(review, user)`。
+- [ ] **[高] Backend ESLint 9 + `.eslintrc.js` 組合導致 CI 失敗** → ESLint 9 不讀 `.eslintrc.js`，CI lint 步驟必炸。修法：新增 `backend/eslint.config.js`（flat config）或將 ESLint 降回 `^8`。
+- [ ] **[高] 同條件可有多份 Published template，`autoCreateReviews()` 用 `find()` 取第一筆** → 結果不可預測，員工可能拿到錯誤表單。修法：publish 時檢查同 `cycleId/regionId/appliesGrades/applyTitles` 不可重複，或加 DB unique constraint。
+- [ ] **[高] 週期推進缺完整性 gate** → 只有 EmployeeReview 前有 template 檢查；進 SupervisorReview 未確認員工全部 submit；進 Calibration 未確認主管全部 submit；進 Completed 未確認已 publish。修法：每個 transition 加最小完成率驗證。
+- [ ] **[中] Appeals Admin 語意矛盾** → controller 允許 Admin，但 `getAppealsForManager()` 用 `managerId = user.id` 查，Admin 永遠查不到申訴。修法：明確決定 Admin 是否全域可讀；若是，service 層需特判 Admin 跳過 managerId 過濾。
+- [ ] **[中] Review answer 提交缺乏 schema 驗證** → `employeeAnswers`/`supervisorAnswers` 是 JSON，submit 時未驗證 questionId 是否屬於該 template、required 題是否都填。修法：submit endpoint 用 `review.template.questions` 驗證；草稿可寬鬆，送出必須嚴格。
+
+### 安全漏洞修補（Codex Code Review，已全數修復）
+
+- [x] **[高] `GoalsService.assertAccess` 權限過寬** → `assertAccess` 改為 async，加入組織關係查詢（Supervisor 需 `employee.supervisorId === user.id`，Manager 需直屬或 via Supervisor）；`approveGoal` / `rejectGoal` 也補上同樣檢查。
+- [x] **[高] `ReviewsService.assertAccess` Manager 可讀任意 review** → Manager 不再直接放行，改為查 `employee.managerId` 和 `supervisor.managerId` 確認管轄範圍。
+- [x] **[高] `Goal` schema 缺少 Prisma relation** → 補 `user User @relation(..., onDelete: Cascade)`、`cycle PerformanceCycle? @relation(...)`；`ProgressUpdate` 補 `user User @relation(...)`；User / PerformanceCycle 補 back-reference；migration `20260508090052_add_goal_relations`。
+- [x] **[高] Cycle advance 只檢查「有 Published template」** → advance 至 EmployeeReview 前加 `dryRunReviews()` dry-run，找出無匹配模板的員工，有缺口時拋 400 並回傳清單（`message` + `unmatched[]`）。
+- [x] **[中] Appeal `newGrade` 無型別驗證** → DTO 改用 `@IsEnum(ReviewGrade)`，service 移除 `as any`。
+- [x] **[中] 前端 type-check / lint 失敗** → `templates/page.tsx` 補 `QuestionDraft` 型別解決 `never[]` 錯誤；移除 `reviews/[id]/page.tsx` 未使用的 import；移除 `templates/[id]/page.tsx` 未使用的 `isHR`；`team/[employeeId]/page.tsx` 用具體型別替換 `as any`。
+- [x] **[低] `.env.example` 寫 Supabase 但 README 說 Neon** → `.env.example` 更新為 Neon 連線字串格式。
 
 ---
 
