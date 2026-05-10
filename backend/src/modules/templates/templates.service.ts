@@ -129,6 +129,25 @@ export class TemplatesService {
     if (template.status === 'Published') {
       throw new BadRequestException('Template is already published')
     }
+
+    // Prevent duplicate coverage: same cycle + region + any overlapping grade/title
+    const conflicts = await this.prisma.formTemplate.findMany({
+      where: {
+        id:       { not: id },
+        cycleId:  template.cycleId,
+        regionId: template.regionId,
+        status:   'Published',
+        appliesGrades: { hasSome: template.appliesGrades },
+        applyTitles:   { hasSome: template.applyTitles },
+      },
+      select: { id: true, name: true },
+    })
+    if (conflicts.length > 0) {
+      throw new BadRequestException(
+        `發布失敗：與已發布模板「${conflicts.map((c) => c.name).join('、')}」的職等/職稱覆蓋範圍重疊，請調整後再發布。`,
+      )
+    }
+
     return this.prisma.formTemplate.update({
       where: { id },
       data:  { status: 'Published' },
