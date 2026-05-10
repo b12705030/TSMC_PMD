@@ -195,10 +195,10 @@ RegionalHR(tw-hr001)
 - 答案存 JSON 的理由：題目可能隨版本不同，不用 FK 關聯；審計時快照即答案
 
 ### 評核自動建立
-- 觸發點：`CycleStatus` 推進到 `InProgress` 時
+- 觸發點：`CycleStatus` 推進到 `EmployeeReview` 時（非 `InProgress`）
 - 匹配邏輯：找出 cycle region 內所有 Employee，對每人找一份 `Published` 模板，條件 `appliesGrades` 包含 `user.jobLevel` **且** `applyTitles` 包含 `user.jobTitle`
 - 若無匹配模板 → 跳過該員工（不報錯，但記錄 log）
-- `supervisorId` = `user.supervisorId`（直屬 Supervisor）
+- `supervisorId` = `user.supervisorId`（直屬 Supervisor；若員工直接匯報 Manager 則為 null）
 
 ### 等第制度（對應 TSMC 實際制度）
 - `O`（Outstanding，傑出）、`S_Plus`（S+）、`S`、`S_Minus`（S-）、`I`（Improvement needed）、`U`（Unacceptable）

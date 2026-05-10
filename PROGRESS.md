@@ -58,7 +58,7 @@
 | 員工填寫 SMART 目標 | ✅ 完成 | `POST /api/goals`，含 SMART 六欄位表單 |
 | 個人目標 / 團隊目標 | ✅ 完成 | `type: Personal \| Team`，建立時選擇 |
 | 查看自己的目標列表 | ✅ 完成 | `GET /api/goals`，卡片式 + 狀態進度條 |
-| 目標詳情頁 | ✅ 完成 | 狀態 badge、SMART 欄位、截止日期、逾期偵測 |
+| 目標詳情頁 | ❌ 頁面遺失 | `/goals/[id]` 在 i18n 遷移時刪除，未重建 |
 | 目標里程碑（新增 / 勾選 / 刪除）| ✅ 完成 | `POST/PATCH/DELETE /api/goals/:id/milestones` |
 | 里程碑完成時附加備注 | ✅ 完成 | 第一次點勾選出現備注輸入框，可選填 |
 | 里程碑順序可拖拉調整 | ✅ 完成 | `PUT /api/goals/:id/milestones/reorder`，左側 ⠿ drag handle，hover 顯示 |
@@ -84,10 +84,10 @@
 | 員工填寫績效表單（自評）| ✅ 完成 | `PUT /reviews/:id/answers`（草稿）+ `POST /reviews/:id/submit`（送出鎖定）|
 | 主管初評（附文字說明）| ✅ 完成 | `PUT /reviews/:id/supervisor`（草稿）+ `POST /reviews/:id/supervisor/submit`；含等第選擇 |
 | 等第制評分（O/S+/S/S-/I/U）| ✅ 完成 | 對應 TSMC 實際制度；O 和 U 各自顯示 soft warning（非硬限制）|
-| 員工 / 主管各端表單（前端）| ✅ 完成 | Text / Rating / MultipleChoice 三種題型；主管見員工自評（read-only）後填評核 |
+| 員工 / 主管各端表單（前端）| ❌ 頁面遺失 | `/reviews/[id]` 在 i18n 遷移時刪除，未重建；後端 API 完整 |
 | 團隊評核列表（主管側）| ✅ 完成 | `GET /reviews/team`，前端 `/reviews/team` 頁面 |
-| 經理校準排名並發布結果 | ✅ 完成 | 前端 `/reviews/calibrate/[cycleId]` 頁面；等第按鈕選取 + 排名輸入 + 一鍵發布；Manager 在 `/reviews/team` 頁面可看到各週期的「進入校準」入口 |
-| 主管比較介面（多員工並排）| ✅ 完成 | 前端 `/reviews/compare/[cycleId]`；水平卡片並排，依等第排序；從校準頁「並排比較 →」進入 |
+| 經理校準排名並發布結果 | ❌ 頁面遺失 | `/reviews/calibrate/[cycleId]` 在 i18n 遷移（commit `71fb88b`）時從舊路徑刪除，未在 `[locale]/(app)/` 下重建；需補回 |
+| 主管比較介面（多員工並排）| ❌ 頁面遺失 | `/reviews/compare/[cycleId]` 同上，需補回 |
 
 ---
 
@@ -97,7 +97,7 @@
 |------|------|------|
 | 員工向經理提出申訴（越過主管）| ✅ 完成 | `POST /api/appeals`；員工在 Published 評核頁點「提出申訴」，輸入原因後送出 |
 | 直屬主管不可見申訴內容 | ✅ 完成 | `getAppealById` 只允許當事員工和 Manager 存取，Supervisor 呼叫會拋 403 |
-| 經理審核並回覆申訴 | ✅ 完成 | `PATCH /api/appeals/:id/respond`；Manager 在 `/appeals/:id` 頁填寫回覆並解決 |
+| 經理審核並回覆申訴 | ❌ 頁面遺失 | `/appeals/[id]` 在 i18n 遷移時刪除，未重建；後端 API 完整 |
 | 申訴列表頁（經理側）| ✅ 完成 | `/appeals` 頁面顯示所有收到的申訴，可點入詳情 |
 | 申訴結果通知員工 | ⬜ 待做 | 目前需員工主動查看評核頁或申訴頁，未實作推播通知 |
 | 前端 `/appeals` 頁面串接真實資料 | ✅ 完成 | `useAppeals` hook 已串接 `GET /appeals` |
@@ -108,10 +108,10 @@
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| 登入 / 登出事件寫入 | ✅ 完成 | 非同步寫入，目前存 PostgreSQL |
-| 所有 CRUD 操作記錄 | ⬜ 待做 | `AuditService` 為 TODO stub |
-| Elasticsearch Append-only 儲存 | ⬜ 待做 | 目前 ES 未串接 |
-| 前端 Audit Log 查閱頁 | ⬜ 待做 | 骨架已建，資料未串 |
+| 登入 / 登出事件寫入 | ✅ 完成 | 非同步寫入 Elasticsearch（無 PostgreSQL 持久化備份） |
+| 所有 CRUD 操作記錄 | ⬜ 待做 | 目前只有登入/登出；其餘 mutation 尚未覆蓋 |
+| Elasticsearch Append-only 儲存 | ✅ 已串接 | `audit.service.ts` 直接寫 ES；失敗只 log error，無重試或 outbox |
+| 前端 Audit Log 查閱頁 | ✅ 完成 | 頁面已完成並接 ES 資料 |
 
 ---
 
@@ -131,7 +131,7 @@
 |------|------|------|
 | Supervisor 看直屬員工列表 | ✅ 完成 | `GET /users/team`，DataTable |
 | Manager 看階層分組視圖 | ✅ 完成 | `GET /users/team/hierarchy`，依 Supervisor 分組；直屬員工（無 Supervisor）獨立顯示 |
-| 點入員工詳情頁 | ✅ 完成 | 顯示基本資料、目標列表（可點入詳情）、評核歷史（可點入評核）；`GET /users/:id/goals` 和 `GET /users/:id/reviews` 已串接真實資料 |
+| 點入員工詳情頁 | ❌ 頁面遺失 | `/team/[employeeId]` 在 i18n 遷移時刪除，未重建 |
 
 ---
 
@@ -198,6 +198,18 @@
 - [x] **[高] 前端 hook 吞錯誤** → 所有 7 個 hook 檔統一加 `error: string | null` state；新增 `ErrorBanner` 元件；所有頁面（`goals`、`reviews`、`reviews/team`、`appeals`、`team`、`templates`、`cycles`、`audit-log`、`dashboard`）接 `error` 並顯示錯誤橫幅。
 - [x] **[中] Admin `getTeamReviews()` 語意不一致** → 拆為獨立 Admin 分支（`where = {}`），不再與 Manager 混用同一分支。（`reviews.service.ts`）
 - [x] **[中] Review submit answer 無型別驗證** → `validateAnswers()` 加 Rating（1–5 整數）、MultipleChoice（需在 `options` 內）、Text（≤5000 字）驗證。（`reviews.service.ts`）
+
+### 安全漏洞修補（第四輪 Codex Review）
+
+- [x] **[高] 跨地區 cycle 可被單一 RegionalHR 推進整個週期** → `advanceStatus()` 加防護：`regions.length > 1 && role !== Admin` 時拋 403，跨區 cycle 只允許 Admin 推進。（`cycles.service.ts`）
+
+### 文件 / 環境修正
+
+- [x] **`backend/.env.example` `DATABASE_URL`/`DIRECT_URL` 對調** → `DATABASE_URL` 應帶 `pgbouncer=true`（pooled），`DIRECT_URL` 為直連（migration 用），已修正並加注解。
+- [x] **`SCHEMA.md` 評核自動建立時機錯誤** → 觸發點改為 `EmployeeReview`（原文誤寫 `InProgress`）。
+- [x] **`PROGRESS.md` Audit Log 狀態錯誤** → 實際是 ES（非 PostgreSQL）；ES 已串接，CRUD 覆蓋不完整。
+- [x] **`PROGRESS.md` i18n 遷移遺失頁面** → 標記以下 6 頁為 ❌ 遺失（`71fb88b` 刪舊路徑但未在 `[locale]/(app)/` 重建）：`/reviews/[id]`、`/reviews/calibrate/[cycleId]`、`/reviews/compare/[cycleId]`、`/goals/[id]`、`/team/[employeeId]`、`/appeals/[id]`。
+- [ ] **重跑 `prisma generate`** → `nullable_review_supervisor` migration 後 Prisma 型別未更新（`supervisorId` 仍為非 nullable）；`createMany` 暫時用 `as any` 繞過；需在 `backend/` 執行 `npx prisma generate`。
 
 ### 待改善（中期，非立即阻塞）
 

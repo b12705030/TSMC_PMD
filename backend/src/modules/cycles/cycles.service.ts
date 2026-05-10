@@ -72,6 +72,12 @@ export class CyclesService {
 
   async advanceStatus(id: string, user: SessionUser) {
     const cycle = await this.getCycle(id, user)
+
+    // Multi-region cycles can only be advanced by Admin to prevent one region's HR from driving global flow
+    if (user.role !== Role.Admin && cycle.regions.length > 1) {
+      throw new ForbiddenException('跨地區週期只能由 Admin 推進，請聯絡系統管理員。')
+    }
+
     const next = NEXT_STATUS[cycle.status]
     if (!next) throw new BadRequestException('Cycle is already completed')
 
@@ -139,7 +145,8 @@ export class CyclesService {
         data:  { status: next },
       })
       if (reviewRows.length) {
-        await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await tx.performanceReview.createMany({ data: reviewRows as any, skipDuplicates: true })
       }
       return result
     })
@@ -236,7 +243,7 @@ export class CyclesService {
       }),
     ])
 
-    const rows: { cycleId: string; employeeId: string; supervisorId: string | null; templateId: string }[] = []
+    const rows: { cycleId: string; employeeId: string; supervisorId?: string; templateId: string }[] = []
 
     for (const emp of employees) {
       const tpl = templates.find(
@@ -249,7 +256,12 @@ export class CyclesService {
         console.warn(`buildReviewRows: no template for employee ${emp.id} (${emp.jobLevel} / ${emp.jobTitle})`)
         continue
       }
-      rows.push({ cycleId, employeeId: emp.id, supervisorId: emp.supervisorId ?? null, templateId: tpl.id })
+      rows.push({
+        cycleId,
+        employeeId: emp.id,
+        templateId: tpl.id,
+        ...(emp.supervisorId ? { supervisorId: emp.supervisorId } : {}),
+      })
     }
 
     return rows
