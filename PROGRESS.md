@@ -58,7 +58,7 @@
 | 員工填寫 SMART 目標 | ✅ 完成 | `POST /api/goals`，含 SMART 六欄位表單 |
 | 個人目標 / 團隊目標 | ✅ 完成 | `type: Personal \| Team`，建立時選擇 |
 | 查看自己的目標列表 | ✅ 完成 | `GET /api/goals`，卡片式 + 狀態進度條 |
-| 目標詳情頁 | ❌ 頁面遺失 | `/goals/[id]` 在 i18n 遷移時刪除，未重建 |
+| 目標詳情頁 | ✅ 完成 | `/goals/[id]`；含里程碑 DnD、submit/approve/reject 按鈕 |
 | 目標里程碑（新增 / 勾選 / 刪除）| ✅ 完成 | `POST/PATCH/DELETE /api/goals/:id/milestones` |
 | 里程碑完成時附加備注 | ✅ 完成 | 第一次點勾選出現備注輸入框，可選填 |
 | 里程碑順序可拖拉調整 | ✅ 完成 | `PUT /api/goals/:id/milestones/reorder`，左側 ⠿ drag handle，hover 顯示 |
@@ -84,10 +84,10 @@
 | 員工填寫績效表單（自評）| ✅ 完成 | `PUT /reviews/:id/answers`（草稿）+ `POST /reviews/:id/submit`（送出鎖定）|
 | 主管初評（附文字說明）| ✅ 完成 | `PUT /reviews/:id/supervisor`（草稿）+ `POST /reviews/:id/supervisor/submit`；含等第選擇 |
 | 等第制評分（O/S+/S/S-/I/U）| ✅ 完成 | 對應 TSMC 實際制度；O 和 U 各自顯示 soft warning（非硬限制）|
-| 員工 / 主管各端表單（前端）| ❌ 頁面遺失 | `/reviews/[id]` 在 i18n 遷移時刪除，未重建；後端 API 完整 |
+| 員工 / 主管各端表單（前端）| ✅ 完成 | `/reviews/[id]`；員工自評 + 主管評核 2 欄位視圖 + 等第選擇 + 申訴入口 |
 | 團隊評核列表（主管側）| ✅ 完成 | `GET /reviews/team`，前端 `/reviews/team` 頁面 |
-| 經理校準排名並發布結果 | ❌ 頁面遺失 | `/reviews/calibrate/[cycleId]` 在 i18n 遷移（commit `71fb88b`）時從舊路徑刪除，未在 `[locale]/(app)/` 下重建；需補回 |
-| 主管比較介面（多員工並排）| ❌ 頁面遺失 | `/reviews/compare/[cycleId]` 同上，需補回 |
+| 經理校準排名並發布結果 | ✅ 完成 | `/reviews/calibrate/[cycleId]`；等第 + 排名 inline 編輯，一鍵發布全部 |
+| 主管比較介面（多員工並排）| ✅ 完成 | `/reviews/compare/[cycleId]`；卡片橫向捲動，依等第排序 |
 
 ---
 
@@ -97,7 +97,7 @@
 |------|------|------|
 | 員工向經理提出申訴（越過主管）| ✅ 完成 | `POST /api/appeals`；員工在 Published 評核頁點「提出申訴」，輸入原因後送出 |
 | 直屬主管不可見申訴內容 | ✅ 完成 | `getAppealById` 只允許當事員工和 Manager 存取，Supervisor 呼叫會拋 403 |
-| 經理審核並回覆申訴 | ❌ 頁面遺失 | `/appeals/[id]` 在 i18n 遷移時刪除，未重建；後端 API 完整 |
+| 經理審核並回覆申訴 | ✅ 完成 | `/appeals/[id]`；Manager 可回覆 + 調整等第（選填），回覆後申訴標記已解決 |
 | 申訴列表頁（經理側）| ✅ 完成 | `/appeals` 頁面顯示所有收到的申訴，可點入詳情 |
 | 申訴結果通知員工 | ⬜ 待做 | 目前需員工主動查看評核頁或申訴頁，未實作推播通知 |
 | 前端 `/appeals` 頁面串接真實資料 | ✅ 完成 | `useAppeals` hook 已串接 `GET /appeals` |
@@ -131,7 +131,7 @@
 |------|------|------|
 | Supervisor 看直屬員工列表 | ✅ 完成 | `GET /users/team`，DataTable |
 | Manager 看階層分組視圖 | ✅ 完成 | `GET /users/team/hierarchy`，依 Supervisor 分組；直屬員工（無 Supervisor）獨立顯示 |
-| 點入員工詳情頁 | ❌ 頁面遺失 | `/team/[employeeId]` 在 i18n 遷移時刪除，未重建 |
+| 點入員工詳情頁 | ✅ 完成 | `/team/[employeeId]`；顯示員工資料、目標列表、評核歷史 |
 
 ---
 
@@ -203,13 +203,29 @@
 
 - [x] **[高] 跨地區 cycle 可被單一 RegionalHR 推進整個週期** → `advanceStatus()` 加防護：`regions.length > 1 && role !== Admin` 時拋 403，跨區 cycle 只允許 Admin 推進。（`cycles.service.ts`）
 
+### 安全漏洞修補（第五輪 Codex Review）
+
+- [x] **[高] 前端 PerformanceReview 型別 `supervisorId`/`supervisor` 非 nullable** → `types/index.ts` 改為 `supervisorId: string | null`、`supervisor: {...} | null`；`employee` 補 `managerId: string | null`；`reviews/[id]/page.tsx` 加 `isDirectReportManager` 判斷，`canSupervisorEdit` 支援 direct-report manager，`review.supervisor?.name` 改 optional chain。
+- [x] **[高] `submitSupervisor()` / `publishAll()` 允許無等第送出與發布** → `submitSupervisor()` 在 validateAnswers 後加 `if (!review.grade) throw 400`；`publishAll()` 查出 pending reviews 帶 grade，有任一筆 grade 為 null 即拒絕整批發布。（`reviews.service.ts`）
+- [x] **[中高] Supervisor/Manager 可對下屬目標執行 mutation** → `goals.service.ts` 拆出 `assertOwner`（只允許 owner/Admin 寫）與 `assertCanRead`（Supervisor/Manager 可讀）；content mutation（updateGoal、addMilestone、toggleMilestone、updateMilestoneNote、updateMilestoneUrl、reorderMilestones、deleteMilestone、addProgressUpdate）改呼叫 `assertOwner`；approve/reject/read 繼續用 `assertCanRead`。
+- [x] **[中高] Admin 建多地區週期模板只套用 `regions[0]`** → `CreateTemplateDto` 加 `regionId?: string`（選填）；service 優先用 `dto.regionId`，其次 fallback `regions[0]`；前端 Admin + multi-region cycle 時顯示「適用地區」必選 selector，未選則送出阻擋。（`templates.service.ts`、`create-template.dto.ts`、`useTemplates.ts`、`templates/page.tsx`）
+- [x] **[中] Detail pages 錯誤未顯示** → `goals/[id]`、`reviews/[id]`、`reviews/calibrate/[cycleId]` 補 `error` destructure 及 `ErrorBanner` 渲染。
+- [x] **[中] 校準頁 rank 依賴空 grade 送壞 payload** → `handleRankChange` 若 `!review.grade` 直接 return；rank input 加 `disabled={!review.grade}` 並顯示 tooltip 提示先選等第。（`reviews/calibrate/[cycleId]/page.tsx`）
+- [x] **[低] PROGRESS.md 底部重複未勾選** → 刪除已在「文件/環境修正」段落標記完成的重複條目。
+
+### 安全漏洞修補（第六輪 Review，已全數修復）
+
+- [x] **[高] `createTemplate()` 直接信任 `dto.regionId`，RegionalHR 可跨 Region 建模板** → 改為：RegionalHR 永遠忽略 `dto.regionId`，使用 `user.regionId`；Admin + 多 region cycle 必須傳 `regionId`，缺少時拋 400；查 Region 並確認 `region.name` 在 `cycle.regions` 內，不存在或不屬於週期皆拋 400；Admin + 單 region cycle 自動繼承（不接受 `dto.regionId`）。（`templates.service.ts`）
+- [x] **[中] `goals/[id]` 非 owner 仍可操作里程碑 UI** → 所有里程碑互動元素（+ 新增按鈕、checkbox toggle、drag/drop、備注新增/編輯/刪除、連結新增/刪除、刪除按鈕）加 `isOwner` gate；非 owner 僅能閱讀里程碑及其備注/連結，但不能修改。後端安全已在第五輪修復，本次修前端 UX 以避免無聲 403。（`goals/[id]/page.tsx`）
+- [x] **[中] `templates/[id]` 載入失敗顯示「找不到此模板」而非實際錯誤** → `useEffect` 加 `.catch()` 捕捉 API 錯誤並 `setError`；加 `import { ErrorBanner }` 並在 `error` 非空時提前 `return <ErrorBanner />`，403/500/network error 都能正確顯示。（`templates/[id]/page.tsx`）
+
 ### 文件 / 環境修正
 
 - [x] **`backend/.env.example` `DATABASE_URL`/`DIRECT_URL` 對調** → `DATABASE_URL` 應帶 `pgbouncer=true`（pooled），`DIRECT_URL` 為直連（migration 用），已修正並加注解。
 - [x] **`SCHEMA.md` 評核自動建立時機錯誤** → 觸發點改為 `EmployeeReview`（原文誤寫 `InProgress`）。
 - [x] **`PROGRESS.md` Audit Log 狀態錯誤** → 實際是 ES（非 PostgreSQL）；ES 已串接，CRUD 覆蓋不完整。
-- [x] **`PROGRESS.md` i18n 遷移遺失頁面** → 標記以下 6 頁為 ❌ 遺失（`71fb88b` 刪舊路徑但未在 `[locale]/(app)/` 重建）：`/reviews/[id]`、`/reviews/calibrate/[cycleId]`、`/reviews/compare/[cycleId]`、`/goals/[id]`、`/team/[employeeId]`、`/appeals/[id]`。
-- [ ] **重跑 `prisma generate`** → `nullable_review_supervisor` migration 後 Prisma 型別未更新（`supervisorId` 仍為非 nullable）；`createMany` 暫時用 `as any` 繞過；需在 `backend/` 執行 `npx prisma generate`。
+- [x] **i18n 遷移遺失頁面已補回** → `71fb88b` 刪舊路徑後未在 `[locale]/(app)/` 重建的 7 個動態路由頁面（含 `templates/[id]`）已從 git `e771faf` 還原並更新 `Link` import 為 `@/i18n/navigation`；`templates/[id]` 同步改為 `use(params)` 模式。
+- [x] **重跑 `prisma generate`** → `nullable_review_supervisor` migration 後 Prisma 型別已更新（`supervisorId` 正確為 nullable）；`createMany` 的 `as any` 已移除。
 
 ### 待改善（中期，非立即阻塞）
 
@@ -222,10 +238,6 @@
 - [ ] **Direct-report schema 調整後**：評核建立後模板題目快照缺失 → 模板新增題目後會影響已進行中的評核。長期應在建立 review 時 snapshot question set。
 - [ ] **缺 pagination / filtering** → `findMany` 直接全撈；資料量成長後 API 與 UI 會慢。先對列表端點加 `page/pageSize/status/cycleId`。
 
-### 文件修正
-
-- [ ] `backend/.env.example` `DIRECT_URL` 帶 `pgbouncer=true`，Prisma migration 需要直連，這個 flag 應移除
-- [ ] `SCHEMA.md` 寫評核在 `InProgress` 時自動建立 → 實作是推進到 `EmployeeReview` 時建立，需修正
 
 ---
 
