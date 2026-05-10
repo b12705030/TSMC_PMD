@@ -1,8 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { Role, ReviewStatus } from '@prisma/client'
 import type { SessionUser } from '../../common/types/request.types'
 import type { SaveAnswersDto, SaveSupervisorReviewDto, CalibrateDto } from './dto/review.dto'
+import type { TemplateQuestion } from '@prisma/client'
 
 const REVIEW_INCLUDE = {
   cycle:      true,
@@ -89,9 +90,19 @@ export class ReviewsService {
 
   // Employee: submit → status moves to PendingSupervisorReview
   async submitEmployee(id: string, user: SessionUser) {
-    const review = await this.findAndCheck(id)
+    const review = await this.prisma.performanceReview.findUnique({
+      where:   { id },
+      include: { template: { include: { questions: true } } },
+    })
+    if (!review) throw new NotFoundException('Review not found')
     if (review.employeeId !== user.id) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingEmployeeSubmit) throw new ForbiddenException('Already submitted')
+
+    this.validateAnswers(
+      review.employeeAnswers as { questionId: string; answer: string }[],
+      review.template.questions,
+    )
+
     return this.prisma.performanceReview.update({
       where: { id },
       data:  { status: ReviewStatus.PendingSupervisorReview },
@@ -115,9 +126,19 @@ export class ReviewsService {
 
   // Supervisor: submit → status moves to PendingManagerApproval
   async submitSupervisor(id: string, user: SessionUser) {
-    const review = await this.findAndCheck(id)
+    const review = await this.prisma.performanceReview.findUnique({
+      where:   { id },
+      include: { template: { include: { questions: true } } },
+    })
+    if (!review) throw new NotFoundException('Review not found')
     if (review.supervisorId !== user.id) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingSupervisorReview) throw new ForbiddenException()
+
+    this.validateAnswers(
+      review.supervisorAnswers as { questionId: string; answer: string }[],
+      review.template.questions,
+    )
+
     return this.prisma.performanceReview.update({
       where: { id },
       data:  { status: ReviewStatus.PendingManagerApproval },
@@ -129,6 +150,7 @@ export class ReviewsService {
     const review = await this.findAndCheck(id)
     if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingManagerApproval) throw new ForbiddenException()
+    await this.assertAccess(review, user)
     return this.prisma.performanceReview.update({
       where: { id },
       data:  { grade: dto.grade, ...(dto.rank !== undefined && { rank: dto.rank }) },
@@ -206,6 +228,29 @@ export class ReviewsService {
     }
 
     return { total: reviews.length, gradeDistribution, statusCount }
+  }
+
+  private validateAnswers(
+    answers: { questionId: string; answer: string }[] | null,
+    questions: TemplateQuestion[],
+  ) {
+    const answersMap = new Map((answers ?? []).map((a) => [a.questionId, a.answer]))
+    const validIds   = new Set(questions.map((q) => q.id))
+
+    // Check for answers with unknown questionIds
+    for (const qid of answersMap.keys()) {
+      if (!validIds.has(qid)) {
+        throw new BadRequestException(`Invalid questionId: ${qid}`)
+      }
+    }
+
+    // Check all required questions are answered and non-empty
+    const missing = questions.filter((q) => q.required && !answersMap.get(q.id)?.trim())
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `以下必填題尚未回答：${missing.map((q) => q.questionText).join('、')}`,
+      )
+    }
   }
 
   private async findAndCheck(id: string) {
