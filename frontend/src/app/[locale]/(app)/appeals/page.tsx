@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useAppeals } from '@/modules/appeals/hooks/useAppeals'
 import type { Appeal } from '@/types'
 
@@ -12,7 +13,7 @@ function fmt(date: string) {
 }
 
 export default function AppealsPage() {
-  const { appeals, isLoading } = useAppeals()
+  const { appeals, isLoading, error, refetch } = useAppeals()
 
   return (
     <div>
@@ -20,6 +21,8 @@ export default function AppealsPage() {
 
       {isLoading ? (
         <p className="text-muted">載入中...</p>
+      ) : error ? (
+        <ErrorBanner message={error} onRetry={refetch} />
       ) : appeals.length === 0 ? (
         <EmptyState title="尚無申訴" description="目前尚無員工提交申訴。" />
       ) : (

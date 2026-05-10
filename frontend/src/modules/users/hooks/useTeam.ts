@@ -14,34 +14,38 @@ export interface TeamHierarchy {
   directReports: User[]
 }
 
+const errMsg = (err: unknown) => err instanceof Error ? err.message : '載入失敗'
+
 export function useTeamHierarchy() {
   const [hierarchy, setHierarchy] = useState<TeamHierarchy>({ groups: [], directReports: [] })
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api
       .get<TeamHierarchy>('/users/team/hierarchy')
-      .then(setHierarchy)
-      .catch(() => setHierarchy({ groups: [], directReports: [] }))
+      .then((data) => { setHierarchy(data); setError(null) })
+      .catch((err: unknown) => setError(errMsg(err)))
       .finally(() => setIsLoading(false))
   }, [])
 
-  return { ...hierarchy, isLoading }
+  return { ...hierarchy, isLoading, error }
 }
 
 export function useTeam() {
   const [members, setMembers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api
       .get<User[]>('/users/team')
-      .then(setMembers)
-      .catch(() => setMembers([]))
+      .then((data) => { setMembers(data); setError(null) })
+      .catch((err: unknown) => setError(errMsg(err)))
       .finally(() => setIsLoading(false))
   }, [])
 
-  return { members, isLoading }
+  return { members, isLoading, error }
 }
 
 interface EmployeeDetail {
@@ -49,6 +53,7 @@ interface EmployeeDetail {
   goals: Goal[]
   reviews: PerformanceReview[]
   isLoading: boolean
+  error: string | null
 }
 
 export function useEmployee(employeeId: string): EmployeeDetail {
@@ -56,6 +61,7 @@ export function useEmployee(employeeId: string): EmployeeDetail {
   const [goals, setGoals] = useState<Goal[]>([])
   const [reviews, setReviews] = useState<PerformanceReview[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetch = useCallback(() => {
     setIsLoading(true)
@@ -68,16 +74,13 @@ export function useEmployee(employeeId: string): EmployeeDetail {
         setEmployee(emp)
         setGoals(g)
         setReviews(r)
+        setError(null)
       })
-      .catch(() => {
-        setEmployee(null)
-        setGoals([])
-        setReviews([])
-      })
+      .catch((err: unknown) => setError(errMsg(err)))
       .finally(() => setIsLoading(false))
   }, [employeeId])
 
   useEffect(() => { fetch() }, [fetch])
 
-  return { employee, goals, reviews, isLoading }
+  return { employee, goals, reviews, isLoading, error }
 }

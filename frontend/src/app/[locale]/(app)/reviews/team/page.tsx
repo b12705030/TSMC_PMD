@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeamReviews } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { PerformanceReviewDetail, ReviewGrade, ReviewStatus } from '@/types'
@@ -28,7 +29,7 @@ const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
 
 
 export default function TeamReviewsPage() {
-  const { reviews, isLoading } = useTeamReviews()
+  const { reviews, isLoading, error, refetch } = useTeamReviews()
   const { user } = useAuth()
   const isManager = user?.role === 'Manager'
 
@@ -86,6 +87,8 @@ export default function TeamReviewsPage() {
 
       {isLoading ? (
         <p className="text-muted">載入中...</p>
+      ) : error ? (
+        <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (
         <EmptyState title="目前沒有團隊評核" description="週期開始並員工完成自評後，評核會出現在這裡。" />
       ) : (

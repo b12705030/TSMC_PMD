@@ -26,13 +26,14 @@ export interface UpdateCyclePayload {
 export function useCycles() {
   const [cycles, setCycles] = useState<PerformanceCycle[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   async function fetchCycles() {
     setIsLoading(true)
     api
       .get<PerformanceCycle[]>('/cycles')
-      .then(setCycles)
-      .catch(() => setCycles([]))
+      .then((data) => { setCycles(data); setError(null) })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : '載入失敗'))
       .finally(() => setIsLoading(false))
   }
 
@@ -54,5 +55,5 @@ export function useCycles() {
     setCycles((prev) => prev.map((c) => (c.id === id ? updated : c)))
   }
 
-  return { cycles, isLoading, createCycle, updateCycle, advanceStatus }
+  return { cycles, isLoading, error, createCycle, updateCycle, advanceStatus }
 }

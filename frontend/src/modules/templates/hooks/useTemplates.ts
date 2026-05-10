@@ -28,12 +28,13 @@ export interface AddQuestionPayload {
 export function useTemplates() {
   const [templates, setTemplates] = useState<ReviewTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api
       .get<ReviewTemplate[]>('/templates')
-      .then(setTemplates)
-      .catch(() => setTemplates([]))
+      .then((data) => { setTemplates(data); setError(null) })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : '載入失敗'))
       .finally(() => setIsLoading(false))
   }, [])
 
@@ -69,5 +70,5 @@ export function useTemplates() {
     )
   }
 
-  return { templates, isLoading, createTemplate, publishTemplate, addCustomQuestion, deleteCustomQuestion }
+  return { templates, isLoading, error, createTemplate, publishTemplate, addCustomQuestion, deleteCustomQuestion }
 }

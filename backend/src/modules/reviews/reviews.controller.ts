@@ -74,9 +74,9 @@ export class ReviewsController {
     return this.reviewsService.submitEmployee(id, user)
   }
 
-  // Supervisor: save review (draft)
+  // Supervisor / Manager (for direct-reports): save review (draft)
   @Put(':id/supervisor')
-  @Roles(Role.Supervisor)
+  @Roles(Role.Supervisor, Role.Manager)
   saveSupervisorReview(
     @Param('id') id: string,
     @CurrentUser() user: SessionUser,
@@ -85,9 +85,9 @@ export class ReviewsController {
     return this.reviewsService.saveSupervisorReview(id, user, dto)
   }
 
-  // Supervisor: submit → PendingManagerApproval
+  // Supervisor / Manager (for direct-reports): submit → PendingManagerApproval
   @Post(':id/supervisor/submit')
-  @Roles(Role.Supervisor)
+  @Roles(Role.Supervisor, Role.Manager)
   submitSupervisor(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.reviewsService.submitSupervisor(id, user)
   }

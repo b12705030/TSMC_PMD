@@ -19,6 +19,15 @@ export class GoalsController {
     return this.goalsService.getMyGoals(user.id)
   }
 
+  @Get('employee/:employeeId')
+  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
+  getEmployeeGoalsInline(
+    @Param('employeeId') employeeId: string,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.goalsService.getGoalsByEmployee(employeeId, user)
+  }
+
   @Get(':id')
   @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.Admin)
   getGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
@@ -114,15 +123,6 @@ export class GoalsController {
     @CurrentUser() user: SessionUser,
   ) {
     return this.goalsService.deleteMilestone(id, milestoneId, user)
-  }
-
-  @Get('employee/:employeeId')
-  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
-  getEmployeeGoals(
-    @Param('employeeId') employeeId: string,
-    @CurrentUser() user: SessionUser,
-  ) {
-    return this.goalsService.getGoalsByEmployee(employeeId, user)
   }
 
   @Patch(':id/approve')

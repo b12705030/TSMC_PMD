@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useGoals } from '@/modules/goals/hooks/useGoals'
 import type { Goal, GoalStatus } from '@/types'
 
@@ -14,7 +15,7 @@ const STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: num
 }
 
 export default function GoalsPage() {
-  const { goals, isLoading } = useGoals()
+  const { goals, isLoading, error, refetch } = useGoals()
 
   const completedCount = goals.filter((g) => g.status === 'Completed').length
   const activeCount    = goals.filter((g) => g.status === 'Approved').length
@@ -31,8 +32,10 @@ export default function GoalsPage() {
         }
       />
 
+      {error && <div className="mb-4"><ErrorBanner message={error} onRetry={refetch} /></div>}
+
       {/* Summary bar */}
-      {!isLoading && goals.length > 0 && (
+      {!isLoading && !error && goals.length > 0 && (
         <div className="mb-6 flex gap-4">
           <StatChip icon="total"    value={goals.length}   label="目標總數" />
           <StatChip icon="active"   value={activeCount}    label="進行中" />
@@ -42,7 +45,7 @@ export default function GoalsPage() {
 
       {isLoading ? (
         <p className="text-muted">載入中...</p>
-      ) : goals.length === 0 ? (
+      ) : error ? null : goals.length === 0 ? (
         <EmptyState
           title="還沒有任何目標"
           description="設定你的第一個 SMART 目標，讓這個績效週期有個好的開始。"

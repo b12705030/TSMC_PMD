@@ -127,15 +127,22 @@ export class CyclesService {
       }
     }
 
-    const updated = await this.prisma.performanceCycle.update({
-      where: { id },
-      data:  { status: next },
-    })
+    // Build review rows before the transaction (read-only)
+    const reviewRows = next === CycleStatus.EmployeeReview
+      ? await this.buildReviewRows(cycle.id, cycle.regions)
+      : []
 
-    // Auto-create PerformanceReview records when employee review period starts
-    if (next === CycleStatus.EmployeeReview) {
-      await this.autoCreateReviews(cycle.id, cycle.regions)
-    }
+    // Atomic: status update + review creation
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.performanceCycle.update({
+        where: { id },
+        data:  { status: next },
+      })
+      if (reviewRows.length) {
+        await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
+      }
+      return result
+    })
 
     return updated
   }
@@ -178,7 +185,11 @@ export class CyclesService {
   private async dryRunReviews(cycleId: string, cycleRegions: string[]) {
     const [employees, templates] = await Promise.all([
       this.prisma.user.findMany({
-        where: { role: Role.Employee, region: { name: { in: cycleRegions } }, supervisorId: { not: null } },
+        where: {
+          role:   Role.Employee,
+          region: { name: { in: cycleRegions } },
+          OR: [{ supervisorId: { not: null } }, { managerId: { not: null } }],
+        },
         select: { id: true, name: true, jobLevel: true, jobTitle: true, region: { select: { name: true } } },
       }),
       this.prisma.formTemplate.findMany({
@@ -197,15 +208,14 @@ export class CyclesService {
       .map((emp) => ({ id: emp.id, name: emp.name, jobLevel: emp.jobLevel, jobTitle: emp.jobTitle, region: emp.region.name }))
   }
 
-  // When cycle moves to InProgress: create one PerformanceReview per employee that
-  // matches a Published template (by jobLevel in appliesGrades AND jobTitle in applyTitles).
-  private async autoCreateReviews(cycleId: string, cycleRegions: string[]) {
+  // Build review rows for all eligible employees — used inside $transaction
+  private async buildReviewRows(cycleId: string, cycleRegions: string[]) {
     const [employees, templates] = await Promise.all([
       this.prisma.user.findMany({
         where: {
-          role: Role.Employee,
+          role:   Role.Employee,
           region: { name: { in: cycleRegions } },
-          supervisorId: { not: null },
+          OR: [{ supervisorId: { not: null } }, { managerId: { not: null } }],
         },
         select: {
           id: true,
@@ -226,7 +236,7 @@ export class CyclesService {
       }),
     ])
 
-    const rows: { cycleId: string; employeeId: string; supervisorId: string; templateId: string }[] = []
+    const rows: { cycleId: string; employeeId: string; supervisorId: string | null; templateId: string }[] = []
 
     for (const emp of employees) {
       const tpl = templates.find(
@@ -236,14 +246,12 @@ export class CyclesService {
           t.applyTitles.includes(emp.jobTitle),
       )
       if (!tpl) {
-        console.warn(`autoCreateReviews: no template for employee ${emp.id} (${emp.jobLevel} / ${emp.jobTitle})`)
+        console.warn(`buildReviewRows: no template for employee ${emp.id} (${emp.jobLevel} / ${emp.jobTitle})`)
         continue
       }
-      rows.push({ cycleId, employeeId: emp.id, supervisorId: emp.supervisorId!, templateId: tpl.id })
+      rows.push({ cycleId, employeeId: emp.id, supervisorId: emp.supervisorId ?? null, templateId: tpl.id })
     }
 
-    if (rows.length) {
-      await this.prisma.performanceReview.createMany({ data: rows, skipDuplicates: true })
-    }
+    return rows
   }
 }

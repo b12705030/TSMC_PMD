@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useTemplates, type CreateTemplatePayload } from '@/modules/templates/hooks/useTemplates'
@@ -19,7 +20,7 @@ const EMPTY_QUESTION: Omit<QuestionDraft, 'orderIndex'> = { questionText: '', qu
 
 export default function TemplatesPage() {
   const { user } = useAuth()
-  const { templates, isLoading, createTemplate, publishTemplate } = useTemplates()
+  const { templates, isLoading, error: loadError, createTemplate, publishTemplate } = useTemplates()
   const { cycles } = useCycles()
 
   const [jobLevels, setJobLevels] = useState<string[]>([])
@@ -141,6 +142,8 @@ export default function TemplatesPage() {
 
       {isLoading ? (
         <p className="text-muted">載入中...</p>
+      ) : loadError ? (
+        <ErrorBanner message={loadError} />
       ) : templates.length === 0 ? (
         <EmptyState
           title="尚無評核模板"

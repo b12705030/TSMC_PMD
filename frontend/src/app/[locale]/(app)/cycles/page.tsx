@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CycleStepper } from '@/components/CycleStepper'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useCycles, type CreateCyclePayload, type UpdateCyclePayload } from '@/modules/cycles/hooks/useCycles'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
@@ -77,7 +78,7 @@ export default function CyclesPage() {
   const t       = useTranslations('cycles')
   const tCommon = useTranslations('common')
   const locale  = useLocale()
-  const { cycles, isLoading, createCycle, updateCycle, advanceStatus } = useCycles()
+  const { cycles, isLoading, error: loadError, createCycle, updateCycle, advanceStatus } = useCycles()
   const { user } = useAuth()
   const isAdmin   = user?.role === 'Admin'
   const isHR      = user?.role === 'RegionalHR'
@@ -214,6 +215,8 @@ export default function CyclesPage() {
 
       {isLoading ? (
         <p className="text-muted">{tCommon('loading')}</p>
+      ) : loadError ? (
+        <ErrorBanner message={loadError} />
       ) : cycles.length === 0 ? (
         <EmptyState
           title={t('emptyTitle')}

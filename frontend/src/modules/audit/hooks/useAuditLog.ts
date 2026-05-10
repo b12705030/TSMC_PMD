@@ -7,14 +7,15 @@ import type { AuditLog } from '@/types'
 export function useAuditLog() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api
       .get<AuditLog[]>('/audit')
-      .then(setLogs)
-      .catch(() => setLogs([]))
+      .then((data) => { setLogs(data); setError(null) })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : '載入失敗'))
       .finally(() => setIsLoading(false))
   }, [])
 
-  return { logs, isLoading }
+  return { logs, isLoading, error }
 }

@@ -8,7 +8,7 @@ import type { TemplateQuestion } from '@prisma/client'
 const REVIEW_INCLUDE = {
   cycle:      true,
   template:   { include: { questions: { orderBy: { orderIndex: 'asc' as const } } } },
-  employee:   { select: { id: true, name: true, employeeId: true, jobLevel: true, jobTitle: true } },
+  employee:   { select: { id: true, name: true, employeeId: true, jobLevel: true, jobTitle: true, departmentId: true, managerId: true } },
   supervisor: { select: { id: true, name: true, employeeId: true } },
 }
 
@@ -17,11 +17,12 @@ export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getMyReviews(userId: string) {
-    return this.prisma.performanceReview.findMany({
+    const reviews = await this.prisma.performanceReview.findMany({
       where:   { employeeId: userId },
       include: REVIEW_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })
+    return reviews.map((r) => this.scopeQuestions(r))
   }
 
   async getReview(id: string, user: SessionUser) {
@@ -31,29 +32,32 @@ export class ReviewsService {
     })
     if (!review) throw new NotFoundException('Review not found')
     await this.assertAccess(review, user)
-    return review
+    return this.scopeQuestions(review)
   }
 
   // Supervisor: reviews waiting for their action
   async getTeamReviews(user: SessionUser) {
     if (user.role === Role.Supervisor) {
-      return this.prisma.performanceReview.findMany({
+      const reviews = await this.prisma.performanceReview.findMany({
         where:   { supervisorId: user.id },
         include: REVIEW_INCLUDE,
         orderBy: { createdAt: 'desc' },
       })
+      return reviews.map((r) => this.scopeQuestions(r))
     }
     if (user.role === Role.Manager || user.role === Role.Admin) {
-      return this.prisma.performanceReview.findMany({
-        where: {
-          OR: [
-            { employee: { supervisor: { managerId: user.id } } },
-            { employee: { managerId: user.id, supervisorId: null } },
-          ],
-        },
+      const where = user.role === Role.Admin ? {} : {
+        OR: [
+          { employee: { supervisor: { managerId: user.id } } },
+          { employee: { managerId: user.id, supervisorId: null } },
+        ],
+      }
+      const reviews = await this.prisma.performanceReview.findMany({
+        where,
         include: REVIEW_INCLUDE,
         orderBy: { createdAt: 'desc' },
       })
+      return reviews.map((r) => this.scopeQuestions(r))
     }
     throw new ForbiddenException()
   }
@@ -70,11 +74,12 @@ export class ReviewsService {
             { employee: { managerId: user.id, supervisorId: null } },
           ],
         }
-    return this.prisma.performanceReview.findMany({
+    const reviews = await this.prisma.performanceReview.findMany({
       where,
       include: REVIEW_INCLUDE,
       orderBy: [{ grade: 'asc' }, { rank: 'asc' }, { createdAt: 'asc' }],
     })
+    return reviews.map((r) => this.scopeQuestions(r))
   }
 
   // Employee: save answers (draft)
@@ -92,15 +97,21 @@ export class ReviewsService {
   async submitEmployee(id: string, user: SessionUser) {
     const review = await this.prisma.performanceReview.findUnique({
       where:   { id },
-      include: { template: { include: { questions: true } } },
+      include: {
+        template: { include: { questions: true } },
+        employee: { select: { departmentId: true } },
+      },
     })
     if (!review) throw new NotFoundException('Review not found')
     if (review.employeeId !== user.id) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingEmployeeSubmit) throw new ForbiddenException('Already submitted')
 
+    const scopedQuestions = review.template.questions.filter(
+      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+    )
     this.validateAnswers(
       review.employeeAnswers as { questionId: string; answer: string }[],
-      review.template.questions,
+      scopedQuestions,
     )
 
     return this.prisma.performanceReview.update({
@@ -109,10 +120,16 @@ export class ReviewsService {
     })
   }
 
-  // Supervisor: save review (draft)
+  // Supervisor / Manager (for direct-reports): save review (draft)
   async saveSupervisorReview(id: string, user: SessionUser, dto: SaveSupervisorReviewDto) {
-    const review = await this.findAndCheck(id)
-    if (review.supervisorId !== user.id) throw new ForbiddenException()
+    const review = await this.prisma.performanceReview.findUnique({
+      where:   { id },
+      include: { employee: { select: { managerId: true } } },
+    })
+    if (!review) throw new NotFoundException('Review not found')
+    const isReviewer = review.supervisorId === user.id ||
+      (review.supervisorId === null && review.employee.managerId === user.id)
+    if (!isReviewer) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingSupervisorReview) throw new ForbiddenException()
     return this.prisma.performanceReview.update({
       where: { id },
@@ -124,19 +141,27 @@ export class ReviewsService {
     })
   }
 
-  // Supervisor: submit → status moves to PendingManagerApproval
+  // Supervisor / Manager (for direct-reports): submit → status moves to PendingManagerApproval
   async submitSupervisor(id: string, user: SessionUser) {
     const review = await this.prisma.performanceReview.findUnique({
       where:   { id },
-      include: { template: { include: { questions: true } } },
+      include: {
+        template: { include: { questions: true } },
+        employee: { select: { managerId: true, departmentId: true } },
+      },
     })
     if (!review) throw new NotFoundException('Review not found')
-    if (review.supervisorId !== user.id) throw new ForbiddenException()
+    const isReviewer = review.supervisorId === user.id ||
+      (review.supervisorId === null && review.employee.managerId === user.id)
+    if (!isReviewer) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingSupervisorReview) throw new ForbiddenException()
 
+    const scopedQuestions = review.template.questions.filter(
+      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+    )
     this.validateAnswers(
       review.supervisorAnswers as { questionId: string; answer: string }[],
-      review.template.questions,
+      scopedQuestions,
     )
 
     return this.prisma.performanceReview.update({
@@ -173,11 +198,12 @@ export class ReviewsService {
       const isViaSuper     = (employee as any).supervisor?.managerId === user.id
       if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
     }
-    return this.prisma.performanceReview.findMany({
+    const reviews = await this.prisma.performanceReview.findMany({
       where:   { employeeId },
       include: REVIEW_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })
+    return reviews.map((r) => this.scopeQuestions(r))
   }
 
   // Manager: publish all PendingManagerApproval reviews in a cycle
@@ -213,6 +239,8 @@ export class ReviewsService {
           { employee: { managerId: user.id, supervisorId: null } },
         ],
       }
+    } else if (user.role === Role.RegionalHR) {
+      where = { employee: { regionId: user.regionId } }
     }
 
     const reviews = await this.prisma.performanceReview.findMany({
@@ -230,6 +258,21 @@ export class ReviewsService {
     return { total: reviews.length, gradeDistribution, statusCount }
   }
 
+  private scopeQuestions<T extends {
+    template: { questions: { scopeDepartmentId: string | null }[] }
+    employee: { departmentId: string }
+  }>(review: T): T {
+    return {
+      ...review,
+      template: {
+        ...review.template,
+        questions: review.template.questions.filter(
+          (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+        ),
+      },
+    }
+  }
+
   private validateAnswers(
     answers: { questionId: string; answer: string }[] | null,
     questions: TemplateQuestion[],
@@ -237,14 +280,12 @@ export class ReviewsService {
     const answersMap = new Map((answers ?? []).map((a) => [a.questionId, a.answer]))
     const validIds   = new Set(questions.map((q) => q.id))
 
-    // Check for answers with unknown questionIds
     for (const qid of answersMap.keys()) {
       if (!validIds.has(qid)) {
         throw new BadRequestException(`Invalid questionId: ${qid}`)
       }
     }
 
-    // Check all required questions are answered and non-empty
     const missing = questions.filter((q) => q.required && !answersMap.get(q.id)?.trim())
     if (missing.length > 0) {
       throw new BadRequestException(
@@ -259,7 +300,7 @@ export class ReviewsService {
     return review
   }
 
-  private async assertAccess(review: { employeeId: string; supervisorId: string }, user: SessionUser) {
+  private async assertAccess(review: { employeeId: string; supervisorId: string | null }, user: SessionUser) {
     if (user.role === Role.Admin) return
     if (review.employeeId === user.id) return
     if (review.supervisorId === user.id) return

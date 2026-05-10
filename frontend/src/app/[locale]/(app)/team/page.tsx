@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { DataTable } from '@/components/DataTable'
 import { RoleBadge } from '@/components/RoleBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeam, useTeamHierarchy } from '@/modules/users/hooks/useTeam'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { User } from '@/types'
@@ -12,7 +13,9 @@ import type { User } from '@/types'
 // ─── Supervisor flat view ────────────────────────────────────────────────────
 
 function SupervisorTeamView() {
-  const { members, isLoading } = useTeam()
+  const { members, isLoading, error } = useTeam()
+
+  if (error) return <ErrorBanner message={error} />
 
   const columns = [
     { key: 'name',       label: '姓名',   sortable: true },
@@ -63,9 +66,10 @@ function EmployeeRow({ emp }: { emp: User }) {
 }
 
 function ManagerTeamView() {
-  const { groups, directReports, isLoading } = useTeamHierarchy()
+  const { groups, directReports, isLoading, error } = useTeamHierarchy()
 
   if (isLoading) return <p className="text-muted">載入中...</p>
+  if (error) return <ErrorBanner message={error} />
 
   if (groups.length === 0 && directReports.length === 0) {
     return <EmptyState title="尚無團隊成員" description="目前沒有任何人被指派到你的部門。" />

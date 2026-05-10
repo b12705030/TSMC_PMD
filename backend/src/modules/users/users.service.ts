@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import type { SessionUser } from '../../common/types/request.types'
 import { Role } from '../../common/enums/role.enum'
@@ -81,13 +81,27 @@ export class UsersService {
     return rows.map((r) => r.jobTitle)
   }
 
-  async getEmployee(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: { region: true, department: true },
+  async getEmployee(id: string, currentUser: SessionUser) {
+    const target = await this.prisma.user.findUnique({
+      where:   { id },
+      include: { region: true, department: true, supervisor: { select: { managerId: true } } },
     })
-    if (!user) return null
-    return flattenUser(user)
+    if (!target) return null
+
+    if (currentUser.role !== Role.Admin) {
+      if (currentUser.role === Role.RegionalHR) {
+        if (target.regionId !== currentUser.regionId) throw new ForbiddenException()
+      } else if (currentUser.role === Role.Supervisor) {
+        if (target.supervisorId !== currentUser.id) throw new ForbiddenException()
+      } else if (currentUser.role === Role.Manager) {
+        const isDirectReport = target.managerId === currentUser.id && !target.supervisorId
+        const isViaSuper     = target.supervisor?.managerId === currentUser.id
+        if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
+      }
+    }
+
+    const { supervisor: _sv, ...rest } = target
+    return flattenUser(rest as UserWithRelations)
   }
 }
 

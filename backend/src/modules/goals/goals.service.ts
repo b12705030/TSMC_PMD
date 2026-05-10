@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { Role } from '../../common/enums/role.enum'
 import type { SessionUser } from '../../common/types/request.types'
@@ -32,6 +32,17 @@ export class GoalsService {
   }
 
   async createGoal(user: SessionUser, dto: CreateGoalDto) {
+    if (dto.cycleId) {
+      const cycle = await this.prisma.performanceCycle.findUnique({ where: { id: dto.cycleId } })
+      if (!cycle) throw new BadRequestException('Cycle not found')
+      if (!cycle.regions.includes(user.region)) {
+        throw new ForbiddenException('Cycle does not include your region')
+      }
+      if (cycle.status !== 'GoalSetting' && cycle.status !== 'InProgress') {
+        throw new BadRequestException('Goals can only be linked to active cycles (GoalSetting or InProgress)')
+      }
+    }
+
     return this.prisma.goal.create({
       data: {
         userId:      user.id,

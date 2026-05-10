@@ -50,8 +50,8 @@ export class UsersController {
 
   @Get(':id')
   @Roles(Role.Manager, Role.Supervisor, Role.RegionalHR, Role.Admin)
-  getEmployee(@Param('id') id: string) {
-    return this.usersService.getEmployee(id)
+  getEmployee(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.usersService.getEmployee(id, user)
   }
 
   @Get(':id/goals')

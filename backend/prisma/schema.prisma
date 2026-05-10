@@ -279,8 +279,8 @@ model PerformanceReview {
   cycle             PerformanceCycle @relation(fields: [cycleId], references: [id])
   employeeId        String
   employee          User         @relation("ReviewEmployee",   fields: [employeeId],   references: [id])
-  supervisorId      String
-  supervisor        User         @relation("ReviewSupervisor", fields: [supervisorId], references: [id])
+  supervisorId      String?
+  supervisor        User?        @relation("ReviewSupervisor", fields: [supervisorId], references: [id])
   templateId        String
   template          FormTemplate @relation(fields: [templateId], references: [id])
   status            ReviewStatus @default(PendingEmployeeSubmit)
