@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
-import { GoalType, GoalStatus } from '@prisma/client'
+import { GoalType } from '@prisma/client'
 
 export class CreateGoalDto {
   @IsString() @IsNotEmpty()
@@ -56,7 +56,4 @@ export class UpdateGoalDto {
 
   @IsEnum(GoalType) @IsOptional()
   type?: GoalType
-
-  @IsEnum(GoalStatus) @IsOptional()
-  status?: GoalStatus
 }
