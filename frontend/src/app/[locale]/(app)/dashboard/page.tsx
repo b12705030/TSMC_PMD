@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { PageHeader } from '@/components/PageHeader'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
 import { CycleStepper } from '@/components/CycleStepper'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -245,8 +246,8 @@ function ActiveCycles({ cycles }: { cycles: PerformanceCycle[] }) {
 
 function EmployeeSection() {
   const t = useTranslations('dashboard')
-  const { reviews, isLoading: rl } = useReviews()
-  const { goals,   isLoading: gl } = useGoals()
+  const { reviews, isLoading: rl, error: rlErr } = useReviews()
+  const { goals,   isLoading: gl, error: glErr } = useGoals()
 
   const pendingReviews = reviews.filter((r) => r.status === 'PendingEmployeeSubmit')
   const goalStats = {
@@ -289,6 +290,8 @@ function EmployeeSection() {
           </div>
           {gl ? (
             <p className="text-muted">{t('loading')}</p>
+          ) : glErr ? (
+            <ErrorBanner message={glErr} />
           ) : goalStats.total === 0 ? (
             <div className="card py-6 text-center">
               <p className="text-sm text-gray-500">{t('goals.empty')}</p>
@@ -319,6 +322,8 @@ function EmployeeSection() {
           </div>
           {rl ? (
             <p className="text-muted">{t('loading')}</p>
+          ) : rlErr ? (
+            <ErrorBanner message={rlErr} />
           ) : reviews.length === 0 ? (
             <p className="text-muted">{t('myReviews.empty')}</p>
           ) : (
@@ -344,7 +349,7 @@ function EmployeeSection() {
 
 function TeamReviewSection({ role }: { role: Role }) {
   const t = useTranslations('dashboard')
-  const { reviews, isLoading } = useTeamReviews()
+  const { reviews, isLoading, error } = useTeamReviews()
 
   const pendingSup = reviews.filter((r) => r.status === 'PendingSupervisorReview')
   const pendingMgr = reviews.filter((r) => r.status === 'PendingManagerApproval')
@@ -376,6 +381,8 @@ function TeamReviewSection({ role }: { role: Role }) {
         </div>
         {isLoading ? (
           <p className="text-muted">{t('loading')}</p>
+        ) : error ? (
+          <ErrorBanner message={error} />
         ) : reviews.length === 0 ? (
           <div className="card py-5 text-center">
             <p className="text-sm text-gray-500">{t('teamReviews.empty')}</p>
@@ -420,9 +427,10 @@ const GRADE_BAR_COLOR = {
 
 function GradeDistributionChart() {
   const t = useTranslations('dashboard')
-  const { stats, isLoading } = useReviewStats()
+  const { stats, isLoading, error } = useReviewStats()
 
   if (isLoading) return <p className="text-muted text-sm">{t('loading')}</p>
+  if (error) return <p className="text-sm text-red-600">載入失敗：{error}</p>
   if (!stats || stats.total === 0) return <p className="text-muted text-sm">{t('gradeChart.empty')}</p>
 
   const graded      = GRADE_ORDER.map((g) => ({ grade: g, count: stats.gradeDistribution[g] ?? 0 }))
@@ -455,7 +463,7 @@ function GradeDistributionChart() {
 
 function HRSection() {
   const t = useTranslations('dashboard')
-  const { templates, isLoading } = useTemplates()
+  const { templates, isLoading, error: tmplErr } = useTemplates()
 
   const draftCount     = templates.filter((t) => t.status === 'Draft').length
   const publishedCount = templates.filter((t) => t.status === 'Published').length
@@ -485,6 +493,8 @@ function HRSection() {
         </div>
         {isLoading ? (
           <p className="text-muted">{t('loading')}</p>
+        ) : tmplErr ? (
+          <ErrorBanner message={tmplErr} />
         ) : (
           <div className="grid grid-cols-2 gap-3">
             <Link href="/templates" className="block rounded-lg bg-orange-50 p-4 text-center hover:opacity-80">
@@ -549,7 +559,7 @@ function FlowGuide({ role }: { role: Role }) {
 export default function DashboardPage() {
   const t = useTranslations('dashboard')
   const { user } = useAuth()
-  const { cycles, isLoading: cyclesLoading } = useCycles()
+  const { cycles, isLoading: cyclesLoading, error: cyclesError } = useCycles()
 
   if (!user) return null
 
@@ -569,6 +579,8 @@ export default function DashboardPage() {
 
       {cyclesLoading ? (
         <p className="text-muted">{t('loadingCycles')}</p>
+      ) : cyclesError ? (
+        <ErrorBanner message={cyclesError} />
       ) : (
         <>
           <CycleTimeline cycles={cycles} />

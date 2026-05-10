@@ -195,14 +195,14 @@
 - [x] **[高] Goal 可綁任意 `cycleId`，缺 region/status 驗證** → `createGoal()` 中若 `dto.cycleId` 存在，驗證 cycle region 包含 `user.region` 且狀態為 `GoalSetting` 或 `InProgress`，否則拋 400/403。（`goals.service.ts`）
 - [x] **[高] CI `npm test` 因無測試而失敗** → `package.json` test script 加 `--passWithNoTests`，CI pipeline 恢復綠燈。
 - [x] **[高] Direct-report 員工不進評核** → `PerformanceReview.supervisorId` 改 nullable（`String?`）；`dryRunReviews` / `buildReviewRows` 改為包含有 supervisor 或有 manager 的員工；`saveSupervisorReview` / `submitSupervisor` 補 direct-report 的 reviewer 判斷（`supervisorId === null && employee.managerId === user.id`）。需執行 migration `nullable_review_supervisor`。（`schema.prisma`、`cycles.service.ts`、`reviews.service.ts`）
-- [x] **[高] 前端 hook 吞錯誤** → 所有 7 個 hook 檔（`useReviews`、`useGoals`、`useAppeals`、`useTemplates`、`useCycles`、`useTeam`、`useAuditLog`）統一加 `error: string | null` state，`.catch()` 改為 `setError(errMsg(err))`；新增 `ErrorBanner` 元件，所有列表頁（`goals`、`reviews`、`reviews/team`、`appeals`、`team`、`templates`、`cycles`）接 `error` 並顯示錯誤橫幅與重試按鈕。
+- [x] **[高] 前端 hook 吞錯誤** → 所有 7 個 hook 檔統一加 `error: string | null` state；新增 `ErrorBanner` 元件；所有頁面（`goals`、`reviews`、`reviews/team`、`appeals`、`team`、`templates`、`cycles`、`audit-log`、`dashboard`）接 `error` 並顯示錯誤橫幅。
+- [x] **[中] Admin `getTeamReviews()` 語意不一致** → 拆為獨立 Admin 分支（`where = {}`），不再與 Manager 混用同一分支。（`reviews.service.ts`）
+- [x] **[中] Review submit answer 無型別驗證** → `validateAnswers()` 加 Rating（1–5 整數）、MultipleChoice（需在 `options` 內）、Text（≤5000 字）驗證。（`reviews.service.ts`）
 
 ### 待改善（中期，非立即阻塞）
 
 - [ ] **[中高] 登入無 rate limit / lockout** → `POST /auth/login` 無節流，帳密可暴力嘗試。修法：加 NestJS rate limiter，登入失敗超過 N 次鎖定帳號並寫 audit。
 - [ ] **[中] CSRF 防護不完整** → 目前依賴 `SameSite=Lax`；正式部署若涉及跨子網域需明確 CSRF token 或 double-submit cookie。
-- [ ] **[中] API 路由順序潛在衝突** → `GET /goals/:id` 宣告在 `GET /goals/employee/:employeeId` 前，Express/Nest 可能讓後者被前者攔截。修法：靜態路由移到 `:id` 之前。（`goals.controller.ts`）
-- [ ] **[中] Admin `getTeamReviews()` 語意不一致** → Admin 被當 Manager 查下屬，語意模糊；若 Admin 應全域可讀需獨立分支。
 
 ### 架構層優化（長期）
 

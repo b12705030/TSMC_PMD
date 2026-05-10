@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
-import { Role, ReviewStatus } from '@prisma/client'
+import { QuestionType, Role, ReviewStatus } from '@prisma/client'
 import type { SessionUser } from '../../common/types/request.types'
 import type { SaveAnswersDto, SaveSupervisorReviewDto, CalibrateDto } from './dto/review.dto'
 import type { TemplateQuestion } from '@prisma/client'
@@ -37,6 +37,13 @@ export class ReviewsService {
 
   // Supervisor: reviews waiting for their action
   async getTeamReviews(user: SessionUser) {
+    if (user.role === Role.Admin) {
+      const reviews = await this.prisma.performanceReview.findMany({
+        include: REVIEW_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      })
+      return reviews.map((r) => this.scopeQuestions(r))
+    }
     if (user.role === Role.Supervisor) {
       const reviews = await this.prisma.performanceReview.findMany({
         where:   { supervisorId: user.id },
@@ -45,15 +52,14 @@ export class ReviewsService {
       })
       return reviews.map((r) => this.scopeQuestions(r))
     }
-    if (user.role === Role.Manager || user.role === Role.Admin) {
-      const where = user.role === Role.Admin ? {} : {
-        OR: [
-          { employee: { supervisor: { managerId: user.id } } },
-          { employee: { managerId: user.id, supervisorId: null } },
-        ],
-      }
+    if (user.role === Role.Manager) {
       const reviews = await this.prisma.performanceReview.findMany({
-        where,
+        where: {
+          OR: [
+            { employee: { supervisor: { managerId: user.id } } },
+            { employee: { managerId: user.id, supervisorId: null } },
+          ],
+        },
         include: REVIEW_INCLUDE,
         orderBy: { createdAt: 'desc' },
       })
@@ -291,6 +297,28 @@ export class ReviewsService {
       throw new BadRequestException(
         `以下必填題尚未回答：${missing.map((q) => q.questionText).join('、')}`,
       )
+    }
+
+    for (const q of questions) {
+      const raw = answersMap.get(q.id)
+      if (!raw?.trim()) continue
+
+      if (q.questionType === QuestionType.Rating) {
+        const n = Number(raw)
+        if (!Number.isInteger(n) || n < 1 || n > 5) {
+          throw new BadRequestException(`「${q.questionText}」評分必須為 1–5 的整數`)
+        }
+      }
+
+      if (q.questionType === QuestionType.MultipleChoice) {
+        if (!q.options.includes(raw)) {
+          throw new BadRequestException(`「${q.questionText}」的答案不在可選範圍內`)
+        }
+      }
+
+      if (q.questionType === QuestionType.Text && raw.length > 5000) {
+        throw new BadRequestException(`「${q.questionText}」回答不可超過 5000 字`)
+      }
     }
   }
 

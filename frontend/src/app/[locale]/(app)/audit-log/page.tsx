@@ -3,13 +3,14 @@
 import { useTranslations, useLocale } from 'next-intl'
 import { PageHeader } from '@/components/PageHeader'
 import { DataTable } from '@/components/DataTable'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { useAuditLog } from '@/modules/audit/hooks/useAuditLog'
 import type { AuditLog } from '@/types'
 
 export default function AuditLogPage() {
   const t      = useTranslations('auditLog')
   const locale = useLocale()
-  const { logs, isLoading } = useAuditLog()
+  const { logs, isLoading, error } = useAuditLog()
 
   const columns = [
     {
@@ -31,12 +32,16 @@ export default function AuditLogPage() {
         title={t('pageTitle')}
         description={t('pageDesc')}
       />
-      <DataTable
-        columns={columns}
-        data={logs}
-        isLoading={isLoading}
-        emptyMessage={t('empty')}
-      />
+      {error ? (
+        <ErrorBanner message={error} />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={logs}
+          isLoading={isLoading}
+          emptyMessage={t('empty')}
+        />
+      )}
     </div>
   )
 }
