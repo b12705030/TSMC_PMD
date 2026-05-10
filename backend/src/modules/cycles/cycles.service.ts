@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-import { CycleStatus, Role, TemplateStatus } from '@prisma/client'
+import { CycleStatus, ReviewStatus, Role, TemplateStatus } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateCycleDto } from './dto/create-cycle.dto'
@@ -90,6 +90,40 @@ export class CyclesService {
           message: `有 ${unmatched.length} 位員工找不到匹配的評核模板，推進前請補齊模板覆蓋範圍。`,
           unmatched,
         })
+      }
+    }
+
+    // Completeness gates before advancing
+    if (next === CycleStatus.SupervisorReview) {
+      const pendingCount = await this.prisma.performanceReview.count({
+        where: { cycleId: id, status: ReviewStatus.PendingEmployeeSubmit },
+      })
+      if (pendingCount > 0) {
+        throw new BadRequestException(
+          `尚有 ${pendingCount} 位員工未完成自評，請等所有員工提交後再推進。`,
+        )
+      }
+    }
+
+    if (next === CycleStatus.Calibration) {
+      const pendingCount = await this.prisma.performanceReview.count({
+        where: { cycleId: id, status: ReviewStatus.PendingSupervisorReview },
+      })
+      if (pendingCount > 0) {
+        throw new BadRequestException(
+          `尚有 ${pendingCount} 份評核未由主管完成審核，請等所有主管提交後再推進。`,
+        )
+      }
+    }
+
+    if (next === CycleStatus.Completed) {
+      const pendingCount = await this.prisma.performanceReview.count({
+        where: { cycleId: id, status: ReviewStatus.PendingManagerApproval },
+      })
+      if (pendingCount > 0) {
+        throw new BadRequestException(
+          `尚有 ${pendingCount} 份評核未由主管校準發布，請完成校準後再關閉週期。`,
+        )
       }
     }
 
