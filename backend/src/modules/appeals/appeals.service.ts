@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateAppealDto, RespondAppealDto } from './dto/appeal.dto'
@@ -57,34 +58,39 @@ export class AppealsService {
     return appeal
   }
 
-  // Manager 查看自己收到的申訴清單
-  async getAppealsForManager(managerId: string) {
+  // Manager / Admin 查看申訴清單：Admin 看全部，Manager 只看指派給自己的
+  async getAppealsForManager(user: SessionUser) {
+    const where = user.role === Role.Admin ? {} : { managerId: user.id }
     return this.prisma.appeal.findMany({
-      where:   { managerId },
+      where,
       include: APPEAL_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })
   }
 
-  // 取得單筆申訴（只有當事員工和指定 Manager 可看，主管不可見）
+  // 取得單筆申訴（當事員工、指定 Manager 或 Admin 可看）
   async getAppealById(id: string, user: SessionUser) {
     const appeal = await this.prisma.appeal.findUnique({
       where:   { id },
       include: APPEAL_INCLUDE,
     })
     if (!appeal) throw new NotFoundException()
-    if (user.id !== appeal.employeeId && user.id !== appeal.managerId) {
+    if (
+      user.role !== Role.Admin &&
+      user.id !== appeal.employeeId &&
+      user.id !== appeal.managerId
+    ) {
       throw new ForbiddenException()
     }
     return appeal
   }
 
-  // Manager 回覆並解決申訴（可選調整等第）
+  // Manager / Admin 回覆並解決申訴（可選調整等第）
   async respondToAppeal(id: string, user: SessionUser, dto: RespondAppealDto) {
     const appeal = await this.prisma.appeal.findUnique({ where: { id } })
-    if (!appeal)                        throw new NotFoundException()
-    if (appeal.managerId !== user.id)   throw new ForbiddenException()
-    if (appeal.status === 'Resolved')   throw new BadRequestException('此申訴已解決')
+    if (!appeal)                                                           throw new NotFoundException()
+    if (user.role !== Role.Admin && appeal.managerId !== user.id)          throw new ForbiddenException()
+    if (appeal.status === 'Resolved')                                      throw new BadRequestException('此申訴已解決')
 
     const [updatedAppeal] = await this.prisma.$transaction([
       this.prisma.appeal.update({

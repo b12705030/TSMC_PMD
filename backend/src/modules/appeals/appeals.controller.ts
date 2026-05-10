@@ -17,7 +17,7 @@ export class AppealsController {
   @Get()
   @Roles(Role.Manager, Role.Admin)
   getAppeals(@CurrentUser() user: SessionUser) {
-    return this.appealsService.getAppealsForManager(user.id)
+    return this.appealsService.getAppealsForManager(user)
   }
 
   // 員工提出申訴
