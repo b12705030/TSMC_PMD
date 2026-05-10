@@ -145,8 +145,7 @@ export class CyclesService {
         data:  { status: next },
       })
       if (reviewRows.length) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await tx.performanceReview.createMany({ data: reviewRows as any, skipDuplicates: true })
+        await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
       }
       return result
     })

@@ -51,11 +51,32 @@ export class TemplatesService {
       throw new ForbiddenException('Cycle does not belong to your region')
     }
 
-    // Resolve regionId: Admin → use first region of cycle; HR → own region
-    let regionId = user.regionId
-    if (user.role === Role.Admin && cycle.regions.length > 0) {
-      const regionRec = await this.prisma.region.findFirst({ where: { name: cycle.regions[0] } })
-      if (regionRec) regionId = regionRec.id
+    // Resolve regionId with strict validation
+    let regionId: string
+    if (user.role === Role.Admin) {
+      if (cycle.regions.length === 0) {
+        throw new BadRequestException('此週期尚未設定 Region')
+      }
+      if (cycle.regions.length > 1) {
+        // Multi-region: Admin must explicitly specify regionId
+        if (!dto.regionId) {
+          throw new BadRequestException('此週期跨多個 Region，建立模板時必須指定 regionId')
+        }
+        const region = await this.prisma.region.findUnique({ where: { id: dto.regionId } })
+        if (!region) throw new BadRequestException('指定的 Region 不存在')
+        if (!cycle.regions.includes(region.name)) {
+          throw new BadRequestException('指定的 Region 不屬於此週期')
+        }
+        regionId = region.id
+      } else {
+        // Single-region: Admin inherits the only region (dto.regionId ignored)
+        const region = await this.prisma.region.findFirst({ where: { name: cycle.regions[0] } })
+        if (!region) throw new BadRequestException('找不到對應的 Region')
+        regionId = region.id
+      }
+    } else {
+      // RegionalHR: always uses own region; dto.regionId is ignored
+      regionId = user.regionId
     }
 
     return this.prisma.formTemplate.create({

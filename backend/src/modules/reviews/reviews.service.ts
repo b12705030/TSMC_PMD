@@ -170,6 +170,10 @@ export class ReviewsService {
       scopedQuestions,
     )
 
+    if (!review.grade) {
+      throw new BadRequestException('請先選擇等第才能送出評核')
+    }
+
     return this.prisma.performanceReview.update({
       where: { id },
       data:  { status: ReviewStatus.PendingManagerApproval },
@@ -215,7 +219,7 @@ export class ReviewsService {
   // Manager: publish all PendingManagerApproval reviews in a cycle
   async publishAll(cycleId: string, user: SessionUser) {
     if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
-    const ids = await this.prisma.performanceReview.findMany({
+    const pending = await this.prisma.performanceReview.findMany({
       where: {
         cycleId,
         status: ReviewStatus.PendingManagerApproval,
@@ -226,10 +230,18 @@ export class ReviewsService {
           ],
         }),
       },
-      select: { id: true },
+      select: { id: true, grade: true },
     })
+
+    const missingGrade = pending.filter((r) => !r.grade)
+    if (missingGrade.length > 0) {
+      throw new BadRequestException(
+        `有 ${missingGrade.length} 份評核尚未設定等第，請完成校準後再發布。`,
+      )
+    }
+
     await this.prisma.performanceReview.updateMany({
-      where: { id: { in: ids.map((r) => r.id) } },
+      where: { id: { in: pending.map((r) => r.id) } },
       data:  { status: ReviewStatus.Published, publishedAt: new Date() },
     })
   }
