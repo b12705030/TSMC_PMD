@@ -166,15 +166,15 @@
 - [ ] Session 閒置 30 分鐘自動登出尚未實作（目前固定 8 小時 TTL）
 - [ ] ~~PROGRESS.md 說 AuditLog 存 PostgreSQL~~ → 實際上是 Elasticsearch（`audit.service.ts` 直接打 ES），文件已更正
 
-### 待修 Bug（第二輪 Codex Review 確認，尚未處理）
+### 安全漏洞修補（第二輪 Codex Review，已全數修復）
 
-- [ ] **[高] `UpdateGoalDto` 保留 `status` 欄位，`updateGoal()` 直接 spread** → 任何人都可透過 `PUT /goals/:id { status: "Approved" }` 繞過審核流程。修法：從 `UpdateGoalDto` 移除 `status`，狀態只能透過 `submit/approve/reject` 專用 endpoint 改。
-- [ ] **[高] `ReviewsService.calibrate()` 缺管轄權檢查** → 只驗角色與狀態，任何 Manager 可校準不屬於自己的 review。修法：在 status check 後加 `await this.assertAccess(review, user)`。
-- [ ] **[高] Backend ESLint 9 + `.eslintrc.js` 組合導致 CI 失敗** → ESLint 9 不讀 `.eslintrc.js`，CI lint 步驟必炸。修法：新增 `backend/eslint.config.js`（flat config）或將 ESLint 降回 `^8`。
-- [ ] **[高] 同條件可有多份 Published template，`autoCreateReviews()` 用 `find()` 取第一筆** → 結果不可預測，員工可能拿到錯誤表單。修法：publish 時檢查同 `cycleId/regionId/appliesGrades/applyTitles` 不可重複，或加 DB unique constraint。
-- [ ] **[高] 週期推進缺完整性 gate** → 只有 EmployeeReview 前有 template 檢查；進 SupervisorReview 未確認員工全部 submit；進 Calibration 未確認主管全部 submit；進 Completed 未確認已 publish。修法：每個 transition 加最小完成率驗證。
-- [ ] **[中] Appeals Admin 語意矛盾** → controller 允許 Admin，但 `getAppealsForManager()` 用 `managerId = user.id` 查，Admin 永遠查不到申訴。修法：明確決定 Admin 是否全域可讀；若是，service 層需特判 Admin 跳過 managerId 過濾。
-- [ ] **[中] Review answer 提交缺乏 schema 驗證** → `employeeAnswers`/`supervisorAnswers` 是 JSON，submit 時未驗證 questionId 是否屬於該 template、required 題是否都填。修法：submit endpoint 用 `review.template.questions` 驗證；草稿可寬鬆，送出必須嚴格。
+- [x] **[高] `UpdateGoalDto` 保留 `status` 欄位** → 任何人都可透過 `PUT /goals/:id { status: "Approved" }` 繞過審核流程。修法：從 `UpdateGoalDto` 移除 `status` 及 `GoalStatus` import，狀態只能透過 `submit/approve/reject` 專用 endpoint 改。
+- [x] **[高] `ReviewsService.calibrate()` 缺管轄權檢查** → 只驗角色與狀態，任何 Manager 可校準不屬於自己的 review。修法：在 status check 後加 `await this.assertAccess(review, user)`。
+- [x] **[高] Backend ESLint 9 + `.eslintrc.js` 組合導致 CI 失敗** → ESLint 9 不讀 `.eslintrc.js`，CI lint 步驟必炸。修法：新增 `backend/eslint.config.js` flat config（`@typescript-eslint/eslint-plugin` + parser）。
+- [x] **[高] 同條件可有多份 Published template** → `autoCreateReviews()` 用 `find()` 取第一筆，結果不可預測。修法：`publishTemplate()` 加 `hasSome` overlap 檢查，有衝突時拋 400 並回傳衝突模板名稱。
+- [x] **[高] 週期推進缺完整性 gate** → 進 SupervisorReview 前加確認員工全部 submit（`PendingEmployeeSubmit` count = 0）；進 Calibration 前確認主管全部 submit（`PendingSupervisorReview` count = 0）；進 Completed 前確認已 publish（`PendingManagerApproval` count = 0）。
+- [x] **[中] Appeals Admin 語意矛盾** → `getAppealsForManager()` 改接收 `SessionUser`，Admin 跳過 `managerId` 過濾全域查看；`getAppealById` / `respondToAppeal` 也補 `Role.Admin` 特判，Admin 可看並回覆所有申訴。
+- [x] **[中] Review answer 提交缺乏 schema 驗證** → submit 前調用 `validateAnswers()`：驗 questionId 屬於該 template、required 題必須填寫；草稿 save 不驗，送出才嚴格檢查。
 
 ### 安全漏洞修補（Codex Code Review，已全數修復）
 
