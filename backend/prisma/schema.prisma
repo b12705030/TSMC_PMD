@@ -1,6 +1,5 @@
-// This Prisma schema covers only what's needed to bootstrap auth.
-// Full schema (goals, reviews, cycles, templates, appeals) to be added
-// when the team finalizes the data model.
+// Schema covers auth + performance cycle management.
+// Remaining models (goals, reviews, templates, appeals) to be added per feature.
 
 generator client {
   provider = "prisma-client-js"
@@ -22,30 +21,305 @@ enum Role {
   Employee
 }
 
+enum CycleType {
+  Annual
+  Quarterly
+  Probation
+}
+
+enum CycleStatus {
+  GoalSetting
+  InProgress
+  EmployeeReview
+  SupervisorReview
+  Calibration
+  Completed
+}
+
+enum GoalType {
+  Personal
+  Team
+}
+
+enum GoalStatus {
+  Draft
+  PendingApproval
+  Approved
+  Completed
+}
+
+enum ReviewStatus {
+  PendingEmployeeSubmit
+  PendingSupervisorReview
+  PendingManagerApproval
+  Published
+  Appealed
+}
+
+enum AppealStatus {
+  Pending
+  Resolved
+}
+
+enum ReviewGrade {
+  O
+  S_Plus
+  S
+  S_Minus
+  I
+  U
+}
+
+// ─── Region ───────────────────────────────────────────────────────────────────
+
+model Region {
+  id   String @id @default(uuid())
+  name String @unique  // e.g. "Taiwan", "North America"
+  code String @unique  // e.g. "TW", "NA"
+
+  users       User[]
+  departments Department[]
+  templates   FormTemplate[]
+
+  createdAt DateTime @default(now())
+}
+
+// ─── Department ───────────────────────────────────────────────────────────────
+
+model Department {
+  id       String  @id @default(uuid())
+  name     String
+  regionId String
+  region   Region  @relation(fields: [regionId], references: [id])
+  parentId String?
+  parent   Department?  @relation("DeptTree", fields: [parentId], references: [id])
+  children Department[] @relation("DeptTree")
+
+  users User[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([name, regionId])
+  @@index([regionId])
+}
+
 // ─── User ─────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  employeeId   String   @unique
+  id           String     @id @default(uuid())
+  employeeId   String     @unique
   passwordHash String
   name         String
-  email        String   @unique
+  email        String     @unique
   role         Role
-  region       String
-  department   String
-  jobLevel     String   // e.g. L1, L2, L3
-  jobTitle     String   // e.g. Software Engineer, Operator
+  regionId     String
+  region       Region     @relation(fields: [regionId], references: [id])
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  jobLevel     String     // e.g. L1, L2, L3
+  jobTitle     String     // e.g. Software Engineer, Process Engineer
 
   managerId    String?
+  manager      User?   @relation("UserManager",    fields: [managerId],    references: [id], onDelete: SetNull)
   supervisorId String?
+  supervisor   User?   @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
 
-  sessions     Session[]
+  managedUsers    User[] @relation("UserManager")
+  supervisedUsers User[] @relation("UserSupervisor")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  sessions Session[]
 
-  @@index([region])
-  @@index([department])
+  reviewsAsEmployee   PerformanceReview[] @relation("ReviewEmployee")
+  reviewsAsSupervisor PerformanceReview[] @relation("ReviewSupervisor")
+  appealsAsEmployee   Appeal[]            @relation("AppealEmployee")
+  appealsAsManager    Appeal[]            @relation("AppealManager")
+  goals               Goal[]
+  progressUpdates     ProgressUpdate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([regionId])
+  @@index([departmentId])
+}
+
+// ─── Performance Cycle ────────────────────────────────────────────────────────
+
+model PerformanceCycle {
+  id               String      @id @default(uuid())
+  name             String
+  type             CycleType
+  status           CycleStatus @default(GoalSetting)
+  regions          String[]    // 可跨多個 region，例如 ["Taiwan", "Japan"]
+
+  goalSettingStart DateTime
+  goalSettingEnd   DateTime
+  reviewStart      DateTime
+  reviewEnd        DateTime
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  templates        FormTemplate[]
+  reviews          PerformanceReview[]
+  goals            Goal[]
+}
+
+// ─── Form Template ────────────────────────────────────────────────────────────
+
+enum QuestionType {
+  Text
+  Rating
+  MultipleChoice
+}
+
+enum TemplateStatus {
+  Draft
+  Published
+}
+
+model FormTemplate {
+  id            String           @id @default(uuid())
+  name          String
+  cycleId       String
+  cycle         PerformanceCycle @relation(fields: [cycleId], references: [id])
+  regionId      String
+  region        Region           @relation(fields: [regionId], references: [id])
+  appliesGrades String[]         // e.g. ["L2", "L3"]
+  applyTitles   String[]         // e.g. ["Software Engineer", "Process Engineer"]
+  status        TemplateStatus   @default(Draft)
+  createdById   String
+
+  questions TemplateQuestion[]
+  reviews   PerformanceReview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([regionId])
+  @@index([cycleId])
+}
+
+model TemplateQuestion {
+  id                String       @id @default(uuid())
+  templateId        String
+  template          FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  scopeDepartmentId String?      // null = all depts; set = manager custom for this dept
+  questionText      String
+  questionType      QuestionType @default(Text)
+  options           String[]     // for MultipleChoice
+  isCustom          Boolean      @default(false) // false = HR base, true = Manager custom
+  required          Boolean      @default(true)
+  orderIndex        Int
+
+  createdAt         DateTime     @default(now())
+
+  @@index([templateId])
+}
+
+// ─── Goal ─────────────────────────────────────────────────────────────────────
+
+model Goal {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cycleId     String?
+  cycle       PerformanceCycle?   @relation(fields: [cycleId], references: [id])
+  title       String
+  description String     // Specific
+  metric      String     // Measurable
+  targetValue String     // Achievable
+  relevance   String     // Relevant
+  dueDate     DateTime
+  type        GoalType   @default(Personal)
+  status      GoalStatus @default(Draft)
+
+  progressUpdates ProgressUpdate[]
+  milestones      GoalMilestone[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([cycleId])
+}
+
+model ProgressUpdate {
+  id        String   @id @default(uuid())
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([goalId])
+  @@index([userId])
+}
+
+model GoalMilestone {
+  id          String    @id @default(uuid())
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title       String
+  completedAt DateTime?
+  note        String?
+  url         String?
+  orderIndex  Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([goalId])
+}
+
+// ─── Performance Review ───────────────────────────────────────────────────────
+
+model PerformanceReview {
+  id                String       @id @default(uuid())
+  cycleId           String
+  cycle             PerformanceCycle @relation(fields: [cycleId], references: [id])
+  employeeId        String
+  employee          User         @relation("ReviewEmployee",   fields: [employeeId],   references: [id])
+  supervisorId      String?
+  supervisor        User?        @relation("ReviewSupervisor", fields: [supervisorId], references: [id])
+  templateId        String
+  template          FormTemplate @relation(fields: [templateId], references: [id])
+  status            ReviewStatus @default(PendingEmployeeSubmit)
+  employeeAnswers   Json         @default("[]")
+  supervisorAnswers Json         @default("[]")
+  supervisorComment String?
+  grade             ReviewGrade?
+  rank              Int?
+  publishedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  appeal            Appeal?
+
+  @@unique([cycleId, employeeId])
+  @@index([cycleId])
+  @@index([employeeId])
+  @@index([supervisorId])
+}
+
+// ─── Appeal ───────────────────────────────────────────────────────────────────
+
+model Appeal {
+  id              String       @id @default(uuid())
+  reviewId        String       @unique
+  review          PerformanceReview @relation(fields: [reviewId], references: [id])
+  employeeId      String
+  employee        User         @relation("AppealEmployee", fields: [employeeId], references: [id])
+  managerId       String
+  manager         User         @relation("AppealManager",  fields: [managerId],  references: [id])
+  reason          String
+  status          AppealStatus @default(Pending)
+  managerResponse String?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([employeeId])
+  @@index([managerId])
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────

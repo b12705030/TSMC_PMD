@@ -15,35 +15,56 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto, ipAddress: string) {
-    const user = await this.prisma.user.findUnique({
+    const raw = await this.prisma.user.findUnique({
       where: { employeeId: dto.employeeId },
     })
 
-    if (!user) throw new UnauthorizedException('Invalid credentials')
+    if (!raw) throw new UnauthorizedException('Invalid credentials')
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash)
+    const passwordMatch = await bcrypt.compare(dto.password, raw.passwordHash)
     if (!passwordMatch) throw new UnauthorizedException('Invalid credentials')
 
     const sessionId = uuidv4()
     await this.prisma.session.create({
       data: {
         id: sessionId,
-        userId: user.id,
+        userId: raw.id,
         expiresAt: new Date(Date.now() + SESSION_TTL_MS),
       },
     })
 
     void this.audit.log({
-      userId: user.id,
-      userName: user.name,
+      userId: raw.id,
+      userName: raw.name,
       action: 'LOGIN',
       resource: 'auth',
-      resourceId: user.id,
-      detail: { employeeId: user.employeeId },
+      resourceId: raw.id,
+      detail: { employeeId: raw.employeeId },
       ipAddress,
     })
 
-    return { sessionId, user }
+    // Reload with relations so the response has region/department names
+    const user = await this.prisma.user.findUnique({
+      where: { id: raw.id },
+      include: { region: true, department: true },
+    })
+
+    return {
+      sessionId,
+      user: {
+        id:           user!.id,
+        employeeId:   user!.employeeId,
+        name:         user!.name,
+        email:        user!.email,
+        role:         user!.role,
+        regionId:     user!.regionId,
+        region:       user!.region.name,
+        departmentId: user!.departmentId,
+        department:   user!.department.name,
+        jobLevel:     user!.jobLevel,
+        jobTitle:     user!.jobTitle,
+      },
+    }
   }
 
   async logout(sessionId: string, userId: string, ipAddress: string) {
@@ -63,7 +84,7 @@ export class AuthService {
   async getMe(sessionId: string) {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      include: { user: true },
+      include: { user: { include: { region: true, department: true } } },
     })
 
     if (!session || session.expiresAt < new Date()) {
@@ -77,8 +98,10 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      region: user.region,
-      department: user.department,
+      regionId: user.regionId,
+      region: user.region.name,
+      departmentId: user.departmentId,
+      department: user.department.name,
       jobLevel: user.jobLevel,
       jobTitle: user.jobTitle,
     }

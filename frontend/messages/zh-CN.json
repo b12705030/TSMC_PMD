@@ -1,0 +1,276 @@
+{
+  "nav": {
+    "dashboard": "仪表板",
+    "myGoals": "我的目标",
+    "myReviews": "我的评核",
+    "myReviewsSub": "自己的绩效表单",
+    "teamReviews": "团队评核",
+    "teamReviewsSub": "下属的评核状况",
+    "myTeam": "我的团队",
+    "cycles": "周期管理",
+    "templates": "评核模板",
+    "appeals": "申诉管理",
+    "auditLog": "稽核日志"
+  },
+  "sidebar": {
+    "logout": "退出",
+    "expand": "展开侧栏",
+    "collapse": "收合侧栏"
+  },
+  "status": {
+    "GoalSetting": "目标设定",
+    "InProgress": "执行中",
+    "EmployeeReview": "员工自评",
+    "SupervisorReview": "主管初评",
+    "Calibration": "校准发布",
+    "Completed": "已完成",
+    "Draft": "草稿",
+    "PendingApproval": "待审核",
+    "Approved": "已核准",
+    "PendingEmployeeSubmit": "待员工自评",
+    "PendingSupervisorReview": "待主管初评",
+    "PendingManagerApproval": "待校准",
+    "Published": "已发布",
+    "Appealed": "申诉中",
+    "Pending": "待处理",
+    "Resolved": "已解决"
+  },
+  "roles": {
+    "Admin": "系统管理员",
+    "RegionalHR": "区域人资",
+    "Manager": "经理",
+    "Supervisor": "直属主管",
+    "Employee": "员工"
+  },
+  "language": {
+    "label": "语言",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "加载中...",
+    "cancel": "取消"
+  },
+  "login": {
+    "title": "绩效管理系统",
+    "subtitle": "Unleash Innovation — 绩效管理",
+    "signIn": "登录",
+    "employeeId": "员工编号",
+    "employeeIdPlaceholder": "例如 emp001",
+    "password": "密码",
+    "signingIn": "登录中...",
+    "invalidCredentials": "账号或密码错误，请再试一次。"
+  },
+  "cycleStepper": {
+    "companyGoal":        "公司/部门目标公布",
+    "companyGoalDesc":    "提供员工设定目标的方向",
+    "goalSetting":        "目标设定",
+    "goalSettingDesc":    "员工设定 SMART 目标",
+    "inProgress":         "执行中",
+    "inProgressDesc":     "目标追踪进行中",
+    "reviewStart":        "绩效评核期开始",
+    "employeeReview":     "员工自评",
+    "employeeReviewDesc": "填写绩效表单",
+    "supervisorReview":     "主管初评",
+    "supervisorReviewDesc": "主管进行评核",
+    "calibration":        "校准发布",
+    "calibrationDesc":    "经理调整并发布结果",
+    "completed":          "已完成",
+    "completedDesc":      "结果已发布"
+  },
+  "auditLog": {
+    "pageTitle": "稽核日志",
+    "pageDesc": "所有系统操作与数据访问的不可篡改记录。",
+    "colTime": "时间",
+    "colUser": "用户",
+    "colAction": "操作",
+    "colResource": "资源",
+    "colResourceId": "资源编号",
+    "colIpAddress": "IP 地址",
+    "empty": "找不到稽核记录。"
+  },
+  "cycles": {
+    "pageTitle": "绩效周期管理",
+    "pageDesc": "管理各地区的绩效考核周期。",
+    "addCycle": "+ 新增周期",
+    "emptyTitle": "暂无绩效周期",
+    "emptyDescAdmin": "创建第一个绩效考核周期。",
+    "emptyDescUser": "当前地区暂无绩效周期，请联系 HR 创建。",
+    "advance": {
+      "GoalSetting": "进入执行中",
+      "InProgress": "开始员工自评",
+      "EmployeeReview": "开始主管初评",
+      "SupervisorReview": "开始校准发布",
+      "Calibration": "完成周期"
+    },
+    "confirmAdvanceTitle": "确认推进至下一阶段？",
+    "confirmAdvanceDesc": "【{name}】将推进至：{nextLabel}。此操作无法撤销。",
+    "confirmAdvanceLabel": "确认推进",
+    "pendingManagersWarning": "以下 {count} 位经理尚未补充自定义问卷：",
+    "pendingManagersNote": "确认推进后，员工将以现有问卷开始自评。",
+    "allManagersDone": "✓ 所有经理均已完成问卷补充。",
+    "modal": {
+      "newTitle": "新增绩效周期",
+      "editTitle": "编辑周期",
+      "cycleName": "周期名称",
+      "cycleNamePlaceholder": "例：2025 年度绩效考核",
+      "cycleType": "类型",
+      "regions": "适用地区",
+      "autoRegion": "（自动套用您的 Region）",
+      "goalPeriod": "目标设定期间",
+      "reviewPeriod": "考核期间",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "creating": "创建中...",
+      "createBtn": "创建周期",
+      "saving": "保存中...",
+      "saveBtn": "保存变更",
+      "errorRegion": "请至少选择一个 Region"
+    },
+    "card": {
+      "edit": "编辑",
+      "reviewProcess": "考核流程",
+      "goalRange": "目标设定：{start} – {end}",
+      "reviewRange": "考核期间：{start} – {end}"
+    },
+    "dateWarning": {
+      "goalEndEarly": "目标设定期计划于 {date} 结束，距今还有 {days} 天，确定提前推进？",
+      "reviewStartEarly": "考核期计划于 {date} 开始，距今还有 {days} 天，确定提前推进？",
+      "reviewStartLate": "考核期计划开始日为 {date}，目前已逾期 {days} 天，确定现在推进？",
+      "reviewEndEarly": "考核期计划于 {date} 结束，距今还有 {days} 天，确定提前完成周期？"
+    },
+    "templateTrack": {
+      "title": "模板准备",
+      "goCreate": "前往创建 →",
+      "node0Label": "HR 创建模板",
+      "node0Desc": "确保考核表单内容完整",
+      "node1Label": "模板已发布",
+      "node1Desc": "员工与主管可访问表单",
+      "node2Label": "经理补充问卷",
+      "node2Desc": "各部门经理新增自定义问题",
+      "reviewStart": "绩效考核期开始",
+      "warnNoTemplate": "尚未创建模板，推进前请先至「考核模板」创建并发布",
+      "warnNotPublished": "模板尚未发布，推进前请先发布模板",
+      "warnNoCustomQ": "经理尚未补充问卷，请确认各部门经理已新增自定义问题"
+    }
+  },
+  "dashboard": {
+    "pageTitle": "仪表板",
+    "loading": "加载中...",
+    "loadingCycles": "加载周期数据中...",
+    "viewAll": "查看全部 →",
+    "goTo": "前往 →",
+    "fillNow": "立即填写 →",
+    "manageTemplates": "管理模板 →",
+    "actionsRequired": "需要您的操作",
+    "flowGuide": {
+      "toggle": "年度绩效流程说明（点击展开）",
+      "stepsEmployee": [
+        "【目标设定】HR 建立周期后，填写个人 SMART 目标并提交主管审核",
+        "【员工自评】HR 推进进入员工自评期，系统产生绩效表单，你填写自评",
+        "填完后按「提交」，转由直属主管进行初评",
+        "【主管初评 → 校准发布】主管评核完成后，经理校准并发布，你可查看最终等级",
+        "若对结果有异议，可提出申诉"
+      ],
+      "stepsSupervisor": [
+        "【目标设定】员工填写目标后，你负责核准下属的目标",
+        "【主管初评】员工自评提交后，轮到你进行初评",
+        "阅读员工自评、填写评语、选择等级（O/S+/S/S-/I/U）",
+        "你提交后，进入校准发布阶段，由经理决定是否调整并发布"
+      ],
+      "stepsManager": [
+        "【目标设定 / 执行中】可在已发布模板中为部门新增自定义题目",
+        "【校准发布】员工自评与主管初评完成后，进入你的校准阶段",
+        "比较所有员工等级，必要时调整排名（前往「团队评核」→「进入校准」）",
+        "全部确认后，按「发布全部」，所有结果一次公开给员工"
+      ],
+      "stepsRegionalHR": [
+        "建立绩效周期，设定地区、类型（Annual/Quarterly/Probation）与日期范围",
+        "建立表单模板：设定适用职等与职称，Manager 可补充自定义题目",
+        "确认模板就绪后 Publish，再将周期推进至「员工自评」",
+        "推进前系统会检查是否有已发布模板，并自动为所有员工建立评核单",
+        "后续依序推进：主管初评 → 校准发布 → 完成"
+      ],
+      "stepsAdmin": [
+        "管理所有地区的绩效周期（可在目标设定阶段编辑周期信息）",
+        "监控各地区评核进度，确认模板发布与周期推进时间",
+        "查阅稽核日志（Audit Log）确认系统操作记录"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "年度考核",
+      "Quarterly": "季度考核",
+      "Probation": "试用期考核"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "目标设定中 — 员工填写 SMART 目标，同时 HR 准备评核模板",
+      "InProgress": "执行中 — 目标追踪进行中，Manager 可补充自定义题目",
+      "EmployeeReview": "员工自评期 — 所有员工填写绩效自评表单",
+      "SupervisorReview": "主管初评期 — 主管阅读自评、填写评语与等级",
+      "Calibration": "校准发布期 — 经理调整等级排名，确认后一次发布",
+      "Completed": "已完成 — 结果已发布"
+    },
+    "timeline": {
+      "yearTitle": "{year} 年周期行程",
+      "subtitle": "时程由 HR / Admin 建立周期时设定",
+      "emptyTitle": "全年周期行程",
+      "emptyDesc": "尚无绩效周期数据。",
+      "emptyDescSub": "周期由 HR / Admin 建立后将显示于此。",
+      "goalSettingBar": "目标设定",
+      "reviewBar": "评核期",
+      "todayMarker": "今天",
+      "legendGoal": "目标设定 & 执行期",
+      "legendReview": "评核期",
+      "legendPublish": "结果发布",
+      "goalRange": "目标设定 & 执行：{start} – {end}",
+      "reviewRange": "评核期：{start} – {end}",
+      "publishRange": "结果发布：{date}"
+    },
+    "activeCycles": { "title": "进行中的周期" },
+    "goals": {
+      "title": "我的目标",
+      "empty": "尚未设定任何目标",
+      "setGoal": "设定目标",
+      "draft": "草稿",
+      "pendingApproval": "待审核",
+      "approved": "已核准",
+      "completed": "已完成"
+    },
+    "myReviews": {
+      "title": "我的评核",
+      "pendingTitle": "绩效评核待填写",
+      "empty": "目前没有评核记录。"
+    },
+    "teamReviews": {
+      "title": "团队评核总览",
+      "pendingEmployee": "待员工填写",
+      "pendingSupervisor": "待主管初评",
+      "pendingCalibration": "待校准/发布",
+      "actionLabelManager": "待校准 / 发布",
+      "actionLabelOther": "待初评",
+      "actionCount": "{count} 份员工评核{action}",
+      "actionDesc": "前往团队评核页面处理",
+      "empty": "目前没有团队评核记录。",
+      "emptyDesc": "HR 将周期推进至「执行中」后，系统会自动为员工建立评核单。"
+    },
+    "gradeChart": {
+      "title": "全局等级分布",
+      "titleTeam": "等级分布",
+      "empty": "尚无评核数据。",
+      "summary": "共 {total} 份评核・已评等级 {graded} 份",
+      "summaryPending": "・尚待 {pending} 份"
+    },
+    "templates": {
+      "title": "表单模板",
+      "draft": "草稿",
+      "published": "已发布",
+      "draftWarning": "{count} 份模板草稿尚未发布",
+      "draftWarningDesc": "模板需要先 Publish 才能在周期推进时自动套用至员工"
+    }
+  }
+}

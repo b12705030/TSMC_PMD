@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 interface ConfirmDialogProps {
   open: boolean
   title: string
@@ -9,17 +11,19 @@ interface ConfirmDialogProps {
   onConfirm: () => void
   onCancel: () => void
   danger?: boolean
+  children?: ReactNode
 }
 
 export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = '確認',
+  cancelLabel = '取消',
   onConfirm,
   onCancel,
   danger = false,
+  children,
 }: ConfirmDialogProps) {
   if (!open) return null
 
@@ -29,6 +33,7 @@ export function ConfirmDialog({
       <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
         <p className="mt-2 text-sm text-gray-500">{description}</p>
+        {children && <div className="mt-3">{children}</div>}
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={onCancel} className="btn-secondary">
             {cancelLabel}

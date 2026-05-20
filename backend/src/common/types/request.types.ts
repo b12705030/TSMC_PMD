@@ -7,8 +7,10 @@ export interface SessionUser {
   name: string
   email: string
   role: Role
-  region: string
-  department: string
+  regionId: string
+  region: string       // region.name — for display and backward-compat filtering
+  departmentId: string
+  department: string   // department.name — for display
   jobLevel: string
   jobTitle: string
 }

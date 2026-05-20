@@ -1,0 +1,276 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "myGoals": "Meine Ziele",
+    "myReviews": "Meine Bewertungen",
+    "myReviewsSub": "Meine Leistungsformulare",
+    "teamReviews": "Team-Bewertungen",
+    "teamReviewsSub": "Bewertungsstatus der Mitarbeiter",
+    "myTeam": "Mein Team",
+    "cycles": "Zyklen",
+    "templates": "Vorlagen",
+    "appeals": "Einsprüche",
+    "auditLog": "Prüfprotokoll"
+  },
+  "sidebar": {
+    "logout": "Abmelden",
+    "expand": "Seitenleiste einblenden",
+    "collapse": "Seitenleiste ausblenden"
+  },
+  "status": {
+    "GoalSetting": "Zielsetzung",
+    "InProgress": "In Bearbeitung",
+    "EmployeeReview": "Mitarbeiterbewertung",
+    "SupervisorReview": "Vorgesetztenbewertung",
+    "Calibration": "Kalibrierung",
+    "Completed": "Abgeschlossen",
+    "Draft": "Entwurf",
+    "PendingApproval": "Genehmigung ausstehend",
+    "Approved": "Genehmigt",
+    "PendingEmployeeSubmit": "Warte auf Mitarbeiter",
+    "PendingSupervisorReview": "Warte auf Vorgesetzten",
+    "PendingManagerApproval": "Kalibrierung ausstehend",
+    "Published": "Veröffentlicht",
+    "Appealed": "Einspruch erhoben",
+    "Pending": "Ausstehend",
+    "Resolved": "Gelöst"
+  },
+  "roles": {
+    "Admin": "Systemadministrator",
+    "RegionalHR": "Regionale HR",
+    "Manager": "Manager",
+    "Supervisor": "Vorgesetzter",
+    "Employee": "Mitarbeiter"
+  },
+  "language": {
+    "label": "Sprache",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "es": "Español"
+  },
+  "common": {
+    "loading": "Laden...",
+    "cancel": "Abbrechen"
+  },
+  "login": {
+    "title": "PMS",
+    "subtitle": "Unleash Innovation — Leistungsmanagement",
+    "signIn": "Anmelden",
+    "employeeId": "Mitarbeiter-ID",
+    "employeeIdPlaceholder": "z.B. emp001",
+    "password": "Passwort",
+    "signingIn": "Anmelden...",
+    "invalidCredentials": "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+  },
+  "cycleStepper": {
+    "companyGoal":        "Unternehmensziele veröffentlicht",
+    "companyGoalDesc":    "Gibt Mitarbeitern Richtung für die Zielsetzung",
+    "goalSetting":        "Zielsetzung",
+    "goalSettingDesc":    "Mitarbeiter setzen ihre SMART-Ziele",
+    "inProgress":         "Laufend",
+    "inProgressDesc":     "Zielverfolgung aktiv",
+    "reviewStart":        "Bewertungszeitraum beginnt",
+    "employeeReview":     "Mitarbeiterbewertung",
+    "employeeReviewDesc": "Leistungsformular ausfüllen",
+    "supervisorReview":     "Vorgesetztenbewertung",
+    "supervisorReviewDesc": "Vorgesetzter führt Bewertung durch",
+    "calibration":        "Kalibrierung",
+    "calibrationDesc":    "Manager passt an und veröffentlicht Ergebnisse",
+    "completed":          "Abgeschlossen",
+    "completedDesc":      "Ergebnisse veröffentlicht"
+  },
+  "auditLog": {
+    "pageTitle": "Prüfprotokoll",
+    "pageDesc": "Eine unveränderliche Aufzeichnung aller Systemoperationen und Datenzugriffe.",
+    "colTime": "Zeit",
+    "colUser": "Benutzer",
+    "colAction": "Aktion",
+    "colResource": "Ressource",
+    "colResourceId": "Ressourcen-ID",
+    "colIpAddress": "IP-Adresse",
+    "empty": "Keine Prüfeinträge gefunden."
+  },
+  "cycles": {
+    "pageTitle": "Leistungszyklen",
+    "pageDesc": "Verwalten Sie die Leistungsbewertungszyklen aller Regionen.",
+    "addCycle": "+ Neuer Zyklus",
+    "emptyTitle": "Keine Leistungszyklen",
+    "emptyDescAdmin": "Erstellen Sie den ersten Leistungszyklus.",
+    "emptyDescUser": "Noch keine Zyklen in Ihrer Region. Bitte wenden Sie sich an HR.",
+    "advance": {
+      "GoalSetting": "Ausführung starten",
+      "InProgress": "Mitarbeiterbewertungen starten",
+      "EmployeeReview": "Vorgesetztenbewertungen starten",
+      "SupervisorReview": "Kalibrierung starten",
+      "Calibration": "Zyklus abschließen"
+    },
+    "confirmAdvanceTitle": "Zur nächsten Phase fortschreiten?",
+    "confirmAdvanceDesc": "[{name}] wird fortgeschritten zu: {nextLabel}. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmAdvanceLabel": "Bestätigen",
+    "pendingManagersWarning": "{count} Manager haben noch keine benutzerdefinierten Fragen hinzugefügt:",
+    "pendingManagersNote": "Nach der Bestätigung beginnen Mitarbeiter die Selbstbewertung mit den aktuellen Fragen.",
+    "allManagersDone": "✓ Alle Manager haben ihre benutzerdefinierten Fragen abgeschlossen.",
+    "modal": {
+      "newTitle": "Neuen Leistungszyklus erstellen",
+      "editTitle": "Zyklus bearbeiten",
+      "cycleName": "Zyklusname",
+      "cycleNamePlaceholder": "z.B. Jahresbewertung 2025",
+      "cycleType": "Typ",
+      "regions": "Anwendbare Regionen",
+      "autoRegion": "(Ihre Region wird automatisch angewendet)",
+      "goalPeriod": "Zielsetzungszeitraum",
+      "reviewPeriod": "Bewertungszeitraum",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum",
+      "creating": "Wird erstellt...",
+      "createBtn": "Zyklus erstellen",
+      "saving": "Wird gespeichert...",
+      "saveBtn": "Änderungen speichern",
+      "errorRegion": "Bitte wählen Sie mindestens eine Region aus"
+    },
+    "card": {
+      "edit": "Bearbeiten",
+      "reviewProcess": "Bewertungsprozess",
+      "goalRange": "Zielsetzung: {start} – {end}",
+      "reviewRange": "Bewertungszeitraum: {start} – {end}"
+    },
+    "dateWarning": {
+      "goalEndEarly": "Zielsetzungsphase endet planmäßig am {date} (noch {days} Tage). Trotzdem vorzeitig fortschreiten?",
+      "reviewStartEarly": "Bewertungszeitraum beginnt planmäßig am {date} (noch {days} Tage). Vorzeitig fortschreiten?",
+      "reviewStartLate": "Bewertungszeitraum hätte am {date} beginnen sollen – {days} Tage überfällig. Jetzt fortschreiten?",
+      "reviewEndEarly": "Bewertungszeitraum endet planmäßig am {date} (noch {days} Tage). Zyklus vorzeitig abschließen?"
+    },
+    "templateTrack": {
+      "title": "Vorlagenvorbereitung",
+      "goCreate": "Erstellen →",
+      "node0Label": "HR erstellt Vorlage",
+      "node0Desc": "Stellt vollständige Formularinhalte sicher",
+      "node1Label": "Vorlage veröffentlicht",
+      "node1Desc": "Mitarbeiter & Vorgesetzte können auf Formular zugreifen",
+      "node2Label": "Manager ergänzen Fragen",
+      "node2Desc": "Abteilungsmanager fügen benutzerdefinierte Fragen hinzu",
+      "reviewStart": "Bewertungszeitraum beginnt",
+      "warnNoTemplate": "Keine Vorlage erstellt. Bitte gehen Sie zu Vorlagen und erstellen Sie eine vor dem Fortschreiten.",
+      "warnNotPublished": "Vorlage noch nicht veröffentlicht. Bitte veröffentlichen Sie die Vorlage vor dem Fortschreiten.",
+      "warnNoCustomQ": "Manager haben keine benutzerdefinierten Fragen hinzugefügt. Bitte bestätigen Sie, dass alle Abteilungsmanager dies getan haben."
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Dashboard",
+    "loading": "Laden...",
+    "loadingCycles": "Zyklusdaten werden geladen...",
+    "viewAll": "Alle anzeigen →",
+    "goTo": "Weiter →",
+    "fillNow": "Jetzt ausfüllen →",
+    "manageTemplates": "Vorlagen verwalten →",
+    "actionsRequired": "Ihre Aktion erforderlich",
+    "flowGuide": {
+      "toggle": "Jährlicher Leistungsablauf (zum Erweitern klicken)",
+      "stepsEmployee": [
+        "[Zielsetzung] Nach Erstellung des Zyklus: Persönliche SMART-Ziele ausfüllen und zur Genehmigung einreichen",
+        "[Mitarbeiterbewertung] Nach HR-Fortschritt: Leistungsformular ausfüllen und Selbstbewertung abgeben",
+        "Nach Einreichung überprüft Ihr direkter Vorgesetzter die Bewertung",
+        "[Vorgesetztenbewertung → Kalibrierung] Nach Kalibrierung können Sie Ihre endgültige Beurteilung einsehen",
+        "Bei Widerspruch können Sie Einspruch erheben"
+      ],
+      "stepsSupervisor": [
+        "[Zielsetzung] Nach Zieleingabe der Mitarbeiter: Genehmigung der Ziele Ihrer Direktberichte",
+        "[Vorgesetztenbewertung] Nach Einreichung der Selbstbewertungen: Ihre Erstbewertung durchführen",
+        "Selbstbewertung lesen, Feedback schreiben und Beurteilung wählen (O/S+/S/S-/I/U)",
+        "Nach Ihrer Einreichung folgt die Kalibrierungsphase durch den Manager"
+      ],
+      "stepsManager": [
+        "[Zielsetzung / Laufend] Benutzerdefinierte Fragen zur Abteilungsvorlage hinzufügen",
+        "[Kalibrierung] Nach Abschluss aller Bewertungen: Kalibrierungsphase beginnen",
+        "Alle Mitarbeiterbeurteilungen vergleichen, Rankings bei Bedarf anpassen",
+        "Nach Bestätigung 'Alle veröffentlichen' klicken"
+      ],
+      "stepsRegionalHR": [
+        "Leistungszyklen erstellen: Region, Typ und Datumsbereiche festlegen",
+        "Formulavorlagen erstellen; Manager können benutzerdefinierte Fragen hinzufügen",
+        "Vorlage veröffentlichen, dann Zyklus weiterleiten",
+        "System prüft veröffentlichte Vorlagen und erstellt automatisch Bewertungsformulare",
+        "Weiter: Vorgesetztenbewertung → Kalibrierung → Abgeschlossen"
+      ],
+      "stepsAdmin": [
+        "Leistungszyklen für alle Regionen verwalten",
+        "Bewertungsfortschritt aller Regionen überwachen",
+        "Prüfprotokoll einsehen zur Überprüfung von Systemoperationen"
+      ]
+    },
+    "cycleTypes": {
+      "Annual": "Jahresbewertung",
+      "Quarterly": "Quartalsbewertung",
+      "Probation": "Probezeit-Bewertung"
+    },
+    "cycleStatusDesc": {
+      "GoalSetting": "Zielsetzung — Mitarbeiter füllen SMART-Ziele aus; HR bereitet Bewertungsvorlagen vor",
+      "InProgress": "Laufend — Zielverfolgung aktiv; Manager können benutzerdefinierte Fragen hinzufügen",
+      "EmployeeReview": "Mitarbeiterbewertung — Alle Mitarbeiter füllen ihre Selbstbewertungsformulare aus",
+      "SupervisorReview": "Vorgesetztenbewertung — Vorgesetzte lesen Selbstbewertungen und schreiben Beurteilungen",
+      "Calibration": "Kalibrierung — Manager passen Beurteilungen an; Ergebnisse werden gebündelt veröffentlicht",
+      "Completed": "Abgeschlossen — Ergebnisse wurden veröffentlicht"
+    },
+    "timeline": {
+      "yearTitle": "Zykluskalender {year}",
+      "subtitle": "Zeitplan bei Zyklus-Erstellung durch HR / Admin festgelegt",
+      "emptyTitle": "Jahreszykluskalender",
+      "emptyDesc": "Keine Leistungszyklen vorhanden.",
+      "emptyDescSub": "Zyklen werden hier angezeigt, sobald HR / Admin sie erstellt.",
+      "goalSettingBar": "Zielsetzung",
+      "reviewBar": "Bewertungszeitraum",
+      "todayMarker": "Heute",
+      "legendGoal": "Zielsetzung & Ausführung",
+      "legendReview": "Bewertungszeitraum",
+      "legendPublish": "Ergebnisse veröffentlicht",
+      "goalRange": "Zielsetzung & Ausführung: {start} – {end}",
+      "reviewRange": "Bewertungszeitraum: {start} – {end}",
+      "publishRange": "Veröffentlicht: {date}"
+    },
+    "activeCycles": { "title": "Aktive Zyklen" },
+    "goals": {
+      "title": "Meine Ziele",
+      "empty": "Noch keine Ziele gesetzt",
+      "setGoal": "Ziele setzen",
+      "draft": "Entwurf",
+      "pendingApproval": "Genehmigung ausstehend",
+      "approved": "Genehmigt",
+      "completed": "Abgeschlossen"
+    },
+    "myReviews": {
+      "title": "Meine Bewertungen",
+      "pendingTitle": "Leistungsbewertung ausstehend",
+      "empty": "Keine Bewertungseinträge gefunden."
+    },
+    "teamReviews": {
+      "title": "Team-Bewertungsübersicht",
+      "pendingEmployee": "Warte auf Mitarbeiter",
+      "pendingSupervisor": "Warte auf Vorgesetzten",
+      "pendingCalibration": "Kalibrierung ausstehend",
+      "actionLabelManager": "Kalibrierung / Veröffentlichung ausstehend",
+      "actionLabelOther": "Erstbewertung ausstehend",
+      "actionCount": "{count} Mitarbeiterbewertung(en) {action}",
+      "actionDesc": "Zur Team-Bewertungsseite wechseln",
+      "empty": "Keine Team-Bewertungseinträge vorhanden.",
+      "emptyDesc": "Sobald HR den Zyklus auf 'Laufend' setzt, erstellt das System automatisch Formulare für alle Mitarbeiter."
+    },
+    "gradeChart": {
+      "title": "Globale Beurteilungsverteilung",
+      "titleTeam": "Beurteilungsverteilung",
+      "empty": "Noch keine Bewertungsdaten.",
+      "summary": "{total} Bewertungen gesamt · {graded} bewertet",
+      "summaryPending": " · {pending} ausstehend"
+    },
+    "templates": {
+      "title": "Formulavorlagen",
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "draftWarning": "{count} Vorlagenentwurf/-entwürfe noch nicht veröffentlicht",
+      "draftWarningDesc": "Vorlagen müssen veröffentlicht sein, bevor sie automatisch angewendet werden"
+    }
+  }
+}
