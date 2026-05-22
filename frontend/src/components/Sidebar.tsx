@@ -44,15 +44,15 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { labelKey: 'dashboard',   href: '/dashboard',    roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
+  { labelKey: 'dashboard',   href: '/dashboard',    roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
   { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor'] },
   { labelKey: 'myReviews',   subKey: 'myReviewsSub', href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'] },
   { labelKey: 'teamReviews', subKey: 'teamReviewsSub', href: '/reviews/team', roles: ['Supervisor', 'Manager'] },
   { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'] },
-  { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { labelKey: 'templates',   href: '/templates',     roles: ['RegionalHR', 'Manager'] },
+  { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
+  { labelKey: 'templates',   href: '/templates',     roles: ['GlobalHR', 'RegionalHR', 'Manager'] },
   { labelKey: 'appeals',     href: '/appeals',       roles: ['Manager'] },
-  { labelKey: 'auditLog',    href: '/audit-log',     roles: ['Admin', 'RegionalHR'] },
+  { labelKey: 'auditLog',    href: '/audit-log',     roles: ['Admin', 'GlobalHR', 'RegionalHR'] },
 ]
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────

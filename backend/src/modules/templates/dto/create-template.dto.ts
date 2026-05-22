@@ -31,6 +31,10 @@ export class BaseQuestionDto {
   @IsInt()
   @Min(0)
   orderIndex: number
+
+  @IsBoolean()
+  @IsOptional()
+  isGlobal?: boolean
 }
 
 export class CreateTemplateDto {

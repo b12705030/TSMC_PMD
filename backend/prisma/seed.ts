@@ -55,6 +55,13 @@ const SEED_USERS = [
     regionCode: 'GLOBAL', departmentName: 'IT',
     jobLevel: 'L6', jobTitle: 'System Administrator',
   },
+  {
+    employeeId: 'ghr001', password: 'test1234',
+    name: 'Bob GlobalHR', email: 'ghr001@tsmc-pmd.com',
+    role: Role.GlobalHR,
+    regionCode: 'GLOBAL', departmentName: 'IT',
+    jobLevel: 'L5', jobTitle: 'Global HR Director',
+  },
 
   // ── Taiwan ───────────────────────────────────────────────────────────────
   {

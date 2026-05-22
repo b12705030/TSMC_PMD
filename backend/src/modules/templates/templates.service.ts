@@ -15,7 +15,9 @@ export class TemplatesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTemplates(user: SessionUser) {
-    const where = user.role === Role.Admin ? {} : { region: { name: user.region } }
+    const where = (user.role === Role.Admin || user.role === (Role as any).GlobalHR)
+      ? {}
+      : { region: { name: user.region } }
     const templates = await this.prisma.formTemplate.findMany({
       where,
       include: {
@@ -41,10 +43,24 @@ export class TemplatesService {
     return { ...rest, region: region.name }
   }
 
-  // RegionalHR creates the base template with locked questions
-  async createTemplate(dto: CreateTemplateDto, user: SessionUser) {
+  // 依 cycleId 跨 region 分組，供 GlobalHR / Admin 比對各區模板差異
+  async getTemplatesByRegion(cycleId: string) {
+    const templates = await this.prisma.formTemplate.findMany({
+      where:   { cycleId },
+      include: {
+        region:    { select: { name: true } },
+        questions: { orderBy: { orderIndex: 'asc' } },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+    return templates.reduce<Record<string, typeof templates>>((acc, t) => {
+      const key = t.region.name
+      acc[key] = [...(acc[key] ?? []), t]
+      return acc
+    }, {})
+  }
 
-    // Verify cycle belongs to user's region
+  async createTemplate(dto: CreateTemplateDto, user: SessionUser) {
     const cycle = await this.prisma.performanceCycle.findUnique({ where: { id: dto.cycleId } })
     if (!cycle) throw new BadRequestException('Cycle not found')
     if (user.role !== Role.Admin && !cycle.regions.includes(user.region)) {
@@ -95,6 +111,8 @@ export class TemplatesService {
             required:     q.required,
             orderIndex:   q.orderIndex,
             isCustom:     false,
+            // 只有 Admin 能在建立時設定全球鎖定
+            isGlobal:     user.role === Role.Admin ? ((q as any).isGlobal ?? false) : false,
           })),
         },
       },
@@ -102,7 +120,6 @@ export class TemplatesService {
     })
   }
 
-  // Manager adds a custom question scoped to their department
   async addCustomQuestion(templateId: string, dto: AddCustomQuestionDto, user: SessionUser) {
     const template = await this.prisma.formTemplate.findUnique({ where: { id: templateId } })
     if (!template) throw new NotFoundException('Template not found')
@@ -123,16 +140,20 @@ export class TemplatesService {
         required:          dto.required,
         orderIndex:        nextOrder,
         isCustom:          true,
+        isGlobal:          false,
         scopeDepartmentId: user.departmentId,
       },
     })
   }
 
-  // Manager can only delete their own custom questions
   async deleteCustomQuestion(templateId: string, questionId: string, user: SessionUser) {
     const question = await this.prisma.templateQuestion.findUnique({ where: { id: questionId } })
     if (!question || question.templateId !== templateId) {
       throw new NotFoundException('Question not found')
+    }
+    // isGlobal 保護優先
+    if (question.isGlobal) {
+      throw new ForbiddenException('This question is globally required and cannot be deleted')
     }
     if (!question.isCustom) {
       throw new ForbiddenException('HR base questions cannot be deleted')
@@ -176,9 +197,25 @@ export class TemplatesService {
     })
   }
 
-  private assertRegionAccess(templateRegionId: string, user: SessionUser) {
-    if (user.role !== Role.Admin && templateRegionId !== user.regionId) {
-      throw new ForbiddenException()
+  async setQuestionGlobalLock(
+    templateId: string,
+    questionId: string,
+    isGlobal: boolean,
+    user: SessionUser,
+  ) {
+    if (user.role !== Role.Admin) throw new ForbiddenException()
+    const question = await this.prisma.templateQuestion.findUnique({ where: { id: questionId } })
+    if (!question || question.templateId !== templateId) {
+      throw new NotFoundException('Question not found')
     }
+    return this.prisma.templateQuestion.update({
+      where: { id: questionId },
+      data:  { isGlobal },
+    })
+  }
+
+  private assertRegionAccess(templateRegionId: string, user: SessionUser) {
+    if (user.role === Role.Admin || user.role === (Role as any).GlobalHR) return
+    if (templateRegionId !== user.regionId) throw new ForbiddenException()
   }
 }

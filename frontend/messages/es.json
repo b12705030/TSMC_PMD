@@ -90,9 +90,15 @@
     "colUser": "Usuario",
     "colAction": "Acción",
     "colResource": "Recurso",
+    "colOutcome": "Resultado",
     "colResourceId": "ID de recurso",
     "colIpAddress": "Dirección IP",
-    "empty": "No se encontraron registros de auditoría."
+    "empty": "No se encontraron registros de auditoría.",
+    "searchPlaceholder": "Buscar por acción, recurso, usuario…",
+    "outcomeAll": "Todos los resultados",
+    "total": "{count} registros",
+    "prev": "Anterior",
+    "next": "Siguiente"
   },
   "cycles": {
     "pageTitle": "Ciclos de rendimiento",

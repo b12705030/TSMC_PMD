@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import type { SessionUser } from '../../common/types/request.types'
 import { Role } from '../../common/enums/role.enum'
@@ -38,7 +38,6 @@ export class UsersService {
         },
         orderBy: { name: 'asc' },
       }),
-      // Employees who report directly to this manager (no supervisor)
       this.prisma.user.findMany({
         where: { managerId: currentUser.id, supervisorId: null, role: Role.Employee },
         include: { region: true, department: true },
@@ -63,8 +62,10 @@ export class UsersService {
     return regions.map((r) => r.name)
   }
 
-  async getDistinctJobLevels(): Promise<string[]> {
+  async getDistinctJobLevels(user: SessionUser): Promise<string[]> {
+    const isGlobal = user.role === Role.Admin || user.role === Role.GlobalHR
     const rows = await this.prisma.user.findMany({
+      where: isGlobal ? {} : { regionId: user.regionId },
       select: { jobLevel: true },
       distinct: ['jobLevel'],
       orderBy: { jobLevel: 'asc' },
@@ -72,8 +73,10 @@ export class UsersService {
     return rows.map((r) => r.jobLevel)
   }
 
-  async getDistinctJobTitles(): Promise<string[]> {
+  async getDistinctJobTitles(user: SessionUser): Promise<string[]> {
+    const isGlobal = user.role === Role.Admin || user.role === Role.GlobalHR
     const rows = await this.prisma.user.findMany({
+      where: isGlobal ? {} : { regionId: user.regionId },
       select: { jobTitle: true },
       distinct: ['jobTitle'],
       orderBy: { jobTitle: 'asc' },
@@ -88,7 +91,7 @@ export class UsersService {
     })
     if (!target) return null
 
-    if (currentUser.role !== Role.Admin) {
+    if (currentUser.role !== Role.Admin && currentUser.role !== Role.GlobalHR) {
       if (currentUser.role === Role.RegionalHR) {
         if (target.regionId !== currentUser.regionId) throw new ForbiddenException()
       } else if (currentUser.role === Role.Supervisor) {
@@ -103,6 +106,36 @@ export class UsersService {
     const { supervisor: _sv, ...rest } = target
     return flattenUser(rest as UserWithRelations)
   }
+
+  async updateUser(id: string, dto: UpdateUserFields) {
+    const target = await this.prisma.user.findUnique({ where: { id } })
+    if (!target) throw new NotFoundException('User not found')
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(dto.role         !== undefined && { role: dto.role as any }),
+        ...(dto.regionId     !== undefined && { regionId: dto.regionId }),
+        ...(dto.departmentId !== undefined && { departmentId: dto.departmentId }),
+        ...(dto.jobLevel     !== undefined && { jobLevel: dto.jobLevel }),
+        ...(dto.jobTitle     !== undefined && { jobTitle: dto.jobTitle }),
+      },
+      include: { region: true, department: true },
+    })
+
+    // 立即清除該使用者所有 session，確保新存取邊界立即生效
+    await this.prisma.session.deleteMany({ where: { userId: id } })
+
+    return flattenUser(updated)
+  }
+}
+
+export interface UpdateUserFields {
+  role?: string
+  regionId?: string
+  departmentId?: string
+  jobLevel?: string
+  jobTitle?: string
 }
 
 type UserWithRelations = {

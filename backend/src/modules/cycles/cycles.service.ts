@@ -242,7 +242,7 @@ export class CyclesService {
       }),
     ])
 
-    const rows: { cycleId: string; employeeId: string; supervisorId?: string; templateId: string }[] = []
+    const rows: { cycleId: string; employeeId: string; supervisorId: string | null; templateId: string }[] = []
 
     for (const emp of employees) {
       const tpl = templates.find(
@@ -259,7 +259,7 @@ export class CyclesService {
         cycleId,
         employeeId: emp.id,
         templateId: tpl.id,
-        ...(emp.supervisorId ? { supervisorId: emp.supervisorId } : {}),
+        supervisorId: emp.supervisorId ?? null,
       })
     }
 
