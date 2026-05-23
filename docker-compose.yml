@@ -13,6 +13,11 @@ services:
     ports:
       - "9200:9200"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   # ==========================================
   # 1. 後端服務 (NestJS Backend) - 直連 Neon
   # ==========================================
@@ -34,7 +39,8 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     # 使用 env_file 動態載入，取代 environment 的明文硬編碼
     env_file:
       - ./backend/.env

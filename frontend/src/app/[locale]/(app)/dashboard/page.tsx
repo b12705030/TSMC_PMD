@@ -527,6 +527,7 @@ const FLOW_STEP_KEY: Record<Role, string> = {
   Manager:    'flowGuide.stepsManager',
   RegionalHR: 'flowGuide.stepsRegionalHR',
   Admin:      'flowGuide.stepsAdmin',
+  GlobalHR:   'flowGuide.stepsRegionalHR',
 }
 
 function FlowGuide({ role }: { role: Role }) {
