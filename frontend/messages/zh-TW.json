@@ -90,9 +90,15 @@
     "colUser": "使用者",
     "colAction": "操作",
     "colResource": "資源",
+    "colOutcome": "結果",
     "colResourceId": "資源編號",
     "colIpAddress": "IP 位址",
-    "empty": "找不到稽核紀錄。"
+    "empty": "找不到稽核紀錄。",
+    "searchPlaceholder": "搜尋操作、資源、使用者…",
+    "outcomeAll": "全部結果",
+    "total": "共 {count} 筆",
+    "prev": "上一頁",
+    "next": "下一頁"
   },
   "cycles": {
     "pageTitle": "績效週期管理",

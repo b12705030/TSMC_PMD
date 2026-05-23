@@ -260,6 +260,7 @@ export class ReviewsService {
     } else if (user.role === Role.RegionalHR) {
       where = { employee: { regionId: user.regionId } }
     }
+    // Admin 和 GlobalHR：where = {} → 全域統計
 
     const reviews = await this.prisma.performanceReview.findMany({
       where: where as any,

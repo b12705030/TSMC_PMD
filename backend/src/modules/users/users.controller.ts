@@ -1,5 +1,6 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { UsersService } from './users.service'
+import { UpdateUserDto } from './dto/update-user.dto'
 import { GoalsService } from '../goals/goals.service'
 import { ReviewsService } from '../reviews/reviews.service'
 import { AuthGuard } from '../../common/guards/auth.guard'
@@ -31,25 +32,32 @@ export class UsersController {
   }
 
   @Get('regions')
-  @Roles(Role.Admin, Role.RegionalHR)
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
   getRegions() {
     return this.usersService.getDistinctRegions()
   }
 
   @Get('job-levels')
-  @Roles(Role.Admin, Role.RegionalHR)
-  getJobLevels() {
-    return this.usersService.getDistinctJobLevels()
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  getJobLevels(@CurrentUser() user: SessionUser) {
+    return this.usersService.getDistinctJobLevels(user)
   }
 
   @Get('job-titles')
-  @Roles(Role.Admin, Role.RegionalHR)
-  getJobTitles() {
-    return this.usersService.getDistinctJobTitles()
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  getJobTitles(@CurrentUser() user: SessionUser) {
+    return this.usersService.getDistinctJobTitles(user)
+  }
+
+  // PATCH 必須在 :id GET 之前，避免路由衝突
+  @Patch(':id')
+  @Roles(Role.Admin)
+  updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.updateUser(id, dto)
   }
 
   @Get(':id')
-  @Roles(Role.Manager, Role.Supervisor, Role.RegionalHR, Role.Admin)
+  @Roles(Role.Admin, Role.GlobalHR, Role.Manager, Role.Supervisor, Role.RegionalHR)
   getEmployee(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.usersService.getEmployee(id, user)
   }

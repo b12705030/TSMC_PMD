@@ -90,9 +90,15 @@
     "colUser": "Utilisateur",
     "colAction": "Action",
     "colResource": "Ressource",
+    "colOutcome": "Résultat",
     "colResourceId": "ID ressource",
     "colIpAddress": "Adresse IP",
-    "empty": "Aucun enregistrement d'audit trouvé."
+    "empty": "Aucun enregistrement d'audit trouvé.",
+    "searchPlaceholder": "Rechercher par action, ressource, utilisateur…",
+    "outcomeAll": "Tous les résultats",
+    "total": "{count} enregistrements",
+    "prev": "Précédent",
+    "next": "Suivant"
   },
   "cycles": {
     "pageTitle": "Cycles de performance",

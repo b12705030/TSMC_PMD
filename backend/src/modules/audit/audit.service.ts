@@ -1,17 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Client } from '@elastic/elasticsearch'
+import type { AuditLogEntry } from './audit-log.interface'
 
 const INDEX = 'audit-logs'
-
-interface AuditLogEntry {
-  userId: string
-  userName: string
-  action: string
-  resource: string
-  resourceId: string
-  detail: Record<string, unknown>
-  ipAddress: string
-}
 
 @Injectable()
 export class AuditService {
@@ -38,7 +29,7 @@ export class AuditService {
         index: INDEX,
         document: {
           ...entry,
-          createdAt: new Date().toISOString(),
+          createdAt: entry.createdAt.toISOString(),
         },
       })
     } catch (err) {
@@ -47,22 +38,81 @@ export class AuditService {
     }
   }
 
-  async search(query: string, from = 0, size = 50) {
+  async ensureIndex(): Promise<void> {
     try {
+      const exists = await this.es.indices.exists({ index: INDEX })
+      if (exists) return
+
+      await this.es.indices.create({
+        index: INDEX,
+        mappings: {
+          dynamic: 'strict',
+          properties: {
+            userId:     { type: 'keyword' },
+            userName:   { type: 'keyword' },
+            action:     { type: 'keyword' },
+            outcome:    { type: 'keyword' },
+            resource:   { type: 'keyword' },
+            resourceId: { type: 'keyword' },
+            httpMethod: { type: 'keyword' },
+            httpPath:   { type: 'keyword' },
+            httpStatus: { type: 'integer' },
+            ipAddress:  { type: 'ip' },
+            userAgent:  { type: 'text', index: false },
+            detail:     { type: 'object', dynamic: true },
+            createdAt:  { type: 'date' },
+          },
+        },
+      } as any)
+      this.logger.log('audit-logs index created')
+    } catch (err) {
+      this.logger.error('Failed to ensure audit-logs index', err)
+    }
+  }
+
+  async search(opts: {
+    q?: string
+    outcome?: string
+    resource?: string
+    fromDate?: string
+    toDate?: string
+    from?: number
+    size?: number
+  } = {}): Promise<{ data: object[]; total: number }> {
+    const { q, outcome, resource, fromDate, toDate, from = 0, size = 50 } = opts
+    try {
+      const filters: object[] = []
+      if (outcome)              filters.push({ term: { outcome } })
+      if (resource)             filters.push({ term: { resource } })
+      if (fromDate || toDate)   filters.push({ range: { createdAt: { ...(fromDate && { gte: fromDate }), ...(toDate && { lte: toDate }) } } })
+
+      const esQuery = filters.length || q
+        ? {
+            bool: {
+              ...(q && { must: { multi_match: { query: q, fields: ['action', 'resource', 'userName'] } } }),
+              ...(filters.length && { filter: filters }),
+            },
+          }
+        : { match_all: {} }
+
       const result = await this.es.search({
         index: INDEX,
         from,
         size,
         sort: [{ createdAt: { order: 'desc' } }],
-        query: query
-          ? { multi_match: { query, fields: ['action', 'resource', 'userName'] } }
-          : { match_all: {} },
+        query: esQuery,
+        track_total_hits: true,
       })
 
-      return result.hits.hits.map((hit) => ({ id: hit._id ?? '', ...(hit._source as object) }))
+      const total = typeof result.hits.total === 'number'
+        ? result.hits.total
+        : (result.hits.total?.value ?? 0)
+
+      const data = result.hits.hits.map((hit) => ({ id: hit._id ?? '', ...(hit._source as object) }))
+      return { data, total }
     } catch (err) {
       this.logger.warn('Elasticsearch unavailable, returning empty audit log', err)
-      return []
+      return { data: [], total: 0 }
     }
   }
 }

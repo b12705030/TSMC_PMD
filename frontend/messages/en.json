@@ -90,9 +90,15 @@
     "colUser": "User",
     "colAction": "Action",
     "colResource": "Resource",
+    "colOutcome": "Outcome",
     "colResourceId": "Resource ID",
     "colIpAddress": "IP Address",
-    "empty": "No audit records found."
+    "empty": "No audit records found.",
+    "searchPlaceholder": "Search by action, resource, user…",
+    "outcomeAll": "All outcomes",
+    "total": "{count} records",
+    "prev": "Previous",
+    "next": "Next"
   },
   "cycles": {
     "pageTitle": "Performance Cycles",

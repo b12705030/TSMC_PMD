@@ -90,9 +90,15 @@
     "colUser": "Benutzer",
     "colAction": "Aktion",
     "colResource": "Ressource",
+    "colOutcome": "Ergebnis",
     "colResourceId": "Ressourcen-ID",
     "colIpAddress": "IP-Adresse",
-    "empty": "Keine Prüfeinträge gefunden."
+    "empty": "Keine Prüfeinträge gefunden.",
+    "searchPlaceholder": "Nach Aktion, Ressource, Benutzer suchen…",
+    "outcomeAll": "Alle Ergebnisse",
+    "total": "{count} Einträge",
+    "prev": "Zurück",
+    "next": "Weiter"
   },
   "cycles": {
     "pageTitle": "Leistungszyklen",

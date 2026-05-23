@@ -37,10 +37,12 @@ export class AuthService {
       userId: raw.id,
       userName: raw.name,
       action: 'LOGIN',
+      outcome: 'SUCCESS',
       resource: 'auth',
       resourceId: raw.id,
       detail: { employeeId: raw.employeeId },
       ipAddress,
+      createdAt: new Date(),
     })
 
     // Reload with relations so the response has region/department names
@@ -74,10 +76,12 @@ export class AuthService {
       userId,
       userName: '',
       action: 'LOGOUT',
+      outcome: 'SUCCESS',
       resource: 'auth',
       resourceId: userId,
       detail: {},
       ipAddress,
+      createdAt: new Date(),
     })
   }
 

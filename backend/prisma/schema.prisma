@@ -15,6 +15,7 @@ datasource db {
 
 enum Role {
   Admin
+  GlobalHR
   RegionalHR
   Manager
   Supervisor
@@ -209,6 +210,7 @@ model TemplateQuestion {
   questionType      QuestionType @default(Text)
   options           String[]     // for MultipleChoice
   isCustom          Boolean      @default(false) // false = HR base, true = Manager custom
+  isGlobal          Boolean      @default(false) // true = Admin-locked, cannot be deleted by any region
   required          Boolean      @default(true)
   orderIndex        Int
 

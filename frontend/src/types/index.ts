@@ -1,6 +1,6 @@
 // ─── Roles ────────────────────────────────────────────────────────────────────
 
-export type Role = 'Admin' | 'RegionalHR' | 'Manager' | 'Supervisor' | 'Employee'
+export type Role = 'Admin' | 'GlobalHR' | 'RegionalHR' | 'Manager' | 'Supervisor' | 'Employee'
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
@@ -186,10 +186,15 @@ export interface AuditLog {
   userId: string
   userName: string
   action: string
+  outcome: 'SUCCESS' | 'FORBIDDEN'
   resource: string
-  resourceId: string
-  detail: Record<string, unknown>
-  ipAddress: string
+  resourceId?: string
+  httpMethod?: string
+  httpPath?: string
+  httpStatus?: number
+  detail?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
   createdAt: string
 }
 
