@@ -146,6 +146,15 @@ git clone <repo-url>
 cd TSMC_PMD
 
 # 2. 啟動 Elasticsearch（見上方說明）
+docker run -d `
+  --name elasticsearch `
+  -p 9200:9200 `
+  -e "discovery.type=single-node" `
+  -e "xpack.security.enabled=false" `
+  docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+
+# 第一次時須執行以上指令
+docker start elasticsearch # 之後重啟只需 `docker start elasticsearch`，不需重跑 `docker run`。 
 
 # 3. Setup backend
 cd backend
