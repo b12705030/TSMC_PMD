@@ -228,7 +228,7 @@ function ActiveCycles({ cycles }: { cycles: PerformanceCycle[] }) {
               <div>
                 <h3 className="font-semibold text-gray-900">{cycle.name}</h3>
                 <p className="mt-0.5 text-sm text-gray-500">
-                  {cycleTypeLabel[cycle.type] ?? cycle.type} · {cycle.regions.join(', ')}
+                  {cycleTypeLabel[cycle.type] ?? cycle.type} · {cycle.region?.name ?? ''}
                 </p>
               </div>
               <StatusBadge status={cycle.status} />
@@ -526,6 +526,7 @@ const FLOW_STEP_KEY: Record<Role, string> = {
   Supervisor: 'flowGuide.stepsSupervisor',
   Manager:    'flowGuide.stepsManager',
   RegionalHR: 'flowGuide.stepsRegionalHR',
+  GlobalHR:   'flowGuide.stepsRegionalHR',
   Admin:      'flowGuide.stepsAdmin',
 }
 

@@ -46,10 +46,6 @@ export class CreateTemplateDto {
   @IsNotEmpty()
   cycleId: string
 
-  @IsString()
-  @IsOptional()
-  regionId?: string
-
   @IsArray()
   @IsString({ each: true })
   appliesGrades: string[]

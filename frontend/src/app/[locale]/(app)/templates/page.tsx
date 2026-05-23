@@ -40,14 +40,9 @@ export default function TemplatesPage() {
   const [error, setError] = useState('')
   const [pendingPublishId, setPendingPublishId] = useState<string | null>(null)
 
-  const [regions, setRegions] = useState<{ id: string; name: string; code: string }[]>([])
   const [form, setForm] = useState<Omit<CreateTemplatePayload, 'questions'>>({
-    name: '', cycleId: '', regionId: undefined, appliesGrades: [], applyTitles: [],
+    name: '', cycleId: '', appliesGrades: [], applyTitles: [],
   })
-
-  useEffect(() => {
-    api.get<{ id: string; name: string; code: string }[]>('/users/regions').then(setRegions).catch(() => {})
-  }, [])
   const [titleSearch, setTitleSearch] = useState('')
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ ...EMPTY_QUESTION, orderIndex: 0 }])
 
@@ -96,7 +91,7 @@ export default function TemplatesPage() {
 
   function resetModal() {
     setShowModal(false)
-    setForm({ name: '', cycleId: '', regionId: undefined, appliesGrades: [], applyTitles: [] })
+    setForm({ name: '', cycleId: '', appliesGrades: [], applyTitles: [] })
     setQuestions([{ ...EMPTY_QUESTION, orderIndex: 0 }])
     setTitleSearch('')
     setError('')
@@ -114,12 +109,9 @@ export default function TemplatesPage() {
   }
 
   const publishedCycles = cycles.filter((c) => c.status !== 'Completed')
-  const selectedCycle = publishedCycles.find((c) => c.id === form.cycleId)
-  const isAdminMultiRegion = user?.role === 'Admin' && (selectedCycle?.regions?.length ?? 0) > 1
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
-    if (isAdminMultiRegion && !form.regionId) { setError('跨地區週期請選擇此模板適用的地區'); return }
     if (form.appliesGrades.length === 0) { setError('請選擇至少一個職等'); return }
     if (form.applyTitles.length === 0)   { setError('請選擇至少一個職稱'); return }
     if (questions.some((q) => !q.questionText.trim())) { setError('題目內容不得為空'); return }
@@ -207,30 +199,6 @@ export default function TemplatesPage() {
                     ))}
                   </select>
                 </div>
-
-                {isAdminMultiRegion && (
-                  <div>
-                    <label className="label">
-                      適用地區
-                      <span className="ml-1 text-xs font-normal text-red-400">（跨地區週期必填）</span>
-                    </label>
-                    <select
-                      className="input"
-                      value={form.regionId ?? ''}
-                      onChange={(e) => setForm((p) => ({ ...p, regionId: e.target.value || undefined }))}
-                    >
-                      <option value="">— 選擇地區 —</option>
-                      {selectedCycle?.regions.map((regionName) => {
-                        const rec = regions.find((r) => r.name === regionName)
-                        return (
-                          <option key={regionName} value={rec?.id ?? regionName}>
-                            {regionName}
-                          </option>
-                        )
-                      })}
-                    </select>
-                  </div>
-                )}
 
                 {/* Applies to Grade */}
                 <div>

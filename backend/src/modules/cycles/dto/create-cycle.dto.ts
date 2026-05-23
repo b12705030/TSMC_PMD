@@ -1,4 +1,4 @@
-import { IsEnum, IsString, IsDateString, IsNotEmpty, IsArray, ArrayMinSize, Validate } from 'class-validator'
+import { IsEnum, IsString, IsDateString, IsNotEmpty, IsOptional, Validate } from 'class-validator'
 import { CycleType } from '@prisma/client'
 import { ValidatorConstraint } from 'class-validator'
 import type { ValidationArguments, ValidatorConstraintInterface } from 'class-validator'
@@ -27,10 +27,10 @@ export class CreateCycleDto {
   @IsEnum(CycleType)
   type: CycleType
 
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsString({ each: true })
-  regions: string[]
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  regionId?: string
 
   @IsDateString()
   goalSettingStart: string

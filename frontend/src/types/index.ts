@@ -32,7 +32,8 @@ export interface PerformanceCycle {
   name: string
   type: CycleType
   status: CycleStatus
-  regions: string[]
+  regionId: string
+  region: { id: string; name: string; code: string }
   goalSettingStart: string
   goalSettingEnd: string
   reviewStart: string

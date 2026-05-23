@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateAppealDto, RespondAppealDto } from './dto/appeal.dto'
 
@@ -58,28 +59,48 @@ export class AppealsService {
     return appeal
   }
 
-  // Manager / Admin 查看申訴清單：Admin 看全部，Manager 只看指派給自己的
+  // Manager / Admin / RegionalHR 查看申訴清單
   async getAppealsForManager(user: SessionUser) {
-    const where = user.role === Role.Admin ? {} : { managerId: user.id }
+    if (isGlobalRole(user)) {
+      return this.prisma.appeal.findMany({
+        include: APPEAL_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      })
+    }
+
+    if (user.role === Role.RegionalHR) {
+      return this.prisma.appeal.findMany({
+        where:   { employee: { regionId: user.regionId } },
+        include: APPEAL_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      })
+    }
+
+    // Manager: 只看指派給自己的申訴
     return this.prisma.appeal.findMany({
-      where,
+      where:   { managerId: user.id },
       include: APPEAL_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })
   }
 
-  // 取得單筆申訴（當事員工、指定 Manager 或 Admin 可看）
+  // 取得單筆申訴（當事員工、指定 Manager、RegionalHR 同地區、或 Admin/GlobalHR 可看）
   async getAppealById(id: string, user: SessionUser) {
     const appeal = await this.prisma.appeal.findUnique({
       where:   { id },
       include: APPEAL_INCLUDE,
     })
     if (!appeal) throw new NotFoundException()
-    if (
-      user.role !== Role.Admin &&
-      user.id !== appeal.employeeId &&
-      user.id !== appeal.managerId
-    ) {
+
+    if (isGlobalRole(user)) return appeal
+
+    if (user.role === Role.RegionalHR) {
+      const emp = await this.prisma.user.findUnique({ where: { id: appeal.employeeId } })
+      if (emp?.regionId !== user.regionId) throw new ForbiddenException()
+      return appeal
+    }
+
+    if (user.id !== appeal.employeeId && user.id !== appeal.managerId) {
       throw new ForbiddenException()
     }
     return appeal
@@ -89,7 +110,7 @@ export class AppealsService {
   async respondToAppeal(id: string, user: SessionUser, dto: RespondAppealDto) {
     const appeal = await this.prisma.appeal.findUnique({ where: { id } })
     if (!appeal)                                                           throw new NotFoundException()
-    if (user.role !== Role.Admin && appeal.managerId !== user.id)          throw new ForbiddenException()
+    if (!isGlobalRole(user) && appeal.managerId !== user.id)               throw new ForbiddenException()
     if (appeal.status === 'Resolved')                                      throw new BadRequestException('此申訴已解決')
 
     const [updatedAppeal] = await this.prisma.$transaction([

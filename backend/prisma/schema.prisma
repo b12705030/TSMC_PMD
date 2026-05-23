@@ -81,8 +81,27 @@ model Region {
   users       User[]
   departments Department[]
   templates   FormTemplate[]
+  cycles      PerformanceCycle[]
+  configs     RegionConfig[]
 
   createdAt DateTime @default(now())
+}
+
+// ─── RegionConfig ─────────────────────────────────────────────────────────────
+
+model RegionConfig {
+  id       String @id @default(uuid())
+  regionId String
+  region   Region @relation(fields: [regionId], references: [id])
+  key      String
+  value    String
+  label    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([regionId, key])
+  @@index([regionId])
 }
 
 // ─── Department ───────────────────────────────────────────────────────────────
@@ -151,7 +170,8 @@ model PerformanceCycle {
   name             String
   type             CycleType
   status           CycleStatus @default(GoalSetting)
-  regions          String[]    // 可跨多個 region，例如 ["Taiwan", "Japan"]
+  regionId         String
+  region           Region      @relation(fields: [regionId], references: [id])
 
   goalSettingStart DateTime
   goalSettingEnd   DateTime
@@ -164,6 +184,8 @@ model PerformanceCycle {
   templates        FormTemplate[]
   reviews          PerformanceReview[]
   goals            Goal[]
+
+  @@index([regionId])
 }
 
 // ─── Form Template ────────────────────────────────────────────────────────────

@@ -112,16 +112,14 @@ type CycleOverrides = {
   status?: CycleStatus
 }
 
-// Pass Region objects — .name is extracted automatically so the String[] field
-// is always consistent with the Region rows in the DB.
-export async function createCycle(regions: Region[], overrides?: CycleOverrides) {
+export async function createCycle(region: Region, overrides?: CycleOverrides) {
   const n = next()
   return prisma.performanceCycle.create({
     data: {
       name:             overrides?.name   ?? `Cycle-${n}`,
       type:             overrides?.type   ?? CycleType.Annual,
       status:           overrides?.status ?? CycleStatus.GoalSetting,
-      regions:          regions.map((r) => r.name),
+      regionId:         region.id,
       goalSettingStart: new Date('2026-01-01'),
       goalSettingEnd:   new Date('2026-03-31'),
       reviewStart:      new Date('2026-04-01'),

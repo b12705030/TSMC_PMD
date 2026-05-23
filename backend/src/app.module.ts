@@ -9,6 +9,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module'
 import { CyclesModule } from './modules/cycles/cycles.module'
 import { TemplatesModule } from './modules/templates/templates.module'
 import { AppealsModule } from './modules/appeals/appeals.module'
+import { RegionConfigModule } from './modules/config/config.module'
 import { AuditModule } from './modules/audit/audit.module'
 import { AuditWriteInterceptor } from './modules/audit/audit-write.interceptor'
 import { ForbiddenExceptionFilter } from './modules/audit/forbidden.filter'
@@ -24,6 +25,7 @@ import { ForbiddenExceptionFilter } from './modules/audit/forbidden.filter'
     CyclesModule,
     TemplatesModule,
     AppealsModule,
+    RegionConfigModule,
     AuditModule,
   ],
   providers: [

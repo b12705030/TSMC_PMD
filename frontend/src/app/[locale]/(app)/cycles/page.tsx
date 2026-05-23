@@ -38,37 +38,30 @@ function WarnText({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── Region Checkboxes ────────────────────────────────────────────────────────
+// ─── Region Select ────────────────────────────────────────────────────────────
 
-function RegionCheckboxes({
+function RegionSelect({
   allRegions,
-  selected,
+  value,
   onChange,
 }: {
-  allRegions: string[]
-  selected: string[]
-  onChange: (regions: string[]) => void
+  allRegions: { id: string; name: string; code: string }[]
+  value: string
+  onChange: (regionId: string) => void
 }) {
   const tCommon = useTranslations('common')
-
-  function toggle(r: string) {
-    onChange(selected.includes(r) ? selected.filter((x) => x !== r) : [...selected, r])
-  }
   return (
-    <div className="flex flex-wrap gap-2 mt-1">
+    <select
+      className="input"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">— 選擇地區 —</option>
       {allRegions.map((r) => (
-        <label key={r} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={selected.includes(r)}
-            onChange={() => toggle(r)}
-            className="rounded"
-          />
-          {r}
-        </label>
+        <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
       ))}
-      {allRegions.length === 0 && <p className="text-xs text-gray-400">{tCommon('loading')}</p>}
-    </div>
+      {allRegions.length === 0 && <option disabled>{tCommon('loading')}</option>}
+    </select>
   )
 }
 
@@ -85,7 +78,7 @@ export default function CyclesPage() {
   const isManager = user?.role === 'Manager'
   const canEdit   = isAdmin || isHR
 
-  const [allRegions, setAllRegions]   = useState<string[]>([])
+  const [allRegions, setAllRegions]   = useState<{ id: string; name: string; code: string }[]>([])
   const [showModal, setShowModal]     = useState(false)
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
@@ -98,7 +91,7 @@ export default function CyclesPage() {
   const [form, setForm] = useState<CreateCyclePayload>({
     name:             '',
     type:             'Annual',
-    regions:          [],
+    regionId:         '',
     goalSettingStart: '',
     goalSettingEnd:   '',
     reviewStart:      '',
@@ -146,7 +139,7 @@ export default function CyclesPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      api.get<string[]>('/users/regions').then(setAllRegions).catch(() => {})
+      api.get<{ id: string; name: string; code: string }[]>('/users/regions').then(setAllRegions).catch(() => {})
     }
   }, [isAdmin])
 
@@ -161,12 +154,12 @@ export default function CyclesPage() {
   }
 
   function resetForm() {
-    setForm({ name: '', type: 'Annual', regions: [], goalSettingStart: '', goalSettingEnd: '', reviewStart: '', reviewEnd: '' })
+    setForm({ name: '', type: 'Annual', regionId: '', goalSettingStart: '', goalSettingEnd: '', reviewStart: '', reviewEnd: '' })
   }
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
-    if (isAdmin && form.regions.length === 0) { setError(t('modal.errorRegion')); return }
+    if (isAdmin && !form.regionId) { setError(t('modal.errorRegion')); return }
     setError('')
     setSubmitting(true)
     try {
@@ -283,7 +276,6 @@ export default function CyclesPage() {
       {editingCycle && (
         <EditCycleModal
           cycle={editingCycle}
-          allRegions={allRegions}
           onClose={() => setEditingCycle(null)}
           onSave={updateCycle}
         />
@@ -317,10 +309,10 @@ export default function CyclesPage() {
               <div>
                 <label className="label">{t('modal.regions')}</label>
                 {isAdmin ? (
-                  <RegionCheckboxes
+                  <RegionSelect
                     allRegions={allRegions}
-                    selected={form.regions}
-                    onChange={(r) => updateForm('regions', r)}
+                    value={form.regionId ?? ''}
+                    onChange={(r) => updateForm('regionId', r)}
                   />
                 ) : (
                   <div className="mt-1 flex gap-1.5 flex-wrap">
@@ -510,14 +502,14 @@ function CycleCard({
   const locale = useLocale()
 
   const nextLabel  = nextStatusLabel[cycle.status]
-  const regionTags = (cycle.regions ?? []).join(' · ')
+  const regionName = cycle.region?.name ?? ''
 
   return (
     <div className="card">
       <div className="mb-4 flex items-start justify-between">
         <div>
           <h3 className="font-semibold text-gray-900">{cycle.name}</h3>
-          <p className="text-sm text-gray-500">{cycle.type}{regionTags ? ` · ${regionTags}` : ''}</p>
+          <p className="text-sm text-gray-500">{cycle.type}{regionName ? ` · ${regionName}` : ''}</p>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && cycle.status === 'GoalSetting' && onEdit && (
@@ -557,10 +549,9 @@ function CycleCard({
 // ─── Edit Cycle Modal（Admin only）────────────────────────────────────────────
 
 function EditCycleModal({
-  cycle, allRegions, onClose, onSave,
+  cycle, onClose, onSave,
 }: {
   cycle: PerformanceCycle
-  allRegions: string[]
   onClose: () => void
   onSave: (id: string, payload: UpdateCyclePayload) => Promise<void>
 }) {
@@ -569,7 +560,6 @@ function EditCycleModal({
 
   const [form, setForm] = useState({
     name:             cycle.name,
-    regions:          cycle.regions ?? [],
     goalSettingStart: cycle.goalSettingStart.slice(0, 10),
     goalSettingEnd:   cycle.goalSettingEnd.slice(0, 10),
     reviewStart:      cycle.reviewStart.slice(0, 10),
@@ -584,7 +574,6 @@ function EditCycleModal({
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
-    if (form.regions.length === 0) { setError(t('modal.errorRegion')); return }
     setError('')
     setSubmitting(true)
     try {
@@ -605,15 +594,6 @@ function EditCycleModal({
           <div>
             <label className="label">{t('modal.cycleName')}</label>
             <input className="input" required value={form.name} onChange={(e) => updateField('name', e.target.value)} />
-          </div>
-
-          <div>
-            <label className="label">{t('modal.regions')}</label>
-            <RegionCheckboxes
-              allRegions={allRegions}
-              selected={form.regions}
-              onChange={(r) => updateField('regions', r)}
-            />
           </div>
 
           <div>
