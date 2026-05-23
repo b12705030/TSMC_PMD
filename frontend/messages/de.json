@@ -96,6 +96,7 @@
     "colOutcome": "Ergebnis",
     "colResourceId": "Ressourcen-ID",
     "colIpAddress": "IP-Adresse",
+    "colRequest": "Anfragepfad",
     "empty": "Keine Prüfeinträge gefunden.",
     "searchPlaceholder": "Nach Aktion, Ressource, Benutzer suchen…",
     "outcomeAll": "Alle Ergebnisse",

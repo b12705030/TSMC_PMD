@@ -1,5 +1,6 @@
 import { PrismaClient, Role, CycleType, CycleStatus, GoalStatus, GoalType, ReviewStatus, ReviewGrade, AppealStatus } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
+import { Client as EsClient } from '@elastic/elasticsearch'
 
 const prisma = new PrismaClient()
 
@@ -850,6 +851,103 @@ async function main() {
     })
   }
   console.log(`  ✓ Appeals seeded`)
+
+  // ── Audit Logs (Elasticsearch) ───────────────────────────────────────────────
+  console.log('Seeding audit logs (Elasticsearch)...')
+  const es = new EsClient({
+    node: process.env.ELASTICSEARCH_NODE ?? 'http://localhost:9200',
+    requestTimeout: 5000,
+    maxRetries: 0,
+  })
+
+  try {
+    const indexExists = await es.indices.exists({ index: 'audit-logs' })
+    if (!indexExists) {
+      await es.indices.create({
+        index: 'audit-logs',
+        mappings: {
+          dynamic: 'strict',
+          properties: {
+            userId:       { type: 'keyword' },
+            userName:     { type: 'keyword' },
+            userRegionId: { type: 'keyword' },
+            action:       { type: 'keyword' },
+            outcome:      { type: 'keyword' },
+            resource:     { type: 'keyword' },
+            resourceId:   { type: 'keyword' },
+            httpMethod:   { type: 'keyword' },
+            httpPath:     { type: 'keyword' },
+            httpStatus:   { type: 'integer' },
+            ipAddress:    { type: 'ip' },
+            userAgent:    { type: 'text', index: false },
+            detail:       { type: 'object', dynamic: true },
+            createdAt:    { type: 'date' },
+          },
+        },
+      } as any)
+    } else {
+      await es.indices.putMapping({
+        index: 'audit-logs',
+        properties: { userRegionId: { type: 'keyword' } },
+      } as any)
+    }
+
+    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+
+    const AUDIT_LOGS = [
+      // ── TW ────────────────────────────────────────────────────────────────────
+      { userId: idMap['tw-emp001'], userName: '張志明 Eric Chang',     userRegionId: regionMap['TW'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-tw-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-tw-emp001/submit',           httpStatus: 200, ipAddress: '192.168.1.10', userAgent: UA, detail: {}, createdAt: new Date('2026-04-20T09:15:00Z') },
+      { userId: idMap['tw-emp001'], userName: '張志明 Eric Chang',     userRegionId: regionMap['TW'], action: 'REVIEW_ANSWERS_SAVE',      outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp001',             httpMethod: 'PUT',   httpPath: '/reviews/rev-tw-q2-emp001/answers',                 httpStatus: 200, ipAddress: '192.168.1.10', userAgent: UA, detail: {}, createdAt: new Date('2026-05-05T10:30:00Z') },
+      { userId: idMap['tw-emp001'], userName: '張志明 Eric Chang',     userRegionId: regionMap['TW'], action: 'REVIEW_SUBMIT',            outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp001',             httpMethod: 'POST',  httpPath: '/reviews/rev-tw-q2-emp001/submit',                  httpStatus: 200, ipAddress: '192.168.1.10', userAgent: UA, detail: {}, createdAt: new Date('2026-05-05T11:00:00Z') },
+      { userId: idMap['tw-emp001'], userName: '張志明 Eric Chang',     userRegionId: regionMap['TW'], action: 'ACCESS_DENIED',            outcome: 'FORBIDDEN', resource: 'review',        resourceId: undefined,                      httpMethod: 'GET',   httpPath: '/reviews/calibrate/seed-tw-q2-2026',                httpStatus: 403, ipAddress: '192.168.1.10', userAgent: UA, detail: {}, createdAt: new Date('2026-05-12T09:55:00Z') },
+      { userId: idMap['tw-emp002'], userName: '黃建宏 Jason Huang',    userRegionId: regionMap['TW'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-tw-emp002`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-tw-emp002/submit',           httpStatus: 200, ipAddress: '192.168.1.11', userAgent: UA, detail: {}, createdAt: new Date('2026-04-21T14:00:00Z') },
+      { userId: idMap['tw-emp002'], userName: '黃建宏 Jason Huang',    userRegionId: regionMap['TW'], action: 'REVIEW_ANSWERS_SAVE',      outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp002',             httpMethod: 'PUT',   httpPath: '/reviews/rev-tw-q2-emp002/answers',                 httpStatus: 200, ipAddress: '192.168.1.11', userAgent: UA, detail: {}, createdAt: new Date('2026-05-06T09:00:00Z') },
+      { userId: idMap['tw-emp003'], userName: '李怡君 Amy Lee',        userRegionId: regionMap['TW'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-tw-emp003`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-tw-emp003/submit',           httpStatus: 200, ipAddress: '192.168.1.12', userAgent: UA, detail: {}, createdAt: new Date('2026-04-22T10:00:00Z') },
+      { userId: idMap['tw-sup001'], userName: '王雅婷 Susan Wang',     userRegionId: regionMap['TW'], action: 'GOAL_APPROVE',             outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-tw-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-tw-emp001/approve',          httpStatus: 200, ipAddress: '192.168.1.20', userAgent: UA, detail: {}, createdAt: new Date('2026-04-25T11:00:00Z') },
+      { userId: idMap['tw-sup001'], userName: '王雅婷 Susan Wang',     userRegionId: regionMap['TW'], action: 'REVIEW_SUPERVISOR_SAVE',   outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp002',             httpMethod: 'PUT',   httpPath: '/reviews/rev-tw-q2-emp002/supervisor',              httpStatus: 200, ipAddress: '192.168.1.20', userAgent: UA, detail: {}, createdAt: new Date('2026-05-08T15:00:00Z') },
+      { userId: idMap['tw-sup001'], userName: '王雅婷 Susan Wang',     userRegionId: regionMap['TW'], action: 'REVIEW_SUPERVISOR_SUBMIT', outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp002',             httpMethod: 'POST',  httpPath: '/reviews/rev-tw-q2-emp002/supervisor/submit',       httpStatus: 200, ipAddress: '192.168.1.20', userAgent: UA, detail: {}, createdAt: new Date('2026-05-08T15:45:00Z') },
+      { userId: idMap['tw-mgr001'], userName: '陳俊宏 Michael Chen',   userRegionId: regionMap['TW'], action: 'REVIEW_CALIBRATE',         outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-tw-q2-emp003',             httpMethod: 'PUT',   httpPath: '/reviews/rev-tw-q2-emp003/calibrate',               httpStatus: 200, ipAddress: '192.168.1.30', userAgent: UA, detail: { grade: 'S' }, createdAt: new Date('2026-05-12T10:00:00Z') },
+      { userId: idMap['tw-mgr001'], userName: '陳俊宏 Michael Chen',   userRegionId: regionMap['TW'], action: 'REVIEW_PUBLISH_ALL',       outcome: 'SUCCESS',   resource: 'review',        resourceId: undefined,                      httpMethod: 'POST',  httpPath: '/reviews/cycle/seed-tw-q2-2026/publish',            httpStatus: 200, ipAddress: '192.168.1.30', userAgent: UA, detail: {}, createdAt: new Date('2026-05-15T16:00:00Z') },
+
+      // ── NA ────────────────────────────────────────────────────────────────────
+      { userId: idMap['na-emp001'], userName: 'Aaron Brooks',          userRegionId: regionMap['NA'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-na-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-na-emp001/submit',           httpStatus: 200, ipAddress: '10.0.1.10',    userAgent: UA, detail: {}, createdAt: new Date('2026-04-18T16:00:00Z') },
+      { userId: idMap['na-emp001'], userName: 'Aaron Brooks',          userRegionId: regionMap['NA'], action: 'REVIEW_ANSWERS_SAVE',      outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-na-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-na-ann-emp001/answers',                httpStatus: 200, ipAddress: '10.0.1.10',    userAgent: UA, detail: {}, createdAt: new Date('2026-05-04T14:00:00Z') },
+      { userId: idMap['na-emp001'], userName: 'Aaron Brooks',          userRegionId: regionMap['NA'], action: 'REVIEW_SUBMIT',            outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-na-ann-emp001',            httpMethod: 'POST',  httpPath: '/reviews/rev-na-ann-emp001/submit',                 httpStatus: 200, ipAddress: '10.0.1.10',    userAgent: UA, detail: {}, createdAt: new Date('2026-05-04T14:30:00Z') },
+      { userId: idMap['na-emp002'], userName: 'Chloe Davis',           userRegionId: regionMap['NA'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-na-emp002`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-na-emp002/submit',           httpStatus: 200, ipAddress: '10.0.1.11',    userAgent: UA, detail: {}, createdAt: new Date('2026-04-19T17:00:00Z') },
+      { userId: idMap['na-emp002'], userName: 'Chloe Davis',           userRegionId: regionMap['NA'], action: 'ACCESS_DENIED',            outcome: 'FORBIDDEN', resource: 'review',        resourceId: undefined,                      httpMethod: 'GET',   httpPath: '/reviews/calibrate/seed-na-annual-2026',            httpStatus: 403, ipAddress: '10.0.1.11',    userAgent: UA, detail: {}, createdAt: new Date('2026-05-11T09:00:00Z') },
+      { userId: idMap['na-sup001'], userName: 'David Thompson',        userRegionId: regionMap['NA'], action: 'GOAL_APPROVE',             outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-na-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-na-emp001/approve',          httpStatus: 200, ipAddress: '10.0.1.20',    userAgent: UA, detail: {}, createdAt: new Date('2026-04-23T10:00:00Z') },
+      { userId: idMap['na-sup001'], userName: 'David Thompson',        userRegionId: regionMap['NA'], action: 'REVIEW_SUPERVISOR_SUBMIT', outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-na-ann-emp001',            httpMethod: 'POST',  httpPath: '/reviews/rev-na-ann-emp001/supervisor/submit',      httpStatus: 200, ipAddress: '10.0.1.20',    userAgent: UA, detail: {}, createdAt: new Date('2026-05-07T11:00:00Z') },
+      { userId: idMap['na-mgr001'], userName: 'Emma Wilson',           userRegionId: regionMap['NA'], action: 'REVIEW_CALIBRATE',         outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-na-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-na-ann-emp001/calibrate',              httpStatus: 200, ipAddress: '10.0.1.30',    userAgent: UA, detail: { grade: 'S' }, createdAt: new Date('2026-05-11T09:30:00Z') },
+
+      // ── JP ────────────────────────────────────────────────────────────────────
+      { userId: idMap['jp-emp001'], userName: '田中 健太 Kenta Tanaka', userRegionId: regionMap['JP'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-jp-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-jp-emp001/submit',           httpStatus: 200, ipAddress: '172.16.1.10',  userAgent: UA, detail: {}, createdAt: new Date('2026-04-17T09:00:00Z') },
+      { userId: idMap['jp-emp001'], userName: '田中 健太 Kenta Tanaka', userRegionId: regionMap['JP'], action: 'REVIEW_ANSWERS_SAVE',      outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-jp-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-jp-ann-emp001/answers',                httpStatus: 200, ipAddress: '172.16.1.10',  userAgent: UA, detail: {}, createdAt: new Date('2026-05-03T10:00:00Z') },
+      { userId: idMap['jp-emp001'], userName: '田中 健太 Kenta Tanaka', userRegionId: regionMap['JP'], action: 'REVIEW_SUBMIT',            outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-jp-ann-emp001',            httpMethod: 'POST',  httpPath: '/reviews/rev-jp-ann-emp001/submit',                 httpStatus: 200, ipAddress: '172.16.1.10',  userAgent: UA, detail: {}, createdAt: new Date('2026-05-03T10:30:00Z') },
+      { userId: idMap['jp-sup001'], userName: '山本 彩 Aya Yamamoto',  userRegionId: regionMap['JP'], action: 'GOAL_APPROVE',             outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-jp-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-jp-emp001/approve',          httpStatus: 200, ipAddress: '172.16.1.20',  userAgent: UA, detail: {}, createdAt: new Date('2026-04-22T14:00:00Z') },
+      { userId: idMap['jp-sup001'], userName: '山本 彩 Aya Yamamoto',  userRegionId: regionMap['JP'], action: 'REVIEW_SUPERVISOR_SAVE',   outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-jp-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-jp-ann-emp001/supervisor',             httpStatus: 200, ipAddress: '172.16.1.20',  userAgent: UA, detail: {}, createdAt: new Date('2026-05-06T16:00:00Z') },
+      { userId: idMap['jp-sup001'], userName: '山本 彩 Aya Yamamoto',  userRegionId: regionMap['JP'], action: 'REVIEW_SUPERVISOR_SUBMIT', outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-jp-ann-emp001',            httpMethod: 'POST',  httpPath: '/reviews/rev-jp-ann-emp001/supervisor/submit',      httpStatus: 200, ipAddress: '172.16.1.20',  userAgent: UA, detail: {}, createdAt: new Date('2026-05-06T16:30:00Z') },
+      { userId: idMap['jp-mgr001'], userName: '佐藤 誠 Makoto Sato',   userRegionId: regionMap['JP'], action: 'REVIEW_CALIBRATE',         outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-jp-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-jp-ann-emp001/calibrate',              httpStatus: 200, ipAddress: '172.16.1.30',  userAgent: UA, detail: { grade: 'S' }, createdAt: new Date('2026-05-10T11:00:00Z') },
+
+      // ── EU ────────────────────────────────────────────────────────────────────
+      { userId: idMap['eu-emp001'], userName: 'Fritz Bauer',           userRegionId: regionMap['EU'], action: 'GOAL_SUBMIT',              outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-eu-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-eu-emp001/submit',           httpStatus: 200, ipAddress: '10.10.1.10',   userAgent: UA, detail: {}, createdAt: new Date('2026-04-16T14:00:00Z') },
+      { userId: idMap['eu-emp001'], userName: 'Fritz Bauer',           userRegionId: regionMap['EU'], action: 'REVIEW_ANSWERS_SAVE',      outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-eu-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-eu-ann-emp001/answers',                httpStatus: 200, ipAddress: '10.10.1.10',   userAgent: UA, detail: {}, createdAt: new Date('2026-05-02T09:00:00Z') },
+      { userId: idMap['eu-emp001'], userName: 'Fritz Bauer',           userRegionId: regionMap['EU'], action: 'REVIEW_SUBMIT',            outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-eu-ann-emp001',            httpMethod: 'POST',  httpPath: '/reviews/rev-eu-ann-emp001/submit',                 httpStatus: 200, ipAddress: '10.10.1.10',   userAgent: UA, detail: {}, createdAt: new Date('2026-05-02T09:30:00Z') },
+      { userId: idMap['eu-emp002'], userName: 'Klaus Wagner',          userRegionId: regionMap['EU'], action: 'ACCESS_DENIED',            outcome: 'FORBIDDEN', resource: 'review',        resourceId: undefined,                      httpMethod: 'GET',   httpPath: '/reviews/calibrate/seed-eu-annual-2026',            httpStatus: 403, ipAddress: '10.10.1.11',   userAgent: UA, detail: {}, createdAt: new Date('2026-05-09T09:45:00Z') },
+      { userId: idMap['eu-sup001'], userName: 'Hans Müller',           userRegionId: regionMap['EU'], action: 'GOAL_APPROVE',             outcome: 'SUCCESS',   resource: 'goal',          resourceId: `seed-goal-draft-eu-emp001`,    httpMethod: 'PATCH', httpPath: '/goals/seed-goal-draft-eu-emp001/approve',          httpStatus: 200, ipAddress: '10.10.1.20',   userAgent: UA, detail: {}, createdAt: new Date('2026-04-21T16:00:00Z') },
+      { userId: idMap['eu-sup001'], userName: 'Hans Müller',           userRegionId: regionMap['EU'], action: 'REVIEW_SUPERVISOR_SAVE',   outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-eu-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-eu-ann-emp001/supervisor',             httpStatus: 200, ipAddress: '10.10.1.20',   userAgent: UA, detail: {}, createdAt: new Date('2026-05-05T15:00:00Z') },
+      { userId: idMap['eu-mgr001'], userName: 'Sophie Laurent',        userRegionId: regionMap['EU'], action: 'REVIEW_CALIBRATE',         outcome: 'SUCCESS',   resource: 'review',        resourceId: 'rev-eu-ann-emp001',            httpMethod: 'PUT',   httpPath: '/reviews/rev-eu-ann-emp001/calibrate',              httpStatus: 200, ipAddress: '10.10.1.30',   userAgent: UA, detail: { grade: 'S' }, createdAt: new Date('2026-05-09T10:00:00Z') },
+    ]
+
+    for (const entry of AUDIT_LOGS) {
+      await es.index({
+        index: 'audit-logs',
+        document: { ...entry, createdAt: entry.createdAt.toISOString() },
+      })
+    }
+    console.log(`  ✓ Audit logs seeded (${AUDIT_LOGS.length} entries across TW/NA/JP/EU)`)
+  } catch (err) {
+    console.warn('  ⚠ Elasticsearch unavailable — skipping audit log seed:', (err as Error).message)
+  }
 
   console.log('\n✅ Seed complete.')
 }

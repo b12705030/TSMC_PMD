@@ -96,6 +96,7 @@
     "colOutcome": "結果",
     "colResourceId": "リソースID",
     "colIpAddress": "IPアドレス",
+    "colRequest": "リクエストパス",
     "empty": "監査記録が見つかりません。",
     "searchPlaceholder": "操作・リソース・ユーザーで検索…",
     "outcomeAll": "全結果",

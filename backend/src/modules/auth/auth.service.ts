@@ -34,15 +34,19 @@ export class AuthService {
     })
 
     void this.audit.log({
-      userId: raw.id,
-      userName: raw.name,
-      action: 'LOGIN',
-      outcome: 'SUCCESS',
-      resource: 'auth',
-      resourceId: raw.id,
-      detail: { employeeId: raw.employeeId },
+      userId:       raw.id,
+      userName:     raw.name,
+      userRegionId: raw.regionId,
+      action:       'LOGIN',
+      outcome:      'SUCCESS',
+      resource:     'auth',
+      resourceId:   raw.id,
+      httpMethod:   'POST',
+      httpPath:     '/auth/login',
+      httpStatus:   200,
+      detail:       { employeeId: raw.employeeId },
       ipAddress,
-      createdAt: new Date(),
+      createdAt:    new Date(),
     })
 
     // Reload with relations so the response has region/department names
@@ -69,19 +73,23 @@ export class AuthService {
     }
   }
 
-  async logout(sessionId: string, userId: string, ipAddress: string) {
+  async logout(sessionId: string, userId: string, userName: string, userRegionId: string, ipAddress: string) {
     await this.prisma.session.deleteMany({ where: { id: sessionId } })
 
     void this.audit.log({
       userId,
-      userName: '',
-      action: 'LOGOUT',
-      outcome: 'SUCCESS',
-      resource: 'auth',
-      resourceId: userId,
-      detail: {},
+      userName,
+      userRegionId,
+      action:       'LOGOUT',
+      outcome:      'SUCCESS',
+      resource:     'auth',
+      resourceId:   userId,
+      httpMethod:   'POST',
+      httpPath:     '/auth/logout',
+      httpStatus:   204,
+      detail:       {},
       ipAddress,
-      createdAt: new Date(),
+      createdAt:    new Date(),
     })
   }
 

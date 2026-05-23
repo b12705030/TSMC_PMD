@@ -48,7 +48,7 @@ export class AuthController {
     const sessionId = req.cookies?.[COOKIE_NAME] as string | undefined
     if (!sessionId) throw new UnauthorizedException()
     const ip = (req.ip ?? req.socket.remoteAddress) ?? 'unknown'
-    await this.authService.logout(sessionId, user.id, ip)
+    await this.authService.logout(sessionId, user.id, user.name, user.regionId, ip)
     res.clearCookie(COOKIE_NAME)
   }
 

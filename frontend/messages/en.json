@@ -96,6 +96,7 @@
     "colOutcome": "Outcome",
     "colResourceId": "Resource ID",
     "colIpAddress": "IP Address",
+    "colRequest": "Request Path",
     "empty": "No audit records found.",
     "searchPlaceholder": "Search by action, resource, user…",
     "outcomeAll": "All outcomes",

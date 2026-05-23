@@ -96,6 +96,7 @@
     "colOutcome": "结果",
     "colResourceId": "资源编号",
     "colIpAddress": "IP 地址",
+    "colRequest": "请求路径",
     "empty": "找不到稽核记录。",
     "searchPlaceholder": "搜索操作、资源、用户…",
     "outcomeAll": "全部结果",

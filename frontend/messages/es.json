@@ -96,6 +96,7 @@
     "colOutcome": "Resultado",
     "colResourceId": "ID de recurso",
     "colIpAddress": "Dirección IP",
+    "colRequest": "Ruta de solicitud",
     "empty": "No se encontraron registros de auditoría.",
     "searchPlaceholder": "Buscar por acción, recurso, usuario…",
     "outcomeAll": "Todos los resultados",
