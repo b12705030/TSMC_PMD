@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "システム管理者",
+    "GlobalHR": "グローバルHR",
     "RegionalHR": "地域HR",
     "Manager": "マネージャー",
     "Supervisor": "スーパーバイザー",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "読み込み中...",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "retry": "再試行",
+    "loadError": "読み込み失敗"
   },
   "login": {
     "title": "PMS",
@@ -277,6 +280,386 @@
       "published": "公開済み",
       "draftWarning": "{count}件のテンプレート下書きが未公開",
       "draftWarningDesc": "サイクルを進める際に自動適用されるには、テンプレートを事前にPublishする必要があります"
+    }
+  },
+  "templates": {
+    "pageTitle": "テンプレート管理",
+    "pageDesc": "グレードと役職別にパフォーマンスレビューフォームテンプレートを管理します。",
+    "addBtn": "+ 新規テンプレート",
+    "empty": {
+      "title": "レビューテンプレートなし",
+      "desc": "テンプレートを作成してパフォーマンスレビューを標準化してください。",
+      "btn": "+ 新規テンプレート"
+    },
+    "publishConfirm": {
+      "title": "公開を確認しますか？",
+      "desc": "公開後、このテンプレートはレビューに適用されます。HRの基本質問はロックされます。",
+      "btn": "公開"
+    },
+    "modal": {
+      "title": "新規レビューテンプレート",
+      "name": "テンプレート名",
+      "namePlaceholder": "例：エンジニア L2–L3 年次レビュー",
+      "cycle": "パフォーマンスサイクル",
+      "cycleDefault": "— サイクルを選択 —",
+      "grades": "適用グレード",
+      "gradesMulti": "（複数選択）",
+      "titles": "適用役職",
+      "titlesMulti": "（複数選択）",
+      "titleSearch": "役職を検索...",
+      "noTitles": "一致する役職が見つかりません",
+      "questions": "基本質問",
+      "questionsLocked": "（公開後ロック）",
+      "questionPlaceholder": "質問 {index}",
+      "required": "必須",
+      "options": "選択肢（最低2つ）",
+      "optionPlaceholder": "選択肢 {index}",
+      "addOption": "+ 選択肢を追加",
+      "addQuestion": "+ 質問を追加",
+      "creating": "作成中...",
+      "createBtn": "テンプレートを作成"
+    },
+    "card": {
+      "grades": "グレード: {value}",
+      "titles": "役職: {value}",
+      "baseQ": "{count} 基本質問",
+      "customQ": "· {count} カスタム質問",
+      "publishBtn": "公開",
+      "viewBtn": "表示 →"
+    },
+    "errors": {
+      "publishFailed": "公開に失敗しました",
+      "noGrade": "少なくとも1つのグレードを選択してください",
+      "noTitle": "少なくとも1つの役職を選択してください",
+      "emptyQuestion": "質問テキストを入力してください",
+      "minOptions": "多肢選択式には少なくとも2つの選択肢が必要です",
+      "createFailed": "作成に失敗しました。もう一度お試しください。"
+    },
+    "detail": {
+      "baseSection": "基本質問",
+      "baseBadge": "ロック済み — HRが設定",
+      "baseEmpty": "基本質問がありません。",
+      "customSection": "カスタム質問",
+      "customBadge": "マネージャーが追加",
+      "customEmptyManager": "カスタム質問がありません。上のボタンをクリックして追加してください。",
+      "customEmpty": "カスタム質問がありません。",
+      "addBtn": "+ 質問を追加",
+      "deleteConfirmTitle": "この質問を削除しますか？",
+      "deleteConfirmDesc": "このカスタム質問はテンプレートから完全に削除されます。この操作は元に戻せません。",
+      "deleteBtn": "削除",
+      "modalTitle": "新規カスタム質問",
+      "qLabel": "質問",
+      "qPlaceholder": "質問テキストを入力",
+      "typeLabel": "タイプ",
+      "optionsLabel": "選択肢（最低2つ）",
+      "optionPlaceholder": "選択肢 {index}",
+      "addOptionBtn": "+ 選択肢を追加",
+      "requiredLabel": "必須",
+      "adding": "追加中...",
+      "addBtnSubmit": "質問を追加",
+      "errorMinOptions": "多肢選択式には少なくとも2つの選択肢が必要です",
+      "errorEmpty": "質問テキストを入力してください",
+      "errorFailed": "追加に失敗しました。もう一度お試しください。",
+      "notFound": "テンプレートが見つかりません。"
+    },
+    "questionType": {
+      "Text": "テキスト",
+      "Rating": "評点（1–5）",
+      "MultipleChoice": "多肢選択"
+    }
+  },
+  "goals": {
+    "pageTitle": "マイゴール",
+    "pageDesc": "このパフォーマンスサイクルのSMART目標を設定・追跡します。",
+    "addBtn": "+ 新規目標",
+    "stats": {
+      "total": "目標総数",
+      "active": "進行中",
+      "completed": "完了"
+    },
+    "empty": {
+      "title": "目標がまだありません",
+      "desc": "最初のSMART目標を設定して、このサイクルを力強くスタートしましょう。",
+      "btn": "最初の目標を設定"
+    },
+    "statusLabel": {
+      "Draft": "下書き",
+      "PendingApproval": "承認待ち",
+      "Approved": "進行中",
+      "Completed": "完了"
+    },
+    "type": {
+      "Personal": "個人目標",
+      "Team": "チーム目標"
+    },
+    "deadline": {
+      "completed": "完了",
+      "overdue": "{days}日超過",
+      "remaining": "残り{days}日",
+      "due": "期限 {date}"
+    },
+    "progressCount": "{count}件の進捗更新",
+    "detail": {
+      "notFound": "この目標が見つかりません。",
+      "breadcrumb": "マイゴール",
+      "milestonesProgress": "{done} / {total} マイルストーン完了",
+      "milestone": {
+        "heading": "マイルストーン",
+        "addBtn": "+ 追加",
+        "placeholder": "マイルストーン名...",
+        "add": "追加",
+        "empty": "マイルストーンがありません。「+ 追加」をクリックして計画を始めましょう。",
+        "notePlaceholder": "メモを追加...（Enterで確定、Escでスキップ）",
+        "urlPlaceholder": "リンクを貼り付け...（Enterで確定）",
+        "addNote": "+ メモ",
+        "addUrl": "+ リンク"
+      },
+      "smart": {
+        "description": "何を達成したいですか？",
+        "metric": "達成をどのように測りますか？",
+        "targetValue": "目標数値または基準",
+        "relevance": "この目標はなぜ重要ですか？"
+      },
+      "submit": {
+        "draftNote": "このドラフトはまだ上司に見えていません。",
+        "submitBtn": "承認申請",
+        "submitting": "提出中...",
+        "pendingNote": "この目標はあなたのレビューを待っています。",
+        "rejectBtn": "ドラフトに戻す",
+        "approveBtn": "目標を承認",
+        "processing": "処理中..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "マイパフォーマンスレビュー",
+    "myDesc": "パフォーマンスレビューフォームを表示・記入します。",
+    "teamTitle": "チームレビュー",
+    "teamDesc": "チームのレビュー状況を確認し、調整・発布を開始します。",
+    "teamDescSupervisor": "部下のパフォーマンスレビューを表示・完了します。",
+    "empty": {
+      "title": "レビューなし",
+      "desc": "サイクル開始後、システムが自動でレビューフォームを作成します。"
+    },
+    "teamEmpty": {
+      "title": "チームレビューなし",
+      "desc": "従業員が自己評価を提出するとレビューがここに表示されます。"
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "自己評価待ち",
+      "PendingSupervisorReview": "上司レビュー中",
+      "PendingManagerApproval": "調整待ち",
+      "Published": "公開済み",
+      "Appealed": "異議申請中"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "従業員待ち",
+      "PendingSupervisorReview": "上司レビュー待ち",
+      "PendingManagerApproval": "調整待ち",
+      "Published": "公開済み",
+      "Appealed": "異議申請中"
+    },
+    "cycleType": {
+      "Annual": "年次",
+      "Quarterly": "四半期",
+      "Probation": "試用期"
+    },
+    "grade": "評価 {grade}",
+    "actionRequired": "→ 対応が必要",
+    "teamActionPending": "→ レビュー待ち",
+    "teamActionManager": "調整・発布待ち",
+    "teamPendingBanner": "{count}件のレビューが保留中",
+    "teamPendingCalibration": "{count}件の調整・発布待ち",
+    "calibrateBtn": "調整へ",
+    "meta": {
+      "cycle": "サイクル",
+      "template": "テンプレート",
+      "employee": "従業員",
+      "supervisor": "直属上司",
+      "defaultSupervisor": "（直属上司）"
+    },
+    "detail": {
+      "title": "パフォーマンスレビュー",
+      "breadcrumbMy": "マイレビュー",
+      "breadcrumbTeam": "チームレビュー",
+      "notFound": "このレビューが見つかりません。",
+      "saveFailed": "保存に失敗しました。もう一度お試しください。",
+      "submitFailed": "提出に失敗しました。もう一度お試しください。",
+      "appealFailed": "異議申請の提出に失敗しました。もう一度お試しください。",
+      "waitingEmployee": "従業員の自己評価待ち",
+      "waitingEmployeeDesc": "従業員（{name}）がまだ自己評価フォームを完了していません。",
+      "published": {
+        "appealed": "異議申請中",
+        "result": "レビュー結果が公開されました",
+        "supervisorComment": "上司コメント：",
+        "appealBtn": "異議がある場合は申請 →",
+        "appealSubmitted": "異議申請が提出され、マネージャーのレビューを待っています。",
+        "appealLabel": "異議の理由",
+        "appealPlaceholder": "レビュー結果が不正確だと思う理由を詳しく説明してください（最低10文字）...",
+        "appealNote": "申請はマネージャーに直接送られます。直属上司には内容が見えません。",
+        "appealSubmitting": "提出中...",
+        "appealConfirm": "異議を提出",
+        "cancel": "キャンセル"
+      },
+      "sections": {
+        "answerPlaceholder": "回答を入力してください...",
+        "employeeSelf": "従業員自己評価",
+        "submitted": "（提出済み、編集不可）",
+        "supervisorPerQ": "質問別上司コメント",
+        "noAnswer": "（未回答）",
+        "supervisorReview": "上司レビュー",
+        "leftCol": "従業員自己評価",
+        "rightCol": "上司コメント",
+        "supAnswerPlaceholder": "この質問へのコメントを入力（任意）...",
+        "selfReadOnly": "従業員自己評価",
+        "supReadOnly": "上司コメント",
+        "noAnswerFilled": "（未記入）",
+        "overallLabel": "総合レビューコメント",
+        "overallPlaceholder": "総合評価と従業員のパフォーマンスを説明してください...",
+        "overallEmpty": "—",
+        "gradeLabel": "評価",
+        "gradeWarnO": "⚠ O（Outstanding）は上位少数の従業員にのみ適用されます — 慎重に評価してください。",
+        "gradeWarnU": "⚠ U（Unsatisfactory）はPMD追跡を引き起こします — 十分な証拠を確保してください。",
+        "saving": "保存中...",
+        "saveDraft": "ドラフト保存",
+        "submitSelf": "自己評価を提出",
+        "submitSup": "レビューを提出",
+        "gradeRequired": "提出前に評価を選択してください",
+        "confirmSelfTitle": "自己評価の提出を確認しますか？",
+        "confirmSupTitle": "レビューの提出を確認しますか？",
+        "confirmSelfDesc": "提出後は修正できません。提出しますか？",
+        "confirmSupDesc": "提出後は修正できません。提出しますか？",
+        "confirming": "提出中...",
+        "confirm": "提出を確認"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding（卓越）",        "desc": "上位少数 — すべての領域で大幅に期待を超える" },
+      "S_Plus":  { "label": "Excellent（優秀）",          "desc": "全体的に期待を超え、顕著な貢献がある" },
+      "S":       { "label": "Satisfactory（達成）",       "desc": "すべての目標と期待を完全に満たす" },
+      "S_Minus": { "label": "Partially Sat.（部分達成）", "desc": "概ね期待を満たすが、改善が必要な領域がある" },
+      "I":       { "label": "Needs Improvement（要改善）","desc": "期待を完全には満たせていない；指導が必要" },
+      "U":       { "label": "Unsatisfactory（不十分）",   "desc": "標準を大幅に下回る；PMD追跡が開始される" },
+      "tooltip": "ⓘ 評価ガイド",
+      "noAnswer": "（未回答）"
+    },
+    "calibrate": {
+      "title": "調整：{cycleName}",
+      "desc": "各従業員の評価とランキングを設定し、確認後すべての結果を一括公開します。",
+      "breadcrumb": "チームレビュー",
+      "breadcrumbCalib": "調整・発布",
+      "summary": "{total}件のレビュー · {pending}件公開待ち",
+      "compareBtn": "並べて比較 →",
+      "publishBtn": "すべて発布（{count}）",
+      "publishing": "発布中...",
+      "empty": "このサイクルで調整段階のレビューはありません。",
+      "table": {
+        "employee": "従業員",
+        "titleGrade": "役職 / グレード",
+        "status": "ステータス",
+        "grade": "評価",
+        "rank": "ランク",
+        "detail": "詳細",
+        "viewBtn": "表示",
+        "rankPlaceholder": "先に評価を選択",
+        "rankTitle": "ランクを設定する前に評価を選択してください"
+      },
+      "publishConfirm": {
+        "title": "すべてのレビューを発布しますか？",
+        "desc": "{count}件のレビュー結果を発布しようとしています。従業員が自分の評価を確認できるようになります。この操作は元に戻せません。",
+        "btn": "発布を確認"
+      }
+    },
+    "compare": {
+      "title": "並列比較：{cycleName}",
+      "desc": "全従業員の評価と上司コメントを確認し、調整決定を支援します。",
+      "breadcrumb": "チームレビュー",
+      "breadcrumbCalib": "調整・発布",
+      "breadcrumbCompare": "並列比較",
+      "empty": "このサイクルのレビューデータがありません。",
+      "summary": "{count}件のレビュー、評価順（O → U）",
+      "supComment": "上司コメント",
+      "noComment": "コメントなし",
+      "viewBtn": "完全レビューを表示",
+      "rank": "ランク #{rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "異議申請管理",
+    "pageDesc": "従業員のパフォーマンス異議申請を審査・対応します。",
+    "empty": {
+      "title": "異議申請なし",
+      "desc": "従業員の異議申請はまだ提出されていません。"
+    },
+    "cycle": "サイクル: {name}",
+    "submitted": "提出日: {date}",
+    "resolved": "· 解決日: {date}",
+    "reviewBtn": "異議を審査",
+    "viewBtn": "詳細を表示",
+    "detail": {
+      "pageTitle": "異議申請詳細",
+      "breadcrumbManager": "異議申請管理",
+      "breadcrumbEmployee": "マイレビュー",
+      "breadcrumb": "異議申請詳細",
+      "notFound": "この異議申請が見つからないか、アクセスが拒否されました。",
+      "respondFailed": "対応に失敗しました。もう一度お試しください。",
+      "backToReview": "← レビューに戻る",
+      "meta": {
+        "employee": "従業員",
+        "cycle": "サイクル",
+        "grade": "レビュー評価",
+        "submitted": "提出日"
+      },
+      "supComment": "上司コメント",
+      "reason": "従業員の異議理由",
+      "response": {
+        "title": "マネージャー対応 · {date}",
+        "formTitle": "異議に対応",
+        "gradeLabel": "評価を調整",
+        "gradeDetail": "（任意 — 選択しない場合、元の評価 {grade} を保持）",
+        "textPlaceholder": "決定と理由を説明してください（最低5文字）...",
+        "note": "対応後、異議は「解決済み」とマークされ、レビューは「公開済み」に戻ります。従業員は対応を確認できます。",
+        "submitting": "提出中...",
+        "submitBtn": "対応を提出して異議を解決"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "マイチーム",
+    "pageDescManager": "直属上司別にグループ化された従業員のパフォーマンス状況を確認します。",
+    "pageDescSupervisor": "直属部下を管理します。",
+    "table": {
+      "name": "名前",
+      "employeeId": "社員ID",
+      "title": "役職",
+      "grade": "グレード",
+      "role": "役割",
+      "view": "表示"
+    },
+    "empty": {
+      "title": "チームメンバーなし",
+      "desc": "あなたの部署に誰も配属されていません。"
+    },
+    "notFound": "一致するチームメンバーが見つかりません。",
+    "supervisor": {
+      "view": "表示 →",
+      "noReports": "この上司には現在直属部下がいません。",
+      "count": "{count}名の従業員"
+    },
+    "directReports": {
+      "title": "直属部下",
+      "subtitle": "（直接あなたに報告、直属上司なし）",
+      "count": "{count}名の従業員"
+    },
+    "employee": {
+      "department": "部署",
+      "breadcrumb": "マイチーム",
+      "notFound": "この従業員が見つかりません。",
+      "goals": "目標",
+      "noGoals": "目標が設定されていません。",
+      "deadline": "期限: {date}",
+      "reviews": "レビュー履歴",
+      "noReviews": "レビュー記録がありません。"
     }
   }
 }

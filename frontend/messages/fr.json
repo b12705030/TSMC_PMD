@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "Administrateur",
+    "GlobalHR": "RH Mondial",
     "RegionalHR": "RH Régional",
     "Manager": "Manager",
     "Supervisor": "Superviseur",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "Chargement...",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "loadError": "Échec du chargement"
   },
   "login": {
     "title": "PMS",
@@ -277,6 +280,386 @@
       "published": "Publié",
       "draftWarning": "{count} brouillon(s) de modèle non publié(s)",
       "draftWarningDesc": "Les modèles doivent être publiés avant d'être appliqués automatiquement"
+    }
+  },
+  "templates": {
+    "pageTitle": "Gestion des modèles",
+    "pageDesc": "Gérer les modèles de formulaires d'évaluation de performance par grade et titre.",
+    "addBtn": "+ Nouveau modèle",
+    "empty": {
+      "title": "Aucun modèle d'évaluation",
+      "desc": "Créez un modèle pour standardiser les évaluations de performance.",
+      "btn": "+ Nouveau modèle"
+    },
+    "publishConfirm": {
+      "title": "Confirmer la publication ?",
+      "desc": "Une fois publié, ce modèle sera appliqué aux évaluations. Les questions de base RH seront verrouillées.",
+      "btn": "Publier"
+    },
+    "modal": {
+      "title": "Nouveau modèle d'évaluation",
+      "name": "Nom du modèle",
+      "namePlaceholder": "ex. Ingénieur L2–L3 Évaluation annuelle",
+      "cycle": "Cycle de performance",
+      "cycleDefault": "— Sélectionner un cycle —",
+      "grades": "Grades applicables",
+      "gradesMulti": "(Multi-sélection)",
+      "titles": "Titres applicables",
+      "titlesMulti": "(Multi-sélection)",
+      "titleSearch": "Rechercher des titres...",
+      "noTitles": "Aucun titre correspondant",
+      "questions": "Questions de base",
+      "questionsLocked": "(Verrouillé après publication)",
+      "questionPlaceholder": "Question {index}",
+      "required": "Obligatoire",
+      "options": "Options (min. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOption": "+ Ajouter une option",
+      "addQuestion": "+ Ajouter une question",
+      "creating": "Création en cours...",
+      "createBtn": "Créer le modèle"
+    },
+    "card": {
+      "grades": "Grade : {value}",
+      "titles": "Titre : {value}",
+      "baseQ": "{count} question(s) de base",
+      "customQ": "· {count} question(s) personnalisée(s)",
+      "publishBtn": "Publier",
+      "viewBtn": "Voir →"
+    },
+    "errors": {
+      "publishFailed": "Échec de la publication",
+      "noGrade": "Veuillez sélectionner au moins un grade",
+      "noTitle": "Veuillez sélectionner au moins un titre",
+      "emptyQuestion": "Le texte de la question ne peut pas être vide",
+      "minOptions": "Les questions à choix multiple nécessitent au moins 2 options",
+      "createFailed": "Échec de la création. Veuillez réessayer."
+    },
+    "detail": {
+      "baseSection": "Questions de base",
+      "baseBadge": "Verrouillé — défini par RH",
+      "baseEmpty": "Aucune question de base.",
+      "customSection": "Questions personnalisées",
+      "customBadge": "Ajouté par le Manager",
+      "customEmptyManager": "Aucune question personnalisée. Cliquez sur le bouton ci-dessus pour ajouter.",
+      "customEmpty": "Aucune question personnalisée.",
+      "addBtn": "+ Ajouter une question",
+      "deleteConfirmTitle": "Confirmer la suppression de cette question ?",
+      "deleteConfirmDesc": "Cette question personnalisée sera définitivement supprimée du modèle. Cette action est irréversible.",
+      "deleteBtn": "Supprimer",
+      "modalTitle": "Nouvelle question personnalisée",
+      "qLabel": "Question",
+      "qPlaceholder": "Saisir le texte de la question",
+      "typeLabel": "Type",
+      "optionsLabel": "Options (min. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOptionBtn": "+ Ajouter une option",
+      "requiredLabel": "Obligatoire",
+      "adding": "Ajout en cours...",
+      "addBtnSubmit": "Ajouter la question",
+      "errorMinOptions": "Les questions à choix multiple nécessitent au moins 2 options",
+      "errorEmpty": "Le texte de la question ne peut pas être vide",
+      "errorFailed": "Échec de l'ajout. Veuillez réessayer.",
+      "notFound": "Modèle introuvable."
+    },
+    "questionType": {
+      "Text": "Texte",
+      "Rating": "Évaluation (1–5)",
+      "MultipleChoice": "Choix multiple"
+    }
+  },
+  "goals": {
+    "pageTitle": "Mes Objectifs",
+    "pageDesc": "Définir et suivre les objectifs SMART pour ce cycle de performance.",
+    "addBtn": "+ Nouvel objectif",
+    "stats": {
+      "total": "Total des objectifs",
+      "active": "Actifs",
+      "completed": "Terminés"
+    },
+    "empty": {
+      "title": "Aucun objectif",
+      "desc": "Définissez votre premier objectif SMART pour bien démarrer ce cycle.",
+      "btn": "Définir le premier objectif"
+    },
+    "statusLabel": {
+      "Draft": "Brouillon",
+      "PendingApproval": "En attente d'approbation",
+      "Approved": "Actif",
+      "Completed": "Terminé"
+    },
+    "type": {
+      "Personal": "Objectif personnel",
+      "Team": "Objectif d'équipe"
+    },
+    "deadline": {
+      "completed": "Terminé",
+      "overdue": "{days} jour(s) de retard",
+      "remaining": "{days} jour(s) restant(s)",
+      "due": "Échéance {date}"
+    },
+    "progressCount": "{count} mise(s) à jour de progression",
+    "detail": {
+      "notFound": "Objectif introuvable.",
+      "breadcrumb": "Mes Objectifs",
+      "milestonesProgress": "{done} / {total} jalons terminés",
+      "milestone": {
+        "heading": "Jalons",
+        "addBtn": "+ Ajouter",
+        "placeholder": "Nom du jalon...",
+        "add": "Ajouter",
+        "empty": "Aucun jalon. Cliquez sur '+ Ajouter' pour commencer à planifier.",
+        "notePlaceholder": "Ajouter une note... (Entrée pour confirmer, Échap pour ignorer)",
+        "urlPlaceholder": "Coller un lien... (Entrée pour confirmer)",
+        "addNote": "+ Note",
+        "addUrl": "+ Lien"
+      },
+      "smart": {
+        "description": "Que souhaitez-vous accomplir ?",
+        "metric": "Comment saurez-vous que vous avez réussi ?",
+        "targetValue": "Nombre cible ou standard",
+        "relevance": "Pourquoi cet objectif est-il important ?"
+      },
+      "submit": {
+        "draftNote": "Ce brouillon n'est pas encore visible par votre superviseur.",
+        "submitBtn": "Soumettre pour approbation",
+        "submitting": "Soumission en cours...",
+        "pendingNote": "Cet objectif attend votre examen.",
+        "rejectBtn": "Retourner en brouillon",
+        "approveBtn": "Approuver l'objectif",
+        "processing": "Traitement en cours..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "Mes Évaluations de performance",
+    "myDesc": "Afficher et compléter vos formulaires d'évaluation de performance.",
+    "teamTitle": "Évaluations d'équipe",
+    "teamDesc": "Afficher le statut des évaluations de l'équipe et entrer en calibration.",
+    "teamDescSupervisor": "Afficher et compléter les évaluations de performance de vos subordonnés.",
+    "empty": {
+      "title": "Aucune évaluation",
+      "desc": "Le système crée automatiquement les formulaires d'évaluation au démarrage du cycle."
+    },
+    "teamEmpty": {
+      "title": "Aucune évaluation d'équipe",
+      "desc": "Les évaluations apparaîtront ici une fois que les employés auront soumis leurs auto-évaluations."
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "Auto-évaluation en attente",
+      "PendingSupervisorReview": "Évaluation superviseur en attente",
+      "PendingManagerApproval": "Calibration en attente",
+      "Published": "Publié",
+      "Appealed": "En appel"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "Employé en attente",
+      "PendingSupervisorReview": "Superviseur en attente",
+      "PendingManagerApproval": "Calibration en attente",
+      "Published": "Publié",
+      "Appealed": "En appel"
+    },
+    "cycleType": {
+      "Annual": "Annuel",
+      "Quarterly": "Trimestriel",
+      "Probation": "Période d'essai"
+    },
+    "grade": "Note {grade}",
+    "actionRequired": "→ Action requise",
+    "teamActionPending": "→ Votre évaluation en attente",
+    "teamActionManager": "Calibration en attente",
+    "teamPendingBanner": "{count} évaluation(s) en attente",
+    "teamPendingCalibration": "{count} calibration / publication en attente",
+    "calibrateBtn": "Entrer en calibration",
+    "meta": {
+      "cycle": "Cycle",
+      "template": "Modèle",
+      "employee": "Employé",
+      "supervisor": "Supérieur direct",
+      "defaultSupervisor": "(Supérieur direct)"
+    },
+    "detail": {
+      "title": "Évaluation de Performance",
+      "breadcrumbMy": "Mes Évaluations",
+      "breadcrumbTeam": "Évaluations d'équipe",
+      "notFound": "Évaluation introuvable.",
+      "saveFailed": "Échec de la sauvegarde. Veuillez réessayer.",
+      "submitFailed": "Échec de la soumission. Veuillez réessayer.",
+      "appealFailed": "Échec de la soumission de l'appel. Veuillez réessayer.",
+      "waitingEmployee": "En attente de l'auto-évaluation de l'employé",
+      "waitingEmployeeDesc": "L'employé ({name}) n'a pas encore complété son auto-évaluation.",
+      "published": {
+        "appealed": "En appel",
+        "result": "Résultat de l'évaluation publié",
+        "supervisorComment": "Commentaire du superviseur :",
+        "appealBtn": "Pas d'accord ? Soumettre un appel →",
+        "appealSubmitted": "Votre appel a été soumis et attend l'examen du manager.",
+        "appealLabel": "Motif de l'appel",
+        "appealPlaceholder": "Expliquez en détail pourquoi vous estimez que le résultat est incorrect (min. 10 caractères)...",
+        "appealNote": "Votre appel sera envoyé directement à votre manager. Votre supérieur direct ne verra pas le contenu.",
+        "appealSubmitting": "Soumission en cours...",
+        "appealConfirm": "Soumettre l'appel",
+        "cancel": "Annuler"
+      },
+      "sections": {
+        "answerPlaceholder": "Entrez votre réponse...",
+        "employeeSelf": "Auto-évaluation de l'employé",
+        "submitted": "(Soumis, ne peut pas être modifié)",
+        "supervisorPerQ": "Commentaires du superviseur par question",
+        "noAnswer": "(Pas de réponse)",
+        "supervisorReview": "Évaluation du superviseur",
+        "leftCol": "Auto-évaluation",
+        "rightCol": "Commentaires du superviseur",
+        "supAnswerPlaceholder": "Entrez vos commentaires pour cette question (optionnel)...",
+        "selfReadOnly": "Auto-évaluation",
+        "supReadOnly": "Commentaires du superviseur",
+        "noAnswerFilled": "(Non rempli)",
+        "overallLabel": "Commentaires généraux",
+        "overallPlaceholder": "Décrivez votre évaluation globale et les performances de l'employé...",
+        "overallEmpty": "—",
+        "gradeLabel": "Note",
+        "gradeWarnO": "⚠ O (Outstanding) est réservé aux quelques meilleurs employés — veuillez évaluer soigneusement.",
+        "gradeWarnU": "⚠ U (Unsatisfactory) déclenchera un suivi PMD — assurez-vous d'avoir des preuves suffisantes.",
+        "saving": "Sauvegarde...",
+        "saveDraft": "Sauvegarder le brouillon",
+        "submitSelf": "Soumettre l'auto-évaluation",
+        "submitSup": "Soumettre l'évaluation",
+        "gradeRequired": "Veuillez sélectionner une note avant de soumettre",
+        "confirmSelfTitle": "Confirmer la soumission de l'auto-évaluation ?",
+        "confirmSupTitle": "Confirmer la soumission de l'évaluation ?",
+        "confirmSelfDesc": "Une fois soumise, elle ne peut pas être modifiée. Confirmer ?",
+        "confirmSupDesc": "Une fois soumise, elle ne peut pas être modifiée. Confirmer ?",
+        "confirming": "Soumission...",
+        "confirm": "Confirmer la soumission"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding (Exceptionnel)",       "desc": "Quelques-uns du sommet — dépasse significativement les attentes dans tous les domaines" },
+      "S_Plus":  { "label": "Excellent",                        "desc": "Dépasse les attentes dans l'ensemble avec des contributions significatives" },
+      "S":       { "label": "Satisfactory (Satisfaisant)",      "desc": "Atteint pleinement tous les objectifs et attentes" },
+      "S_Minus": { "label": "Partially Sat. (Partiellement)",   "desc": "Répond généralement aux attentes ; certains domaines nécessitent une amélioration" },
+      "I":       { "label": "Needs Improvement (À améliorer)",  "desc": "N'a pas entièrement satisfait aux attentes ; coaching nécessaire" },
+      "U":       { "label": "Unsatisfactory (Insuffisant)",     "desc": "Nettement en dessous des standards ; suivi PMD sera déclenché" },
+      "tooltip": "ⓘ Guide des notes",
+      "noAnswer": "(Pas de réponse)"
+    },
+    "calibrate": {
+      "title": "Calibration : {cycleName}",
+      "desc": "Définir les notes et classements pour chaque employé, puis publier tous les résultats en une fois.",
+      "breadcrumb": "Évaluations d'équipe",
+      "breadcrumbCalib": "Calibration",
+      "summary": "{total} évaluation(s) · {pending} en attente de publication",
+      "compareBtn": "Côte à côte →",
+      "publishBtn": "Tout publier ({count})",
+      "publishing": "Publication en cours...",
+      "empty": "Aucune évaluation en phase de calibration pour ce cycle.",
+      "table": {
+        "employee": "Employé",
+        "titleGrade": "Titre / Grade",
+        "status": "Statut",
+        "grade": "Note",
+        "rank": "Rang",
+        "detail": "Détail",
+        "viewBtn": "Voir",
+        "rankPlaceholder": "Sélectionner d'abord une note",
+        "rankTitle": "Veuillez sélectionner une note avant de définir un rang"
+      },
+      "publishConfirm": {
+        "title": "Confirmer la publication de toutes les évaluations ?",
+        "desc": "Sur le point de publier {count} résultat(s) d'évaluation. Les employés pourront voir leurs notes. Cette action est irréversible.",
+        "btn": "Confirmer la publication"
+      }
+    },
+    "compare": {
+      "title": "Côte à côte : {cycleName}",
+      "desc": "Voir les notes et commentaires des superviseurs pour tous les employés afin d'aider aux décisions de calibration.",
+      "breadcrumb": "Évaluations d'équipe",
+      "breadcrumbCalib": "Calibration",
+      "breadcrumbCompare": "Côte à côte",
+      "empty": "Aucune donnée d'évaluation pour ce cycle.",
+      "summary": "{count} évaluation(s), triées par note (O → U)",
+      "supComment": "Commentaire du superviseur",
+      "noComment": "Pas de commentaire",
+      "viewBtn": "Voir l'évaluation complète",
+      "rank": "Rang #{rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "Gestion des appels",
+    "pageDesc": "Examiner et répondre aux appels de performance des employés.",
+    "empty": {
+      "title": "Aucun appel",
+      "desc": "Aucun appel d'employé n'a été soumis."
+    },
+    "cycle": "Cycle : {name}",
+    "submitted": "Soumis : {date}",
+    "resolved": "· Résolu : {date}",
+    "reviewBtn": "Examiner l'appel",
+    "viewBtn": "Voir les détails",
+    "detail": {
+      "pageTitle": "Détails de l'appel",
+      "breadcrumbManager": "Gestion des appels",
+      "breadcrumbEmployee": "Mes Évaluations",
+      "breadcrumb": "Détails de l'appel",
+      "notFound": "Appel introuvable ou accès refusé.",
+      "respondFailed": "Échec de la réponse. Veuillez réessayer.",
+      "backToReview": "← Retour à l'évaluation",
+      "meta": {
+        "employee": "Employé",
+        "cycle": "Cycle",
+        "grade": "Note de l'évaluation",
+        "submitted": "Soumis"
+      },
+      "supComment": "Commentaire du superviseur",
+      "reason": "Motif de l'appel de l'employé",
+      "response": {
+        "title": "Réponse du manager · {date}",
+        "formTitle": "Répondre à l'appel",
+        "gradeLabel": "Ajuster la note",
+        "gradeDetail": "(Optionnel — si non sélectionné, la note originale {grade} est conservée)",
+        "textPlaceholder": "Expliquez votre décision et vos raisons (min. 5 caractères)...",
+        "note": "Après la réponse, l'appel sera marqué comme 'Résolu' et l'évaluation reviendra à 'Publié'. L'employé pourra voir votre réponse.",
+        "submitting": "Soumission en cours...",
+        "submitBtn": "Soumettre la réponse & résoudre l'appel"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "Mon Équipe",
+    "pageDescManager": "Voir le statut de performance des employés groupés par supérieur direct.",
+    "pageDescSupervisor": "Gérer vos subordonnés directs.",
+    "table": {
+      "name": "Nom",
+      "employeeId": "ID employé",
+      "title": "Titre",
+      "grade": "Grade",
+      "role": "Rôle",
+      "view": "Voir"
+    },
+    "empty": {
+      "title": "Aucun membre d'équipe",
+      "desc": "Personne n'a été affecté à votre département."
+    },
+    "notFound": "Aucun membre d'équipe correspondant.",
+    "supervisor": {
+      "view": "Voir →",
+      "noReports": "Ce superviseur n'a actuellement aucun subordonné direct.",
+      "count": "{count} employé(s)"
+    },
+    "directReports": {
+      "title": "Subordonnés directs",
+      "subtitle": "(Vous rapportant directement, sans supérieur direct)",
+      "count": "{count} employé(s)"
+    },
+    "employee": {
+      "department": "Département",
+      "breadcrumb": "Mon Équipe",
+      "notFound": "Employé introuvable.",
+      "goals": "Objectifs",
+      "noGoals": "Aucun objectif défini.",
+      "deadline": "Échéance : {date}",
+      "reviews": "Historique des évaluations",
+      "noReviews": "Aucun enregistrement d'évaluation."
     }
   }
 }

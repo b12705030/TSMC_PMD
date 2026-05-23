@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -22,20 +23,20 @@ const GRADE_TEXT_COLOR: Record<ReviewGrade, string> = {
   U:       'text-red-500',
 }
 
-const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
-  PendingSupervisorReview: '→ 待您評核',
-  PendingManagerApproval:  '待經理審核',
-}
-
-
 export default function TeamReviewsPage() {
+  const t = useTranslations('reviews')
+  const tCommon = useTranslations('common')
   const { reviews, isLoading, error, refetch } = useTeamReviews()
   const { user } = useAuth()
   const isManager = user?.role === 'Manager'
 
+  const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
+    PendingSupervisorReview: t('teamActionPending'),
+    PendingManagerApproval:  t('teamActionManager'),
+  }
+
   const pendingCount = reviews.filter((r) => r.status === 'PendingSupervisorReview').length
 
-  // Group by cycle for Manager calibration links
   const cycleMap = new Map<string, { id: string; name: string; pendingApproval: number }>()
   if (isManager) {
     for (const r of reviews) {
@@ -51,11 +52,10 @@ export default function TeamReviewsPage() {
   return (
     <div>
       <PageHeader
-        title="團隊評核"
-        description={isManager ? '查看下屬評核狀況，並進行等第校準後發布。' : '查看並完成您的下屬績效評核。'}
+        title={t('teamTitle')}
+        description={isManager ? t('teamDesc') : t('teamDescSupervisor')}
       />
 
-      {/* Manager: calibration entry per cycle */}
       {isManager && cycleMap.size > 0 && (
         <div className="mb-5 space-y-2">
           {Array.from(cycleMap.values()).map((cycle) => (
@@ -63,14 +63,14 @@ export default function TeamReviewsPage() {
               <div>
                 <p className="text-sm font-semibold text-indigo-800">{cycle.name}</p>
                 {cycle.pendingApproval > 0 && (
-                  <p className="text-xs text-indigo-600">{cycle.pendingApproval} 份待校準後發布</p>
+                  <p className="text-xs text-indigo-600">{t('teamPendingCalibration', { count: cycle.pendingApproval })}</p>
                 )}
               </div>
               <Link
                 href={`/reviews/calibrate/${cycle.id}`}
                 className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 transition-colors"
               >
-                進入校準
+                {t('calibrateBtn')}
               </Link>
             </div>
           ))}
@@ -80,21 +80,21 @@ export default function TeamReviewsPage() {
       {!isLoading && !isManager && pendingCount > 0 && (
         <div className="mb-5 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="text-sm font-medium text-amber-700">
-            您有 {pendingCount} 份評核待處理
+            {t('teamPendingBanner', { count: pendingCount })}
           </span>
         </div>
       )}
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (
-        <EmptyState title="目前沒有團隊評核" description="週期開始並員工完成自評後，評核會出現在這裡。" />
+        <EmptyState title={t('teamEmpty.title')} description={t('teamEmpty.desc')} />
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <TeamReviewCard key={review.id} review={review} />
+            <TeamReviewCard key={review.id} review={review} statusAction={STATUS_ACTION} />
           ))}
         </div>
       )}
@@ -102,8 +102,14 @@ export default function TeamReviewsPage() {
   )
 }
 
-function TeamReviewCard({ review }: { review: PerformanceReviewDetail }) {
-  const actionLabel = STATUS_ACTION[review.status]
+function TeamReviewCard({
+  review,
+  statusAction,
+}: {
+  review: PerformanceReviewDetail
+  statusAction: Partial<Record<ReviewStatus, string>>
+}) {
+  const actionLabel = statusAction[review.status]
   const needsAction = review.status === 'PendingSupervisorReview'
 
   return (

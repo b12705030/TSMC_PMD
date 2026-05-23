@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { PageHeader } from '@/components/PageHeader'
@@ -27,6 +28,8 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
 
 export default function CalibratePage({ params }: { params: Promise<{ cycleId: string }> }) {
   const { cycleId } = use(params)
+  const t = useTranslations('reviews')
+  const tCommon = useTranslations('common')
   const { reviews: serverReviews, isLoading, error, refetch } = useCycleReviews(cycleId)
   const [reviews, setReviews] = useState<PerformanceReviewDetail[]>([])
   const [publishing, setPublishing] = useState(false)
@@ -71,23 +74,25 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
   return (
     <div>
       <PageHeader
-        title={`校準：${cycleName}`}
-        description="設定每位員工的等第與排名，確認後一次發布所有評核結果。"
-        breadcrumbs={[{ label: '團隊評核', href: '/reviews/team' }, { label: '校準' }]}
+        title={t('calibrate.title', { cycleName })}
+        description={t('calibrate.desc')}
+        breadcrumbs={[
+          { label: t('calibrate.breadcrumb'), href: '/reviews/team' },
+          { label: t('calibrate.breadcrumbCalib') },
+        ]}
       />
 
       {/* Summary bar */}
       <div className="mb-5 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
         <div className="flex items-center gap-4">
           <p className="text-sm text-gray-600">
-            共 <span className="font-semibold text-gray-900">{reviews.length}</span> 份評核・
-            待發布 <span className="font-semibold text-amber-600">{pendingCount}</span> 份
+            {t('calibrate.summary', { total: reviews.length, pending: pendingCount })}
           </p>
           <Link
             href={`/reviews/compare/${cycleId}`}
             className="text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
           >
-            並排比較 →
+            {t('calibrate.compareBtn')}
           </Link>
         </div>
         <button
@@ -95,28 +100,28 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
           disabled={pendingCount === 0 || publishing}
           className="btn-primary text-sm disabled:opacity-40"
         >
-          {publishing ? '發布中...' : `發布全部（${pendingCount} 份）`}
+          {publishing ? t('calibrate.publishing') : t('calibrate.publishBtn', { count: pendingCount })}
         </button>
       </div>
 
       {error && <ErrorBanner message={error} />}
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : reviews.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
-          此週期目前沒有進入校準階段的評核。
+          {t('calibrate.empty')}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs text-gray-500">
               <tr>
-                <th className="px-5 py-3 text-left font-medium">員工</th>
-                <th className="px-5 py-3 text-left font-medium">職稱 / 職等</th>
-                <th className="px-4 py-3 text-left font-medium">狀態</th>
-                <th className="px-4 py-3 text-left font-medium">等第</th>
-                <th className="px-4 py-3 text-left font-medium">排名</th>
-                <th className="px-3 py-3 text-left font-medium">詳情</th>
+                <th className="px-5 py-3 text-left font-medium">{t('calibrate.table.employee')}</th>
+                <th className="px-5 py-3 text-left font-medium">{t('calibrate.table.titleGrade')}</th>
+                <th className="px-4 py-3 text-left font-medium">{t('calibrate.table.status')}</th>
+                <th className="px-4 py-3 text-left font-medium">{t('calibrate.table.grade')}</th>
+                <th className="px-4 py-3 text-left font-medium">{t('calibrate.table.rank')}</th>
+                <th className="px-3 py-3 text-left font-medium">{t('calibrate.table.detail')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -135,9 +140,9 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
 
       <ConfirmDialog
         open={showConfirm}
-        title="確認發布所有評核？"
-        description={`即將發布 ${pendingCount} 份等待審核的評核結果，員工將可查看等第。此操作無法撤銷。`}
-        confirmLabel="確認發布"
+        title={t('calibrate.publishConfirm.title')}
+        description={t('calibrate.publishConfirm.desc', { count: pendingCount })}
+        confirmLabel={t('calibrate.publishConfirm.btn')}
         onConfirm={handlePublishAll}
         onCancel={() => setShowConfirm(false)}
       />
@@ -152,6 +157,7 @@ function CalibrateRow({
   onGradeChange: (g: ReviewGrade) => void
   onRankChange: (r: number) => void
 }) {
+  const t = useTranslations('reviews')
   const [rankInput, setRankInput] = useState(review.rank?.toString() ?? '')
   const isPending = review.status === 'PendingManagerApproval'
 
@@ -209,8 +215,8 @@ function CalibrateRow({
               const n = parseInt(rankInput)
               if (!isNaN(n) && n > 0) onRankChange(n)
             }}
-            placeholder={review.grade ? '—' : '請先選等第'}
-            title={review.grade ? '' : '請先選擇等第才能填排名'}
+            placeholder={review.grade ? '—' : t('calibrate.table.rankPlaceholder')}
+            title={review.grade ? '' : t('calibrate.table.rankTitle')}
             className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-center text-sm outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200 disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
           />
         ) : (
@@ -219,7 +225,7 @@ function CalibrateRow({
       </td>
       <td className="px-3 py-3">
         <Link href={`/reviews/${review.id}`} className="btn-link text-xs">
-          查看
+          {t('calibrate.table.viewBtn')}
         </Link>
       </td>
     </tr>

@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -30,22 +31,24 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
 
 const GRADES: ReviewGrade[] = ['O', 'S_Plus', 'S', 'S_Minus', 'I', 'U']
 
-const GRADE_SCALE: { grade: ReviewGrade; label: string; desc: string }[] = [
-  { grade: 'O',       label: '傑出',     desc: '極少數頂尖，各方面大幅超越期望' },
-  { grade: 'S_Plus',  label: '強優',     desc: '全面超越期望，顯著貢獻' },
-  { grade: 'S',       label: '滿意',     desc: '完全達成所有目標與期望' },
-  { grade: 'S_Minus', label: '部分滿意', desc: '大致達成，少數面向有待加強' },
-  { grade: 'I',       label: '待改善',   desc: '未完全達成，需要輔導改善' },
-  { grade: 'U',       label: '未達標',   desc: '明顯低於標準，須進入 PMD 追蹤' },
-]
-
 // ─── Grade scale tooltip ──────────────────────────────────────────────────────
 
 function GradeScaleTip() {
+  const t = useTranslations('reviews')
+
+  const GRADE_SCALE: { grade: ReviewGrade; label: string; desc: string }[] = [
+    { grade: 'O',       label: t('grades.O.label'),       desc: t('grades.O.desc') },
+    { grade: 'S_Plus',  label: t('grades.S_Plus.label'),  desc: t('grades.S_Plus.desc') },
+    { grade: 'S',       label: t('grades.S.label'),       desc: t('grades.S.desc') },
+    { grade: 'S_Minus', label: t('grades.S_Minus.label'), desc: t('grades.S_Minus.desc') },
+    { grade: 'I',       label: t('grades.I.label'),       desc: t('grades.I.desc') },
+    { grade: 'U',       label: t('grades.U.label'),       desc: t('grades.U.desc') },
+  ]
+
   return (
     <div className="group relative inline-block align-middle">
       <span className="cursor-help select-none text-xs text-gray-400 underline decoration-dotted">
-        ⓘ 等第說明
+        {t('grades.tooltip')}
       </span>
       <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-xl border border-gray-100 bg-white p-3 shadow-xl group-hover:block">
         <div className="space-y-1.5">
@@ -77,6 +80,8 @@ interface QuestionFieldProps {
 }
 
 function QuestionField({ q, value, onChange, readonly = false }: QuestionFieldProps) {
+  const t = useTranslations('reviews')
+
   if (q.questionType === 'Rating') {
     return (
       <div className="flex gap-2">
@@ -126,7 +131,7 @@ function QuestionField({ q, value, onChange, readonly = false }: QuestionFieldPr
       value={value}
       onChange={(e) => onChange(e.target.value)}
       readOnly={readonly}
-      placeholder={readonly ? '（尚未作答）' : '請輸入您的回答...'}
+      placeholder={readonly ? t('grades.noAnswer') : t('detail.sections.answerPlaceholder')}
       className={`w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
         readonly
           ? 'border-gray-100 bg-gray-50 text-gray-600'
@@ -140,6 +145,8 @@ function QuestionField({ q, value, onChange, readonly = false }: QuestionFieldPr
 
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('reviews')
+  const tCommon = useTranslations('common')
   const { review, isLoading, error, refetch } = useReview(id)
   const { user } = useAuth()
 
@@ -153,6 +160,15 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   const [showAppealForm, setShowAppealForm] = useState(false)
   const [appealReason, setAppealReason]     = useState('')
   const [appealSubmitting, setAppealSubmitting] = useState(false)
+
+  const GRADE_SCALE: { grade: ReviewGrade; label: string; desc: string }[] = [
+    { grade: 'O',       label: t('grades.O.label'),       desc: t('grades.O.desc') },
+    { grade: 'S_Plus',  label: t('grades.S_Plus.label'),  desc: t('grades.S_Plus.desc') },
+    { grade: 'S',       label: t('grades.S.label'),       desc: t('grades.S.desc') },
+    { grade: 'S_Minus', label: t('grades.S_Minus.label'), desc: t('grades.S_Minus.desc') },
+    { grade: 'I',       label: t('grades.I.label'),       desc: t('grades.I.desc') },
+    { grade: 'U',       label: t('grades.U.label'),       desc: t('grades.U.desc') },
+  ]
 
   useEffect(() => {
     if (!review) return
@@ -168,9 +184,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
     setGrade(review.grade ?? '')
   }, [review?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (isLoading) return <p className="text-muted">載入中...</p>
+  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
   if (error)     return <ErrorBanner message={error} />
-  if (!review || !user) return <p className="text-error">找不到評核。</p>
+  if (!review || !user) return <p className="text-error">{t('detail.notFound')}</p>
 
   const questions     = review.template.questions
   const isEmployee    = user.id === review.employeeId
@@ -206,7 +222,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
       })
     } catch {
-      alert('儲存失敗，請稍後再試')
+      alert(t('detail.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -221,7 +237,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       await api.post(`/reviews/${id}/submit`, {})
       refetch()
     } catch {
-      alert('送出失敗，請稍後再試')
+      alert(t('detail.submitFailed'))
     } finally {
       setSubmitting(false)
       setShowConfirm(false)
@@ -237,7 +253,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         grade:   grade   || undefined,
       })
     } catch {
-      alert('儲存失敗，請稍後再試')
+      alert(t('detail.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -254,7 +270,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       await api.post(`/reviews/${id}/supervisor/submit`, {})
       refetch()
     } catch {
-      alert('送出失敗，請稍後再試')
+      alert(t('detail.submitFailed'))
     } finally {
       setSubmitting(false)
       setShowConfirm(false)
@@ -270,7 +286,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       setShowAppealForm(false)
       setAppealReason('')
     } catch {
-      alert('提交申訴失敗，請稍後再試')
+      alert(t('detail.appealFailed'))
     } finally {
       setAppealSubmitting(false)
     }
@@ -279,11 +295,11 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div>
       <PageHeader
-        title="績效評核"
+        title={t('detail.title')}
         breadcrumbs={[
           {
-            label: isEmployee ? '我的評核' : '團隊評核',
-            href:  isEmployee ? '/reviews'  : '/reviews/team',
+            label: isEmployee ? t('detail.breadcrumbMy') : t('detail.breadcrumbTeam'),
+            href:  isEmployee ? '/reviews'               : '/reviews/team',
           },
           { label: review.cycle.name },
         ]}
@@ -293,9 +309,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {/* Status banner: supervisor/manager viewing before employee submits */}
       {(isSupervisor || isManager) && review.status === 'PendingEmployeeSubmit' && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-          <p className="text-sm font-semibold text-amber-800">等待員工填寫自評</p>
+          <p className="text-sm font-semibold text-amber-800">{t('detail.waitingEmployee')}</p>
           <p className="mt-0.5 text-xs text-amber-600">
-            員工（{review.employee.name}）尚未完成自評，送出後您才能進行主管評核。
+            {t('detail.waitingEmployeeDesc', { name: review.employee.name })}
           </p>
         </div>
       )}
@@ -304,16 +320,16 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">週期</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('meta.cycle')}</p>
             <p className="font-medium text-gray-800">{review.cycle.name}</p>
           </div>
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">模板</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('meta.template')}</p>
             <p className="font-medium text-gray-800">{review.template.name}</p>
           </div>
           {(isSupervisor || isManager) && (
             <div>
-              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">受評員工</p>
+              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('meta.employee')}</p>
               <p className="font-medium text-gray-800">
                 {review.employee.name}
                 <span className="ml-1.5 text-xs font-normal text-gray-400">
@@ -324,8 +340,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           )}
           {isEmployee && (
             <div>
-              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">直屬主管</p>
-              <p className="font-medium text-gray-800">{review.supervisor?.name ?? '（直屬主管）'}</p>
+              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('meta.supervisor')}</p>
+              <p className="font-medium text-gray-800">{review.supervisor?.name ?? t('meta.defaultSupervisor')}</p>
             </div>
           )}
         </div>
@@ -339,7 +355,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex items-start justify-between">
             <div>
               <p className={`text-sm font-semibold mb-1 ${review.status === 'Appealed' ? 'text-red-700' : 'text-green-700'}`}>
-                {review.status === 'Appealed' ? '申訴審核中' : '評核結果已發布'}
+                {review.status === 'Appealed' ? t('detail.published.appealed') : t('detail.published.result')}
               </p>
               <p className={`text-4xl font-bold mb-1 ${review.status === 'Appealed' ? 'text-red-800' : 'text-green-800'}`}>
                 {GRADE_DISPLAY[review.grade]}
@@ -355,11 +371,11 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
           {review.supervisorComment && (
             <p className={`text-sm border-t pt-3 mt-3 ${review.status === 'Appealed' ? 'text-red-700 border-red-200' : 'text-green-700 border-green-200'}`}>
-              <span className="font-medium">主管評語：</span>{review.supervisorComment}
+              <span className="font-medium">{t('detail.published.supervisorComment')}</span>{review.supervisorComment}
             </p>
           )}
 
-          {/* 員工申訴入口 */}
+          {/* Employee appeal entry */}
           {isEmployee && review.status === 'Published' && (
             <div className="mt-4 border-t border-green-200 pt-4">
               {!showAppealForm ? (
@@ -367,32 +383,32 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                   onClick={() => setShowAppealForm(true)}
                   className="text-sm text-red-600 hover:text-red-700 font-medium"
                 >
-                  對結果有異議？提出申訴 →
+                  {t('detail.published.appealBtn')}
                 </button>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-700">申訴原因</p>
+                  <p className="text-sm font-medium text-gray-700">{t('detail.published.appealLabel')}</p>
                   <textarea
                     rows={4}
                     value={appealReason}
                     onChange={(e) => setAppealReason(e.target.value)}
-                    placeholder="請詳細說明您認為評核結果有誤的理由（至少 10 字）..."
+                    placeholder={t('detail.published.appealPlaceholder')}
                     className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
                   />
-                  <p className="text-xs text-gray-400">申訴將直接送交您的上級經理審閱，直屬主管不會看到內容。</p>
+                  <p className="text-xs text-gray-400">{t('detail.published.appealNote')}</p>
                   <div className="flex gap-2">
                     <button
                       onClick={handleSubmitAppeal}
                       disabled={appealSubmitting || appealReason.trim().length < 10}
                       className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {appealSubmitting ? '提交中...' : '確認提交申訴'}
+                      {appealSubmitting ? t('detail.published.appealSubmitting') : t('detail.published.appealConfirm')}
                     </button>
                     <button
                       onClick={() => { setShowAppealForm(false); setAppealReason('') }}
                       className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
                     >
-                      取消
+                      {tCommon('cancel')}
                     </button>
                   </div>
                 </div>
@@ -402,7 +418,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
           {isEmployee && review.status === 'Appealed' && (
             <p className="mt-4 text-xs text-red-600 border-t border-red-200 pt-3">
-              您的申訴已送出，等待上級經理審閱。
+              {t('detail.published.appealSubmitted')}
             </p>
           )}
         </div>
@@ -412,9 +428,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {showEmployeeSection && (
         <section className="mb-8">
           <h2 className="mb-4 text-base font-semibold text-gray-900">
-            員工自評
+            {t('detail.sections.employeeSelf')}
             {!canEmployeeEdit && (
-              <span className="ml-2 text-xs font-normal text-gray-400">（已送出，不可修改）</span>
+              <span className="ml-2 text-xs font-normal text-gray-400">{t('detail.sections.submitted')}</span>
             )}
           </h2>
           <div className="space-y-4">
@@ -447,13 +463,13 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 disabled={saving}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
               >
-                {saving ? '儲存中...' : '儲存草稿'}
+                {saving ? t('detail.sections.saving') : t('detail.sections.saveDraft')}
               </button>
               <button
                 onClick={() => setShowConfirm(true)}
                 className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                送出自評
+                {t('detail.sections.submitSelf')}
               </button>
             </div>
           )}
@@ -463,7 +479,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {/* ── Employee views supervisor per-question answers after publish ── */}
       {showSupAnswersToEmployee && (
         <section className="mb-8">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">主管逐題評語</h2>
+          <h2 className="mb-4 text-base font-semibold text-gray-900">{t('detail.sections.supervisorPerQ')}</h2>
           <div className="space-y-4">
             {questions.map((q) => {
               const supAns = review.supervisorAnswers.find((a) => a.questionId === q.id)?.answer
@@ -473,7 +489,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                   {supAns ? (
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">{supAns}</p>
                   ) : (
-                    <p className="text-sm text-gray-400 italic">（主管未作答）</p>
+                    <p className="text-sm text-gray-400 italic">{t('detail.sections.noAnswer')}</p>
                   )}
                 </div>
               )
@@ -486,9 +502,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {showSupervisorSection && (
         <section className="mb-8">
           <h2 className="mb-4 text-base font-semibold text-gray-900">
-            主管評核
+            {t('detail.sections.supervisorReview')}
             {!canSupervisorEdit && (
-              <span className="ml-2 text-xs font-normal text-gray-400">（已送出，不可修改）</span>
+              <span className="ml-2 text-xs font-normal text-gray-400">{t('detail.sections.submitted')}</span>
             )}
           </h2>
 
@@ -497,7 +513,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             <div className="mb-6 grid grid-cols-1 gap-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:grid-cols-2">
               {/* Left: employee answers (read-only reference) */}
               <div className="border-b border-gray-100 bg-gray-50 p-5 lg:border-b-0 lg:border-r">
-                <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400">員工自評（參考）</p>
+                <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400">{t('detail.sections.leftCol')}</p>
                 <div className="space-y-5">
                   {questions.map((q) => {
                     const empAns = review.employeeAnswers.find((a) => a.questionId === q.id)?.answer ?? ''
@@ -512,7 +528,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               </div>
               {/* Right: supervisor text inputs (always textarea) */}
               <div className="p-5">
-                <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-indigo-500">主管評核意見</p>
+                <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-indigo-500">{t('detail.sections.rightCol')}</p>
                 <div className="space-y-5">
                   {questions.map((q) => (
                     <div key={q.id}>
@@ -521,7 +537,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                         rows={3}
                         value={supAnswers[q.id] ?? ''}
                         onChange={(e) => setSupAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        placeholder="請輸入您對此題的評核意見（可留空）..."
+                        placeholder={t('detail.sections.supAnswerPlaceholder')}
                         className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                       />
                     </div>
@@ -542,14 +558,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                     <p className="mb-3 text-sm font-medium text-gray-800">{q.questionText}</p>
                     {empAns && (
                       <div className="mb-3 rounded-lg bg-gray-50 px-3 py-2">
-                        <p className="mb-1 text-xs font-medium text-gray-400">員工自評</p>
+                        <p className="mb-1 text-xs font-medium text-gray-400">{t('detail.sections.selfReadOnly')}</p>
                         <QuestionField q={q} value={empAns} onChange={() => {}} readonly />
                       </div>
                     )}
                     <div>
-                      <p className="mb-1 text-xs font-medium text-gray-400">主管評核意見</p>
+                      <p className="mb-1 text-xs font-medium text-gray-400">{t('detail.sections.supReadOnly')}</p>
                       <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                        {supAns || <span className="text-gray-400 italic">（未填寫）</span>}
+                        {supAns || <span className="text-gray-400 italic">{t('detail.sections.noAnswerFilled')}</span>}
                       </p>
                     </div>
                   </div>
@@ -561,23 +577,23 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           {/* Comment + Grade */}
           <div className="space-y-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">整體評核說明</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t('detail.sections.overallLabel')}</label>
               {canSupervisorEdit ? (
                 <textarea
                   rows={4}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="描述您的整體評核理由與員工表現..."
+                  placeholder={t('detail.sections.overallPlaceholder')}
                   className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                 />
               ) : (
-                <p className="text-sm text-gray-600">{review.supervisorComment ?? '—'}</p>
+                <p className="text-sm text-gray-600">{review.supervisorComment ?? t('detail.sections.overallEmpty')}</p>
               )}
             </div>
 
             <div>
               <div className="mb-1 flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">等第</label>
+                <label className="text-sm font-medium text-gray-700">{t('detail.sections.gradeLabel')}</label>
                 <GradeScaleTip />
               </div>
               {canSupervisorEdit ? (
@@ -605,15 +621,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                     </p>
                   )}
                   {grade === 'O' && (
-                    <p className="mt-1 text-xs text-green-700">⚠ O（傑出）等第為極少數頂尖員工，請謹慎評定。</p>
+                    <p className="mt-1 text-xs text-green-700">{t('detail.sections.gradeWarnO')}</p>
                   )}
                   {grade === 'U' && (
-                    <p className="mt-1 text-xs text-red-600">⚠ U（未達標）將進入 PMD 追蹤，請確認績效佐證資料充足。</p>
+                    <p className="mt-1 text-xs text-red-600">{t('detail.sections.gradeWarnU')}</p>
                   )}
                 </>
               ) : (
                 <p className={`text-lg font-bold ${review.grade ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {review.grade ? `${GRADE_DISPLAY[review.grade]} · ${GRADE_SCALE.find(s => s.grade === review.grade)?.label}` : '—'}
+                  {review.grade
+                    ? `${GRADE_DISPLAY[review.grade]} · ${GRADE_SCALE.find(s => s.grade === review.grade)?.label}`
+                    : t('detail.sections.overallEmpty')}
                 </p>
               )}
             </div>
@@ -626,17 +644,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 disabled={saving}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
               >
-                {saving ? '儲存中...' : '儲存草稿'}
+                {saving ? t('detail.sections.saving') : t('detail.sections.saveDraft')}
               </button>
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={!grade}
                 className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                送出評核
+                {t('detail.sections.submitSup')}
               </button>
               {!grade && (
-                <p className="text-xs text-gray-400">請先選擇等第才能送出</p>
+                <p className="text-xs text-gray-400">{t('detail.sections.gradeRequired')}</p>
               )}
             </div>
           )}
@@ -646,13 +664,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {/* ── Confirm dialog ── */}
       <ConfirmDialog
         open={showConfirm}
-        title={canEmployeeEdit ? '確認送出自評？' : '確認送出評核？'}
-        description={
-          canEmployeeEdit
-            ? '送出後將無法修改，確定要送出自評嗎？'
-            : '送出後將無法修改，確定要送出評核嗎？'
-        }
-        confirmLabel={submitting ? '送出中...' : '確認送出'}
+        title={canEmployeeEdit ? t('detail.sections.confirmSelfTitle') : t('detail.sections.confirmSupTitle')}
+        description={canEmployeeEdit ? t('detail.sections.confirmSelfDesc') : t('detail.sections.confirmSupDesc')}
+        confirmLabel={submitting ? t('detail.sections.confirming') : t('detail.sections.confirm')}
         onConfirm={canEmployeeEdit ? handleSubmitEmployee : handleSubmitSupervisor}
         onCancel={() => setShowConfirm(false)}
       />

@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "系统管理员",
+    "GlobalHR": "全球人资",
     "RegionalHR": "区域人资",
     "Manager": "经理",
     "Supervisor": "直属主管",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "加载中...",
-    "cancel": "取消"
+    "cancel": "取消",
+    "retry": "重试",
+    "loadError": "加载失败"
   },
   "login": {
     "title": "绩效管理系统",
@@ -277,6 +280,386 @@
       "published": "已发布",
       "draftWarning": "{count} 份模板草稿尚未发布",
       "draftWarningDesc": "模板需要先 Publish 才能在周期推进时自动套用至员工"
+    }
+  },
+  "templates": {
+    "pageTitle": "评核模板管理",
+    "pageDesc": "依职等与职称管理绩效评核表单模板。",
+    "addBtn": "+ 新增模板",
+    "empty": {
+      "title": "暂无评核模板",
+      "desc": "创建模板以统一绩效评核标准。",
+      "btn": "+ 新增模板"
+    },
+    "publishConfirm": {
+      "title": "确认发布此模板？",
+      "desc": "发布后，此模板将开放评核使用，HR 基础题目将锁定无法修改。",
+      "btn": "发布"
+    },
+    "modal": {
+      "title": "新增评核模板",
+      "name": "模板名称",
+      "namePlaceholder": "例：工程师 L2–L3 年度考核",
+      "cycle": "绩效周期",
+      "cycleDefault": "— 选择周期 —",
+      "grades": "适用职等",
+      "gradesMulti": "（多选）",
+      "titles": "适用职称",
+      "titlesMulti": "（多选）",
+      "titleSearch": "搜索职称...",
+      "noTitles": "找不到符合的职称",
+      "questions": "基础题目",
+      "questionsLocked": "（发布后锁定）",
+      "questionPlaceholder": "题目 {index}",
+      "required": "必填",
+      "options": "选项（至少 2 个）",
+      "optionPlaceholder": "选项 {index}",
+      "addOption": "+ 新增选项",
+      "addQuestion": "+ 新增题目",
+      "creating": "创建中...",
+      "createBtn": "创建模板"
+    },
+    "card": {
+      "grades": "职等：{value}",
+      "titles": "职称：{value}",
+      "baseQ": "{count} 题基础题目",
+      "customQ": "· {count} 题自定义题目",
+      "publishBtn": "发布",
+      "viewBtn": "查看 →"
+    },
+    "errors": {
+      "publishFailed": "发布失败",
+      "noGrade": "请选择至少一个职等",
+      "noTitle": "请选择至少一个职称",
+      "emptyQuestion": "题目内容不得为空",
+      "minOptions": "多选题至少需要 2 个有效选项",
+      "createFailed": "创建失败，请稍后再试。"
+    },
+    "detail": {
+      "baseSection": "基础题目",
+      "baseBadge": "锁定 — HR 设定",
+      "baseEmpty": "暂无基础题目。",
+      "customSection": "自定义题目",
+      "customBadge": "经理新增",
+      "customEmptyManager": "暂无自定义题目，点击上方按钮新增。",
+      "customEmpty": "暂无自定义题目。",
+      "addBtn": "+ 新增题目",
+      "deleteConfirmTitle": "确认删除此题目？",
+      "deleteConfirmDesc": "此自定义题目将从模板中永久移除，此操作无法撤销。",
+      "deleteBtn": "删除",
+      "modalTitle": "新增自定义题目",
+      "qLabel": "题目",
+      "qPlaceholder": "请输入题目内容",
+      "typeLabel": "题型",
+      "optionsLabel": "选项（至少 2 个）",
+      "optionPlaceholder": "选项 {index}",
+      "addOptionBtn": "+ 新增选项",
+      "requiredLabel": "必填",
+      "adding": "新增中...",
+      "addBtnSubmit": "新增题目",
+      "errorMinOptions": "多选题至少需要 2 个有效选项",
+      "errorEmpty": "题目内容不得为空",
+      "errorFailed": "新增失败，请稍后再试。",
+      "notFound": "找不到此模板。"
+    },
+    "questionType": {
+      "Text": "文字",
+      "Rating": "评分（1–5）",
+      "MultipleChoice": "多选题"
+    }
+  },
+  "goals": {
+    "pageTitle": "我的目标",
+    "pageDesc": "设定并追踪这个绩效周期的 SMART 目标。",
+    "addBtn": "+ 新增目标",
+    "stats": {
+      "total": "目标总数",
+      "active": "进行中",
+      "completed": "已完成"
+    },
+    "empty": {
+      "title": "还没有任何目标",
+      "desc": "设定你的第一个 SMART 目标，让这个绩效周期有个好的开始。",
+      "btn": "设定第一个目标"
+    },
+    "statusLabel": {
+      "Draft": "草稿",
+      "PendingApproval": "待审核",
+      "Approved": "进行中",
+      "Completed": "已完成"
+    },
+    "type": {
+      "Personal": "个人目标",
+      "Team": "团队目标"
+    },
+    "deadline": {
+      "completed": "已完成",
+      "overdue": "已逾期 {days} 天",
+      "remaining": "还剩 {days} 天",
+      "due": "截止 {date}"
+    },
+    "progressCount": "{count} 次进度更新",
+    "detail": {
+      "notFound": "找不到此目标。",
+      "breadcrumb": "我的目标",
+      "milestonesProgress": "{done} / {total} 个里程碑已完成",
+      "milestone": {
+        "heading": "里程碑",
+        "addBtn": "+ 新增",
+        "placeholder": "里程碑名称...",
+        "add": "新增",
+        "empty": "暂无里程碑，点击「+ 新增」开始规划。",
+        "notePlaceholder": "新增备注...（Enter 确认，Esc 略过）",
+        "urlPlaceholder": "粘贴链接...（Enter 确认）",
+        "addNote": "+ 备注",
+        "addUrl": "+ 链接"
+      },
+      "smart": {
+        "description": "你想达成什么目标？",
+        "metric": "如何衡量达成？",
+        "targetValue": "目标数字或标准",
+        "relevance": "这个目标为何重要？"
+      },
+      "submit": {
+        "draftNote": "此草稿尚未提交，主管看不到。",
+        "submitBtn": "提交审核",
+        "submitting": "提交中...",
+        "pendingNote": "此目标正等待你的审核。",
+        "rejectBtn": "退回草稿",
+        "approveBtn": "核准目标",
+        "processing": "处理中..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "我的绩效评核",
+    "myDesc": "查看并完成你的绩效评核表单。",
+    "teamTitle": "团队评核",
+    "teamDesc": "查看团队评核状态，进入校准发布流程。",
+    "teamDescSupervisor": "查看并完成下属的绩效评核表单。",
+    "empty": {
+      "title": "目前没有评核",
+      "desc": "周期开始后系统会自动创建评核表单。"
+    },
+    "teamEmpty": {
+      "title": "目前没有团队评核",
+      "desc": "员工提交自评后，评核记录将显示于此。"
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "待您填写自评",
+      "PendingSupervisorReview": "主管评核中",
+      "PendingManagerApproval": "经理审核中",
+      "Published": "已发布",
+      "Appealed": "申诉中"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "待员工",
+      "PendingSupervisorReview": "待主管初评",
+      "PendingManagerApproval": "待校准",
+      "Published": "已发布",
+      "Appealed": "申诉中"
+    },
+    "cycleType": {
+      "Annual": "年度",
+      "Quarterly": "季度",
+      "Probation": "试用期"
+    },
+    "grade": "等级 {grade}",
+    "actionRequired": "→ 需要您的操作",
+    "teamActionPending": "→ 待你初评",
+    "teamActionManager": "待校准发布",
+    "teamPendingBanner": "你有 {count} 份评核待处理",
+    "teamPendingCalibration": "{count} 份待校准发布",
+    "calibrateBtn": "进入校准",
+    "meta": {
+      "cycle": "周期",
+      "template": "模板",
+      "employee": "员工",
+      "supervisor": "直属主管",
+      "defaultSupervisor": "（直属主管）"
+    },
+    "detail": {
+      "title": "绩效考核",
+      "breadcrumbMy": "我的评核",
+      "breadcrumbTeam": "团队评核",
+      "notFound": "找不到此评核。",
+      "saveFailed": "保存失败，请再试一次。",
+      "submitFailed": "提交失败，请再试一次。",
+      "appealFailed": "申诉提交失败，请再试一次。",
+      "waitingEmployee": "等待员工填写自评",
+      "waitingEmployeeDesc": "员工（{name}）尚未完成自评表单。",
+      "published": {
+        "appealed": "申诉中",
+        "result": "评核结果已发布",
+        "supervisorComment": "主管评语：",
+        "appealBtn": "有异议？提出申诉 →",
+        "appealSubmitted": "你的申诉已提交，正等待经理审阅。",
+        "appealLabel": "申诉原因",
+        "appealPlaceholder": "请详细说明你认为评核结果有误的原因（至少 10 个字）...",
+        "appealNote": "你的申诉将直接传送给你的经理，直属主管不会看到内容。",
+        "appealSubmitting": "提交中...",
+        "appealConfirm": "提交申诉",
+        "cancel": "取消"
+      },
+      "sections": {
+        "answerPlaceholder": "请输入你的回答...",
+        "employeeSelf": "员工自评",
+        "submitted": "（已提交，不可修改）",
+        "supervisorPerQ": "主管逐题评语",
+        "noAnswer": "（未回答）",
+        "supervisorReview": "主管评核",
+        "leftCol": "员工自评",
+        "rightCol": "主管评语",
+        "supAnswerPlaceholder": "请输入此题的评语（选填）...",
+        "selfReadOnly": "员工自评",
+        "supReadOnly": "主管评语",
+        "noAnswerFilled": "（未填写）",
+        "overallLabel": "整体评核评语",
+        "overallPlaceholder": "请描述你的整体评核及员工表现...",
+        "overallEmpty": "—",
+        "gradeLabel": "等级",
+        "gradeWarnO": "⚠ O（Outstanding）仅适用少数顶尖员工，请审慎评估。",
+        "gradeWarnU": "⚠ U（Unsatisfactory）将触发 PMD 追踪，请确保有充分依据。",
+        "saving": "保存中...",
+        "saveDraft": "保存草稿",
+        "submitSelf": "提交自评",
+        "submitSup": "提交评核",
+        "gradeRequired": "请在提交前选择等级",
+        "confirmSelfTitle": "确认提交自评？",
+        "confirmSupTitle": "确认提交评核？",
+        "confirmSelfDesc": "提交后将无法修改，确认提交？",
+        "confirmSupDesc": "提交后将无法修改，确认提交？",
+        "confirming": "提交中...",
+        "confirm": "确认提交"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding（杰出）",      "desc": "少数顶尖 — 全面大幅超越期望" },
+      "S_Plus":  { "label": "Excellent（优秀）",         "desc": "全面超越期望，具有显著贡献" },
+      "S":       { "label": "Satisfactory（达标）",      "desc": "完全达成所有目标与期望" },
+      "S_Minus": { "label": "Partially Sat.（部分达标）", "desc": "大致达成期望，部分领域需改善" },
+      "I":       { "label": "Needs Improvement（待改善）","desc": "未完全达成期望，需要指导" },
+      "U":       { "label": "Unsatisfactory（不符标准）", "desc": "明显低于标准，将进入 PMD 追踪" },
+      "tooltip": "ⓘ 等级说明",
+      "noAnswer": "（未填写）"
+    },
+    "calibrate": {
+      "title": "校准：{cycleName}",
+      "desc": "为每位员工设定等级与排名，确认后一次发布所有结果。",
+      "breadcrumb": "团队评核",
+      "breadcrumbCalib": "校准发布",
+      "summary": "{total} 份评核 · {pending} 份待发布",
+      "compareBtn": "并排比较 →",
+      "publishBtn": "发布全部（{count}）",
+      "publishing": "发布中...",
+      "empty": "此周期目前没有进入校准阶段的评核。",
+      "table": {
+        "employee": "员工",
+        "titleGrade": "职称 / 职等",
+        "status": "状态",
+        "grade": "等级",
+        "rank": "排名",
+        "detail": "详情",
+        "viewBtn": "查看",
+        "rankPlaceholder": "请先选择等级",
+        "rankTitle": "请先选择等级，再设定排名"
+      },
+      "publishConfirm": {
+        "title": "确认发布所有评核？",
+        "desc": "即将发布 {count} 份评核结果，员工将可查看自己的等级，此操作无法撤销。",
+        "btn": "确认发布"
+      }
+    },
+    "compare": {
+      "title": "并排比较：{cycleName}",
+      "desc": "查看所有员工的等级与主管评语，协助校准决策。",
+      "breadcrumb": "团队评核",
+      "breadcrumbCalib": "校准发布",
+      "breadcrumbCompare": "并排比较",
+      "empty": "此周期暂无评核数据。",
+      "summary": "{count} 份评核，依等级排序（O → U）",
+      "supComment": "主管评语",
+      "noComment": "无评语",
+      "viewBtn": "查看完整评核",
+      "rank": "排名第 {rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "申诉管理",
+    "pageDesc": "审阅并回应员工的绩效申诉。",
+    "empty": {
+      "title": "暂无申诉",
+      "desc": "目前暂无员工提交申诉。"
+    },
+    "cycle": "周期：{name}",
+    "submitted": "提交时间：{date}",
+    "resolved": "· 解决时间：{date}",
+    "reviewBtn": "审阅申诉",
+    "viewBtn": "查看详情",
+    "detail": {
+      "pageTitle": "申诉详情",
+      "breadcrumbManager": "申诉管理",
+      "breadcrumbEmployee": "我的评核",
+      "breadcrumb": "申诉详情",
+      "notFound": "找不到此申诉或无访问权限。",
+      "respondFailed": "回应失败，请再试一次。",
+      "backToReview": "← 返回评核",
+      "meta": {
+        "employee": "员工",
+        "cycle": "周期",
+        "grade": "评核等级",
+        "submitted": "提交时间"
+      },
+      "supComment": "主管评语",
+      "reason": "员工申诉原因",
+      "response": {
+        "title": "经理回应 · {date}",
+        "formTitle": "回应申诉",
+        "gradeLabel": "调整等级",
+        "gradeDetail": "（选填 — 若未选择，保留原等级 {grade}）",
+        "textPlaceholder": "请说明你的决定与理由（至少 5 个字）...",
+        "note": "回应后，申诉将标记为「已解决」，评核将回到「已发布」状态，员工可查看你的回应。",
+        "submitting": "提交中...",
+        "submitBtn": "提交回应并解决申诉"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "我的团队",
+    "pageDescManager": "依直属主管分组，检视各组员工绩效状况。",
+    "pageDescSupervisor": "管理你的直属员工。",
+    "table": {
+      "name": "姓名",
+      "employeeId": "员工编号",
+      "title": "职称",
+      "grade": "职等",
+      "role": "角色",
+      "view": "查看"
+    },
+    "empty": {
+      "title": "暂无团队成员",
+      "desc": "目前没有任何人被指派到你的部门。"
+    },
+    "notFound": "找不到任何团队成员。",
+    "supervisor": {
+      "view": "查看 →",
+      "noReports": "此主管目前没有直属员工。",
+      "count": "共 {count} 位员工"
+    },
+    "directReports": {
+      "title": "直属员工",
+      "subtitle": "（直接汇报给你，无直属主管）",
+      "count": "共 {count} 位员工"
+    },
+    "employee": {
+      "department": "部门",
+      "breadcrumb": "我的团队",
+      "notFound": "找不到此员工。",
+      "goals": "目标",
+      "noGoals": "尚未设定目标。",
+      "deadline": "截止：{date}",
+      "reviews": "评核记录",
+      "noReviews": "暂无评核记录。"
     }
   }
 }
