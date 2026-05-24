@@ -1,5 +1,5 @@
 import { PrismaClient, Role, CycleType, CycleStatus, GoalStatus, GoalType, ReviewStatus, ReviewGrade, AppealStatus } from '@prisma/client'
-import * as bcrypt from 'bcryptjs'
+import bcrypt from 'bcryptjs'
 import { Client as EsClient } from '@elastic/elasticsearch'
 
 const prisma = new PrismaClient()
