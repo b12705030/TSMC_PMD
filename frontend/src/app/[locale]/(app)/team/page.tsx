@@ -13,7 +13,6 @@ import type { User } from '@/types'
 
 function SupervisorTeamView() {
   const t = useTranslations('team')
-  const tCommon = useTranslations('common')
   const { members, isLoading, error } = useTeam()
 
   if (error) return <ErrorBanner message={error} />

@@ -12,6 +12,7 @@ A modern, centralized performance management system for a global enterprise with
 | Audit Log | Elasticsearch |
 | ORM | Prisma |
 | CI/CD | GitHub Actions |
+| Container | Docker Compose |
 
 ## 測試帳號（密碼統一 `test1234`）
 
@@ -77,105 +78,60 @@ npx prisma db seed
 
 ### Prerequisites
 
-**必須版本（版本不對 `npm install` 會失敗）：**
-- Node.js **20 或以上**（建議 LTS，目前為 22.x）
-- npm **10 或以上**（隨 Node.js 20+ 自動附帶）
-- Docker（啟動 Elasticsearch 用）
+- Docker Desktop（包含 Docker Compose）
 
-確認目前版本：
+確認安裝：
 ```bash
-node --version   # 應顯示 v20.x.x 或以上
-npm --version    # 應顯示 10.x.x 或以上
 docker --version
+docker compose version
 ```
-
-版本不符時，請至 [https://nodejs.org](https://nodejs.org) 下載最新 LTS，或使用 [nvm](https://github.com/nvm-sh/nvm) 切換版本：
-```bash
-# 使用 nvm（Mac/Linux）
-nvm install 22
-nvm use 22
-```
-
-### 啟動 Elasticsearch（必要）
-
-Audit Log 功能依賴 Elasticsearch，需先啟動：
-(以下為powershell語法)
-```powershell
-docker run -d `
-  --name elasticsearch `
-  -p 9200:9200 `
-  -e "discovery.type=single-node" `
-  -e "xpack.security.enabled=false" `
-  docker.elastic.co/elasticsearch/elasticsearch:8.13.0
-```
-
-確認啟動成功：
-```powershell
-curl http://localhost:9200   # 應回傳 ES cluster 資訊
-```
-
-> 之後重啟只需 `docker start elasticsearch`，不需重跑 `docker run`。  
-> 若 ES 不可用，其他功能（登入、目標、評核等）**仍可正常使用**，只是不會寫入 audit log。
 
 ### Environment Variables
-去看notion
-**backend/.env**：
+
+啟動前只需準備 **backend/.env**（從 Notion 取得內容）：
+
 ```env
 # PostgreSQL（從 Neon dashboard 取得）
 DATABASE_URL="postgresql://..."       # Pooled connection
 DIRECT_URL="postgresql://..."         # Direct / unpooled connection
 
-# Elasticsearch（本機 Docker 預設值）
-ELASTICSEARCH_NODE=http://localhost:9200
-
-# 若 ES 有設定帳密（xpack.security.enabled=true）才需要以下兩行
-# ELASTICSEARCH_USERNAME=elastic
-# ELASTICSEARCH_PASSWORD=your-password
+# Elasticsearch（Docker Compose 內部網路，固定此值）
+ELASTICSEARCH_NODE=http://elasticsearch:9200
 ```
 
-**frontend/.env.local**：
-```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
-```
+> `frontend/.env.local` 不需要手動建立，`NEXT_PUBLIC_API_URL` 已在 `docker-compose.yml` 的 build arg 中設定好。
 
-### Setup
+### 啟動
 
 ```bash
 # 1. Clone the repo
 git clone <repo-url>
 cd TSMC_PMD
 
-# 2. 啟動 Elasticsearch（見上方說明）
-docker run -d `
-  --name elasticsearch `
-  -p 9200:9200 `
-  -e "discovery.type=single-node" `
-  -e "xpack.security.enabled=false" `
-  docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+# 2. 準備 backend/.env（填入 Neon 連線字串）
+cp backend/.env.example backend/.env
 
-# 第一次時須執行以上指令
-docker start elasticsearch # 之後重啟只需 `docker start elasticsearch`，不需重跑 `docker run`。 
+# 3. 第一次啟動（Build image + 啟動所有服務）
+docker-compose up --build -d
 
-# 3. Setup backend
-cd backend
-cp .env.example .env        # 填入 Neon 連線字串（DATABASE_URL / DIRECT_URL）
-npm install
-npx prisma generate         # 產生 Prisma client 型別（必須在 seed 前跑）
-npx prisma migrate deploy   # 套用 DB migrations（每次 pull 後都要跑）
-npx prisma db seed          # 建立測試帳號（第一次）
-npm run start:dev
+# 4. 套用 DB migrations 並 seed 測試資料（第一次）
+docker exec tsmc-backend npx prisma migrate deploy
+docker exec tsmc-backend npx prisma db seed
+```
 
-# 4. Setup frontend（開新 terminal）
-cd frontend
-cp .env.example .env.local  # 預設值即可，無需修改
-npm install
-npm run dev
+之後重啟（不需重新 build）：
+```bash
+docker-compose up -d
+```
+
+停止所有服務：
+```bash
+docker-compose down
 ```
 
 > **注意**：
-> - `migrate deploy` — **每次 pull 新程式碼後都應執行**，確保 DB schema 是最新的
-> - `db seed` — 只需在第一次建立資料庫時執行一次（之後 seed 是 upsert，重複執行安全）
-> - 後端啟動時會自動建立 ES 的 `audit-logs` index（若不存在）
+> - 每次 pull 新程式碼若有 migration 變動，需再執行 `docker exec tsmc-backend npx prisma migrate deploy`
+> - `docker-compose down -v` 會**清除** Elasticsearch 資料，一般停止請用 `docker-compose down`
 
 ### 啟動端點
 

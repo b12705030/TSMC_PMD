@@ -5,7 +5,7 @@ import type { Role } from '@/types'
 
 const ROLE_CLASS: Record<Role, string> = {
   Admin:      'bg-red-100 text-red-700',
-  GlobalHR:   'bg-rose-100 text-rose-700',
+  GlobalHR:   'bg-teal-100 text-teal-700',
   RegionalHR: 'bg-orange-100 text-orange-700',
   Manager:    'bg-purple-100 text-purple-700',
   Supervisor: 'bg-blue-100 text-blue-700',
