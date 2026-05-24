@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "Systemadministrator",
+    "GlobalHR": "Globales HR",
     "RegionalHR": "Regionale HR",
     "Manager": "Manager",
     "Supervisor": "Vorgesetzter",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "Laden...",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "retry": "Wiederholen",
+    "loadError": "Ladefehler"
   },
   "login": {
     "title": "PMS",
@@ -93,6 +96,7 @@
     "colOutcome": "Ergebnis",
     "colResourceId": "Ressourcen-ID",
     "colIpAddress": "IP-Adresse",
+    "colRequest": "Anfragepfad",
     "empty": "Keine Prüfeinträge gefunden.",
     "searchPlaceholder": "Nach Aktion, Ressource, Benutzer suchen…",
     "outcomeAll": "Alle Ergebnisse",
@@ -277,6 +281,386 @@
       "published": "Veröffentlicht",
       "draftWarning": "{count} Vorlagenentwurf/-entwürfe noch nicht veröffentlicht",
       "draftWarningDesc": "Vorlagen müssen veröffentlicht sein, bevor sie automatisch angewendet werden"
+    }
+  },
+  "templates": {
+    "pageTitle": "Vorlagenverwaltung",
+    "pageDesc": "Leistungsbewertungsvorlagen nach Grad und Titel verwalten.",
+    "addBtn": "+ Neue Vorlage",
+    "empty": {
+      "title": "Keine Bewertungsvorlagen",
+      "desc": "Erstellen Sie eine Vorlage zur Standardisierung von Leistungsbewertungen.",
+      "btn": "+ Neue Vorlage"
+    },
+    "publishConfirm": {
+      "title": "Veröffentlichung bestätigen?",
+      "desc": "Nach der Veröffentlichung wird diese Vorlage auf Bewertungen angewendet. HR-Grundfragen werden gesperrt.",
+      "btn": "Veröffentlichen"
+    },
+    "modal": {
+      "title": "Neue Bewertungsvorlage",
+      "name": "Vorlagenname",
+      "namePlaceholder": "z.B. Ingenieur L2–L3 Jahresbewertung",
+      "cycle": "Leistungszyklus",
+      "cycleDefault": "— Zyklus auswählen —",
+      "grades": "Anwendbare Grade",
+      "gradesMulti": "(Mehrfachauswahl)",
+      "titles": "Anwendbare Titel",
+      "titlesMulti": "(Mehrfachauswahl)",
+      "titleSearch": "Titel suchen...",
+      "noTitles": "Keine passenden Titel",
+      "questions": "Grundfragen",
+      "questionsLocked": "(Nach Veröffentlichung gesperrt)",
+      "questionPlaceholder": "Frage {index}",
+      "required": "Erforderlich",
+      "options": "Optionen (mind. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOption": "+ Option hinzufügen",
+      "addQuestion": "+ Frage hinzufügen",
+      "creating": "Wird erstellt...",
+      "createBtn": "Vorlage erstellen"
+    },
+    "card": {
+      "grades": "Grad: {value}",
+      "titles": "Titel: {value}",
+      "baseQ": "{count} Grundfrage(n)",
+      "customQ": "· {count} benutzerdefinierte Frage(n)",
+      "publishBtn": "Veröffentlichen",
+      "viewBtn": "Ansehen →"
+    },
+    "errors": {
+      "publishFailed": "Veröffentlichung fehlgeschlagen",
+      "noGrade": "Bitte wählen Sie mindestens einen Grad",
+      "noTitle": "Bitte wählen Sie mindestens einen Titel",
+      "emptyQuestion": "Fragentext darf nicht leer sein",
+      "minOptions": "Multiple Choice erfordert mindestens 2 Optionen",
+      "createFailed": "Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    },
+    "detail": {
+      "baseSection": "Grundfragen",
+      "baseBadge": "Gesperrt — von HR festgelegt",
+      "baseEmpty": "Keine Grundfragen.",
+      "customSection": "Benutzerdefinierte Fragen",
+      "customBadge": "Von Manager hinzugefügt",
+      "customEmptyManager": "Noch keine benutzerdefinierten Fragen. Klicken Sie oben auf die Schaltfläche.",
+      "customEmpty": "Keine benutzerdefinierten Fragen.",
+      "addBtn": "+ Frage hinzufügen",
+      "deleteConfirmTitle": "Diese Frage löschen?",
+      "deleteConfirmDesc": "Diese benutzerdefinierte Frage wird dauerhaft aus der Vorlage entfernt. Dies kann nicht rückgängig gemacht werden.",
+      "deleteBtn": "Löschen",
+      "modalTitle": "Neue benutzerdefinierte Frage",
+      "qLabel": "Frage",
+      "qPlaceholder": "Fragentext eingeben",
+      "typeLabel": "Typ",
+      "optionsLabel": "Optionen (mind. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOptionBtn": "+ Option hinzufügen",
+      "requiredLabel": "Erforderlich",
+      "adding": "Wird hinzugefügt...",
+      "addBtnSubmit": "Frage hinzufügen",
+      "errorMinOptions": "Multiple Choice erfordert mindestens 2 Optionen",
+      "errorEmpty": "Fragentext darf nicht leer sein",
+      "errorFailed": "Hinzufügen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "notFound": "Vorlage nicht gefunden."
+    },
+    "questionType": {
+      "Text": "Text",
+      "Rating": "Bewertung (1–5)",
+      "MultipleChoice": "Multiple Choice"
+    }
+  },
+  "goals": {
+    "pageTitle": "Meine Ziele",
+    "pageDesc": "SMART-Ziele für diesen Leistungszyklus setzen und verfolgen.",
+    "addBtn": "+ Neues Ziel",
+    "stats": {
+      "total": "Ziele gesamt",
+      "active": "Aktiv",
+      "completed": "Abgeschlossen"
+    },
+    "empty": {
+      "title": "Noch keine Ziele",
+      "desc": "Setzen Sie Ihr erstes SMART-Ziel für einen starken Start in diesen Zyklus.",
+      "btn": "Erstes Ziel setzen"
+    },
+    "statusLabel": {
+      "Draft": "Entwurf",
+      "PendingApproval": "Genehmigung ausstehend",
+      "Approved": "Aktiv",
+      "Completed": "Abgeschlossen"
+    },
+    "type": {
+      "Personal": "Persönliches Ziel",
+      "Team": "Teamziel"
+    },
+    "deadline": {
+      "completed": "Abgeschlossen",
+      "overdue": "{days} Tag(e) überfällig",
+      "remaining": "{days} Tag(e) verbleibend",
+      "due": "Fällig {date}"
+    },
+    "progressCount": "{count} Fortschrittsupdate(s)",
+    "detail": {
+      "notFound": "Ziel nicht gefunden.",
+      "breadcrumb": "Meine Ziele",
+      "milestonesProgress": "{done} / {total} Meilensteine abgeschlossen",
+      "milestone": {
+        "heading": "Meilensteine",
+        "addBtn": "+ Hinzufügen",
+        "placeholder": "Meilensteinname...",
+        "add": "Hinzufügen",
+        "empty": "Noch keine Meilensteine. Klicken Sie auf '+ Hinzufügen', um zu planen.",
+        "notePlaceholder": "Notiz hinzufügen... (Enter zum Bestätigen, Esc zum Überspringen)",
+        "urlPlaceholder": "Link einfügen... (Enter zum Bestätigen)",
+        "addNote": "+ Notiz",
+        "addUrl": "+ Link"
+      },
+      "smart": {
+        "description": "Was möchten Sie erreichen?",
+        "metric": "Wie messen Sie den Erfolg?",
+        "targetValue": "Zielzahl oder Standard",
+        "relevance": "Warum ist dieses Ziel wichtig?"
+      },
+      "submit": {
+        "draftNote": "Dieser Entwurf ist noch nicht für Ihren Vorgesetzten sichtbar.",
+        "submitBtn": "Zur Genehmigung einreichen",
+        "submitting": "Wird eingereicht...",
+        "pendingNote": "Dieses Ziel wartet auf Ihre Prüfung.",
+        "rejectBtn": "Als Entwurf zurücksetzen",
+        "approveBtn": "Ziel genehmigen",
+        "processing": "Wird verarbeitet..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "Meine Leistungsbewertungen",
+    "myDesc": "Ihre Leistungsbewertungsformulare anzeigen und ausfüllen.",
+    "teamTitle": "Team-Bewertungen",
+    "teamDesc": "Bewertungsstatus des Teams einsehen und Kalibrierung starten.",
+    "teamDescSupervisor": "Leistungsbewertungen Ihrer Direktberichte anzeigen und abschließen.",
+    "empty": {
+      "title": "Keine Bewertungen",
+      "desc": "Das System erstellt Bewertungsformulare automatisch, wenn der Zyklus beginnt."
+    },
+    "teamEmpty": {
+      "title": "Keine Team-Bewertungen",
+      "desc": "Bewertungen erscheinen hier, sobald Mitarbeiter ihre Selbstbewertungen einreichen."
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "Selbstbewertung ausstehend",
+      "PendingSupervisorReview": "Vorgesetztenbewertung ausstehend",
+      "PendingManagerApproval": "Kalibrierung ausstehend",
+      "Published": "Veröffentlicht",
+      "Appealed": "Einspruch erhoben"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "Mitarbeiter ausstehend",
+      "PendingSupervisorReview": "Vorgesetzter ausstehend",
+      "PendingManagerApproval": "Kalibrierung ausstehend",
+      "Published": "Veröffentlicht",
+      "Appealed": "Einspruch erhoben"
+    },
+    "cycleType": {
+      "Annual": "Jährlich",
+      "Quarterly": "Quartalsweise",
+      "Probation": "Probezeit"
+    },
+    "grade": "Beurteilung {grade}",
+    "actionRequired": "→ Aktion erforderlich",
+    "teamActionPending": "→ Ihre Bewertung ausstehend",
+    "teamActionManager": "Kalibrierung ausstehend",
+    "teamPendingBanner": "{count} Bewertung(en) ausstehend",
+    "teamPendingCalibration": "{count} Kalibrierung / Veröffentlichung ausstehend",
+    "calibrateBtn": "Kalibrierung starten",
+    "meta": {
+      "cycle": "Zyklus",
+      "template": "Vorlage",
+      "employee": "Mitarbeiter",
+      "supervisor": "Direkter Vorgesetzter",
+      "defaultSupervisor": "(Direkter Vorgesetzter)"
+    },
+    "detail": {
+      "title": "Leistungsbeurteilung",
+      "breadcrumbMy": "Meine Bewertungen",
+      "breadcrumbTeam": "Team-Bewertungen",
+      "notFound": "Bewertung nicht gefunden.",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "submitFailed": "Einreichen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "appealFailed": "Einspruchseinreichung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "waitingEmployee": "Wartet auf Selbstbewertung des Mitarbeiters",
+      "waitingEmployeeDesc": "Mitarbeiter ({name}) hat noch keine Selbstbewertung abgegeben.",
+      "published": {
+        "appealed": "Einspruch erhoben",
+        "result": "Bewertungsergebnis veröffentlicht",
+        "supervisorComment": "Kommentar des Vorgesetzten:",
+        "appealBtn": "Nicht einverstanden? Einspruch einlegen →",
+        "appealSubmitted": "Ihr Einspruch wurde eingereicht und wartet auf die Prüfung durch den Manager.",
+        "appealLabel": "Grund für den Einspruch",
+        "appealPlaceholder": "Bitte erläutern Sie ausführlich, warum das Bewertungsergebnis Ihrer Meinung nach falsch ist (mind. 10 Zeichen)...",
+        "appealNote": "Ihr Einspruch wird direkt an Ihren Manager gesendet. Ihr direkter Vorgesetzter sieht den Inhalt nicht.",
+        "appealSubmitting": "Wird eingereicht...",
+        "appealConfirm": "Einspruch einreichen",
+        "cancel": "Abbrechen"
+      },
+      "sections": {
+        "answerPlaceholder": "Geben Sie Ihre Antwort ein...",
+        "employeeSelf": "Selbstbewertung des Mitarbeiters",
+        "submitted": "(Eingereicht, kann nicht bearbeitet werden)",
+        "supervisorPerQ": "Kommentare des Vorgesetzten je Frage",
+        "noAnswer": "(Keine Antwort)",
+        "supervisorReview": "Bewertung des Vorgesetzten",
+        "leftCol": "Selbstbewertung",
+        "rightCol": "Kommentare des Vorgesetzten",
+        "supAnswerPlaceholder": "Kommentar zu dieser Frage eingeben (optional)...",
+        "selfReadOnly": "Selbstbewertung",
+        "supReadOnly": "Kommentare des Vorgesetzten",
+        "noAnswerFilled": "(Nicht ausgefüllt)",
+        "overallLabel": "Gesamtbewertungskommentar",
+        "overallPlaceholder": "Beschreiben Sie Ihre Gesamtbewertung und die Leistung des Mitarbeiters...",
+        "overallEmpty": "—",
+        "gradeLabel": "Beurteilung",
+        "gradeWarnO": "⚠ O (Outstanding) ist nur für wenige Top-Mitarbeiter vorgesehen — bitte sorgfältig prüfen.",
+        "gradeWarnU": "⚠ U (Unsatisfactory) löst PMD-Tracking aus — ausreichende Belege sicherstellen.",
+        "saving": "Wird gespeichert...",
+        "saveDraft": "Entwurf speichern",
+        "submitSelf": "Selbstbewertung einreichen",
+        "submitSup": "Bewertung einreichen",
+        "gradeRequired": "Bitte wählen Sie vor dem Einreichen eine Beurteilung",
+        "confirmSelfTitle": "Selbstbewertung einreichen?",
+        "confirmSupTitle": "Bewertung einreichen?",
+        "confirmSelfDesc": "Nach dem Einreichen kann nichts mehr geändert werden. Bestätigen?",
+        "confirmSupDesc": "Nach dem Einreichen kann nichts mehr geändert werden. Bestätigen?",
+        "confirming": "Wird eingereicht...",
+        "confirm": "Einreichen bestätigen"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding (Hervorragend)",        "desc": "Spitzengruppe — übertrifft in allen Bereichen deutlich die Erwartungen" },
+      "S_Plus":  { "label": "Excellent (Ausgezeichnet)",         "desc": "Übertrifft durchweg die Erwartungen mit bedeutenden Beiträgen" },
+      "S":       { "label": "Satisfactory (Befriedigend)",       "desc": "Erfüllt alle Ziele und Erwartungen vollständig" },
+      "S_Minus": { "label": "Partially Sat. (Teilweise erfüllt)","desc": "Erfüllt größtenteils die Erwartungen; einige Bereiche benötigen Verbesserung" },
+      "I":       { "label": "Needs Improvement (Verbesserungsbedarf)", "desc": "Hat Erwartungen nicht vollständig erfüllt; Coaching erforderlich" },
+      "U":       { "label": "Unsatisfactory (Unzureichend)",    "desc": "Deutlich unter Standard; PMD-Tracking wird ausgelöst" },
+      "tooltip": "ⓘ Beurteilungsübersicht",
+      "noAnswer": "(Keine Antwort)"
+    },
+    "calibrate": {
+      "title": "Kalibrierung: {cycleName}",
+      "desc": "Beurteilungen und Rankings für jeden Mitarbeiter festlegen, dann alle Ergebnisse auf einmal veröffentlichen.",
+      "breadcrumb": "Team-Bewertungen",
+      "breadcrumbCalib": "Kalibrierung",
+      "summary": "{total} Bewertung(en) · {pending} ausstehend",
+      "compareBtn": "Nebeneinander →",
+      "publishBtn": "Alle veröffentlichen ({count})",
+      "publishing": "Wird veröffentlicht...",
+      "empty": "Keine Bewertungen in der Kalibrierungsphase für diesen Zyklus.",
+      "table": {
+        "employee": "Mitarbeiter",
+        "titleGrade": "Titel / Grad",
+        "status": "Status",
+        "grade": "Beurteilung",
+        "rank": "Rang",
+        "detail": "Detail",
+        "viewBtn": "Ansehen",
+        "rankPlaceholder": "Zuerst Beurteilung auswählen",
+        "rankTitle": "Bitte wählen Sie zuerst eine Beurteilung, um einen Rang festzulegen"
+      },
+      "publishConfirm": {
+        "title": "Alle Bewertungen veröffentlichen?",
+        "desc": "{count} Bewertungsergebnis(se) werden veröffentlicht. Mitarbeiter können ihre Beurteilungen einsehen. Dies kann nicht rückgängig gemacht werden.",
+        "btn": "Veröffentlichung bestätigen"
+      }
+    },
+    "compare": {
+      "title": "Nebeneinander: {cycleName}",
+      "desc": "Beurteilungen und Vorgesetztenkommentare aller Mitarbeiter zur Unterstützung der Kalibrierungsentscheidungen anzeigen.",
+      "breadcrumb": "Team-Bewertungen",
+      "breadcrumbCalib": "Kalibrierung",
+      "breadcrumbCompare": "Nebeneinander",
+      "empty": "Keine Bewertungsdaten für diesen Zyklus.",
+      "summary": "{count} Bewertung(en), sortiert nach Beurteilung (O → U)",
+      "supComment": "Vorgesetztenkommentar",
+      "noComment": "Kein Kommentar",
+      "viewBtn": "Vollständige Bewertung anzeigen",
+      "rank": "Rang #{rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "Einspruchsverwaltung",
+    "pageDesc": "Leistungseinsprüche von Mitarbeitern prüfen und beantworten.",
+    "empty": {
+      "title": "Keine Einsprüche",
+      "desc": "Keine Mitarbeitereinsprüche wurden eingereicht."
+    },
+    "cycle": "Zyklus: {name}",
+    "submitted": "Eingereicht: {date}",
+    "resolved": "· Gelöst: {date}",
+    "reviewBtn": "Einspruch prüfen",
+    "viewBtn": "Details anzeigen",
+    "detail": {
+      "pageTitle": "Einspruchsdetails",
+      "breadcrumbManager": "Einspruchsverwaltung",
+      "breadcrumbEmployee": "Meine Bewertungen",
+      "breadcrumb": "Einspruchsdetails",
+      "notFound": "Einspruch nicht gefunden oder Zugriff verweigert.",
+      "respondFailed": "Antwort fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "backToReview": "← Zurück zur Bewertung",
+      "meta": {
+        "employee": "Mitarbeiter",
+        "cycle": "Zyklus",
+        "grade": "Bewertungsbeurteilung",
+        "submitted": "Eingereicht"
+      },
+      "supComment": "Vorgesetztenkommentar",
+      "reason": "Einspruchsgrund des Mitarbeiters",
+      "response": {
+        "title": "Manager-Antwort · {date}",
+        "formTitle": "Auf Einspruch antworten",
+        "gradeLabel": "Beurteilung anpassen",
+        "gradeDetail": "(Optional — wenn nicht ausgewählt, wird die ursprüngliche Beurteilung {grade} beibehalten)",
+        "textPlaceholder": "Erläutern Sie Ihre Entscheidung und Begründung (mind. 5 Zeichen)...",
+        "note": "Nach der Antwort wird der Einspruch als 'Gelöst' markiert und die Bewertung kehrt zu 'Veröffentlicht' zurück. Der Mitarbeiter kann Ihre Antwort einsehen.",
+        "submitting": "Wird eingereicht...",
+        "submitBtn": "Antwort einreichen & Einspruch lösen"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "Mein Team",
+    "pageDescManager": "Leistungsstatus der Mitarbeiter nach direktem Vorgesetzten gruppiert anzeigen.",
+    "pageDescSupervisor": "Ihre Direktberichte verwalten.",
+    "table": {
+      "name": "Name",
+      "employeeId": "Mitarbeiter-ID",
+      "title": "Titel",
+      "grade": "Grad",
+      "role": "Rolle",
+      "view": "Ansehen"
+    },
+    "empty": {
+      "title": "Keine Teammitglieder",
+      "desc": "Niemandem wurde Ihre Abteilung zugewiesen."
+    },
+    "notFound": "Keine passenden Teammitglieder.",
+    "supervisor": {
+      "view": "Ansehen →",
+      "noReports": "Dieser Vorgesetzte hat derzeit keine Direktberichte.",
+      "count": "{count} Mitarbeiter"
+    },
+    "directReports": {
+      "title": "Direktberichte",
+      "subtitle": "(Direkt an Sie berichtend, kein direkter Vorgesetzter)",
+      "count": "{count} Mitarbeiter"
+    },
+    "employee": {
+      "department": "Abteilung",
+      "breadcrumb": "Mein Team",
+      "notFound": "Mitarbeiter nicht gefunden.",
+      "goals": "Ziele",
+      "noGoals": "Keine Ziele gesetzt.",
+      "deadline": "Fällig: {date}",
+      "reviews": "Bewertungsverlauf",
+      "noReviews": "Keine Bewertungseinträge."
     }
   }
 }

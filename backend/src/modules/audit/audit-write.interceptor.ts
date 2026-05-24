@@ -23,9 +23,10 @@ export class AuditWriteInterceptor implements NestInterceptor {
         next: () => {
           const res = context.switchToHttp().getResponse()
           void this.auditService.log({
-            userId:     req.user?.id    ?? 'anonymous',
-            userName:   req.user?.name  ?? 'anonymous',
-            action:     mapEntry.action,
+            userId:       req.user?.id       ?? 'anonymous',
+            userName:     req.user?.name     ?? 'anonymous',
+            userRegionId: req.user?.regionId,
+            action:       mapEntry.action,
             outcome:    'SUCCESS',
             resource:   mapEntry.resource,
             resourceId: extractResourceId(routePattern, req.path),

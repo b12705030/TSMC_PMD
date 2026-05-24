@@ -3,6 +3,7 @@ export type AuditOutcome = 'SUCCESS' | 'FORBIDDEN'
 export interface AuditLogEntry {
   userId: string
   userName: string
+  userRegionId?: string
   action: string
   outcome: AuditOutcome
   resource: string

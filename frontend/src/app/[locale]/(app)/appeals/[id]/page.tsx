@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -22,20 +23,22 @@ const GRADE_COLOR: Record<string, string> = {
 }
 
 function fmt(date: string) {
-  return new Date(date).toLocaleDateString('zh-TW', { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 export default function AppealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('appeals')
+  const tCommon = useTranslations('common')
   const { appeal, isLoading, refetch } = useAppeal(id)
   const { user } = useAuth()
 
-  const [response, setResponse]       = useState('')
-  const [newGrade, setNewGrade]       = useState('')
-  const [submitting, setSubmitting]   = useState(false)
+  const [response, setResponse]     = useState('')
+  const [newGrade, setNewGrade]     = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  if (isLoading) return <p className="text-muted">載入中...</p>
-  if (!appeal || !user) return <p className="text-error">找不到申訴或無權限查看。</p>
+  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  if (!appeal || !user) return <p className="text-error">{t('detail.notFound')}</p>
 
   const isManager  = user.id === appeal.managerId
   const isEmployee = user.id === appeal.employeeId
@@ -52,7 +55,7 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
       setResponse('')
       setNewGrade('')
     } catch {
-      alert('回覆失敗，請稍後再試')
+      alert(t('detail.respondFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -61,10 +64,13 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div className="max-w-2xl">
       <PageHeader
-        title="申訴詳情"
+        title={t('detail.pageTitle')}
         breadcrumbs={[
-          { label: isManager ? '申訴管理' : '我的評核', href: isManager ? '/appeals' : '/reviews' },
-          { label: '申訴詳情' },
+          {
+            label: isManager ? t('detail.breadcrumbManager') : t('detail.breadcrumbEmployee'),
+            href:  isManager ? '/appeals' : '/reviews',
+          },
+          { label: t('detail.breadcrumb') },
         ]}
         actions={<StatusBadge status={appeal.status} />}
       />
@@ -73,7 +79,7 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
       <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">員工</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('detail.meta.employee')}</p>
             <p className="font-medium text-gray-800">
               {appeal.employee?.name}
               <span className="ml-1.5 text-xs font-normal text-gray-400">
@@ -82,54 +88,55 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
             </p>
           </div>
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">週期</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('detail.meta.cycle')}</p>
             <p className="font-medium text-gray-800">{appeal.review?.cycle.name ?? '—'}</p>
           </div>
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">評核等第</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('detail.meta.grade')}</p>
             <p className="text-xl font-bold text-gray-800">
               {appeal.review?.grade ? GRADE_DISPLAY[appeal.review.grade] : '—'}
             </p>
           </div>
           <div>
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">提交時間</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('detail.meta.submitted')}</p>
             <p className="font-medium text-gray-800">{fmt(appeal.createdAt)}</p>
           </div>
         </div>
         {appeal.review?.supervisorComment && (
           <div className="mt-3 border-t border-gray-100 pt-3">
-            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">主管評語</p>
+            <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-gray-400">{t('detail.supComment')}</p>
             <p className="text-sm text-gray-600">{appeal.review.supervisorComment}</p>
           </div>
         )}
       </div>
 
-      {/* 員工申訴原因 */}
+      {/* Appeal reason */}
       <div className="mb-5 rounded-xl border border-red-100 bg-red-50 p-5">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-red-400">員工申訴原因</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-red-400">{t('detail.reason')}</p>
         <p className="text-sm text-gray-800 whitespace-pre-wrap">{appeal.reason}</p>
       </div>
 
-      {/* 經理回覆區 */}
+      {/* Manager response (resolved) */}
       {appeal.status === 'Resolved' && appeal.managerResponse && (
         <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-5">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-blue-400">
-            經理回覆 · {appeal.resolvedAt ? fmt(appeal.resolvedAt) : ''}
+            {t('detail.response.title', { date: appeal.resolvedAt ? fmt(appeal.resolvedAt) : '' })}
           </p>
           <p className="text-sm text-gray-800 whitespace-pre-wrap">{appeal.managerResponse}</p>
         </div>
       )}
 
-      {/* Manager 回覆表單（申訴待處理時顯示） */}
+      {/* Manager response form */}
       {isManager && isPending && (
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-sm font-semibold text-gray-800">回覆申訴</p>
+          <p className="mb-3 text-sm font-semibold text-gray-800">{t('detail.response.formTitle')}</p>
 
-          {/* 調整等第（選填） */}
           <div className="mb-4">
             <p className="mb-1.5 text-xs font-medium text-gray-700">
-              調整等第
-              <span className="ml-1.5 font-normal text-gray-400">（選填，不選則維持原等第 {appeal.review?.grade ? GRADE_DISPLAY[appeal.review.grade] : '—'}）</span>
+              {t('detail.response.gradeLabel')}
+              <span className="ml-1.5 font-normal text-gray-400">
+                {t('detail.response.gradeDetail', { grade: appeal.review?.grade ? GRADE_DISPLAY[appeal.review.grade] : '—' })}
+              </span>
             </p>
             <div className="flex flex-wrap gap-1.5">
               {GRADES.map((g) => (
@@ -153,26 +160,24 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
             rows={5}
             value={response}
             onChange={(e) => setResponse(e.target.value)}
-            placeholder="說明您的決定與理由（至少 5 字）..."
+            placeholder={t('detail.response.textPlaceholder')}
             className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
           />
-          <p className="mt-1.5 mb-4 text-xs text-gray-400">
-            回覆後申訴將標記為「已解決」，評核恢復為「已發布」，員工可在評核頁看到您的回覆。
-          </p>
+          <p className="mt-1.5 mb-4 text-xs text-gray-400">{t('detail.response.note')}</p>
           <button
             onClick={handleRespond}
             disabled={submitting || response.trim().length < 5}
             className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? '送出中...' : '送出回覆並解決申訴'}
+            {submitting ? t('detail.response.submitting') : t('detail.response.submitBtn')}
           </button>
         </div>
       )}
 
-      {/* 員工：申訴已解決，引導回評核頁 */}
+      {/* Employee: back to review */}
       {isEmployee && appeal.status === 'Resolved' && (
         <Link href={`/reviews/${appeal.reviewId}`} className="btn-secondary text-sm">
-          ← 返回評核頁
+          {t('detail.backToReview')}
         </Link>
       )}
     </div>

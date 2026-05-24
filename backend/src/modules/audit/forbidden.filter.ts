@@ -14,9 +14,10 @@ export class ForbiddenExceptionFilter implements ExceptionFilter {
 
     // 完整 forbidden reason 只進 ES，不進 HTTP response
     void this.auditService.log({
-      userId:     req.user?.id    ?? 'anonymous',
-      userName:   req.user?.name  ?? 'anonymous',
-      action:     'ACCESS_DENIED',
+      userId:       req.user?.id       ?? 'anonymous',
+      userName:     req.user?.name     ?? 'anonymous',
+      userRegionId: req.user?.regionId,
+      action:       'ACCESS_DENIED',
       outcome:    'FORBIDDEN',
       resource:   req.path.split('/')[1] ?? 'unknown',
       resourceId: req.path.split('/')[2],

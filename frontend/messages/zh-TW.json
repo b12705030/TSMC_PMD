@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "系統管理員",
+    "GlobalHR": "全球人資",
     "RegionalHR": "區域人資",
     "Manager": "經理",
     "Supervisor": "直屬主管",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "載入中...",
-    "cancel": "取消"
+    "cancel": "取消",
+    "retry": "重試",
+    "loadError": "載入失敗"
   },
   "login": {
     "title": "績效管理系統",
@@ -93,6 +96,7 @@
     "colOutcome": "結果",
     "colResourceId": "資源編號",
     "colIpAddress": "IP 位址",
+    "colRequest": "請求路徑",
     "empty": "找不到稽核紀錄。",
     "searchPlaceholder": "搜尋操作、資源、使用者…",
     "outcomeAll": "全部結果",
@@ -277,6 +281,386 @@
       "published": "已發布",
       "draftWarning": "{count} 份模板草稿尚未發布",
       "draftWarningDesc": "模板需要先 Publish 才能在週期推進時自動套用至員工"
+    }
+  },
+  "templates": {
+    "pageTitle": "評核模板管理",
+    "pageDesc": "依職等與職稱管理績效評核表單模板。",
+    "addBtn": "+ 新增模板",
+    "empty": {
+      "title": "尚無評核模板",
+      "desc": "建立模板以統一績效評核標準。",
+      "btn": "+ 新增模板"
+    },
+    "publishConfirm": {
+      "title": "確認發布此模板？",
+      "desc": "發布後，此模板將開放評核使用，HR 基礎題目將鎖定無法修改。",
+      "btn": "發布"
+    },
+    "modal": {
+      "title": "新增評核模板",
+      "name": "模板名稱",
+      "namePlaceholder": "例：工程師 L2–L3 年度考核",
+      "cycle": "績效週期",
+      "cycleDefault": "— 選擇週期 —",
+      "grades": "適用職等",
+      "gradesMulti": "（多選）",
+      "titles": "適用職稱",
+      "titlesMulti": "（多選）",
+      "titleSearch": "搜尋職稱...",
+      "noTitles": "找不到符合的職稱",
+      "questions": "基礎題目",
+      "questionsLocked": "（發布後鎖定）",
+      "questionPlaceholder": "題目 {index}",
+      "required": "必填",
+      "options": "選項（至少 2 個）",
+      "optionPlaceholder": "選項 {index}",
+      "addOption": "+ 新增選項",
+      "addQuestion": "+ 新增題目",
+      "creating": "建立中...",
+      "createBtn": "建立模板"
+    },
+    "card": {
+      "grades": "職等：{value}",
+      "titles": "職稱：{value}",
+      "baseQ": "{count} 題基礎題目",
+      "customQ": "· {count} 題自訂題目",
+      "publishBtn": "發布",
+      "viewBtn": "查看 →"
+    },
+    "errors": {
+      "publishFailed": "發布失敗",
+      "noGrade": "請選擇至少一個職等",
+      "noTitle": "請選擇至少一個職稱",
+      "emptyQuestion": "題目內容不得為空",
+      "minOptions": "多選題至少需要 2 個有效選項",
+      "createFailed": "建立失敗，請稍後再試。"
+    },
+    "detail": {
+      "baseSection": "基礎題目",
+      "baseBadge": "鎖定 — HR 設定",
+      "baseEmpty": "尚無基礎題目。",
+      "customSection": "自訂題目",
+      "customBadge": "經理新增",
+      "customEmptyManager": "尚無自訂題目，點擊上方按鈕新增。",
+      "customEmpty": "尚無自訂題目。",
+      "addBtn": "+ 新增題目",
+      "deleteConfirmTitle": "確認刪除此題目？",
+      "deleteConfirmDesc": "此自訂題目將從模板中永久移除，此操作無法復原。",
+      "deleteBtn": "刪除",
+      "modalTitle": "新增自訂題目",
+      "qLabel": "題目",
+      "qPlaceholder": "請輸入題目內容",
+      "typeLabel": "題型",
+      "optionsLabel": "選項（至少 2 個）",
+      "optionPlaceholder": "選項 {index}",
+      "addOptionBtn": "+ 新增選項",
+      "requiredLabel": "必填",
+      "adding": "新增中...",
+      "addBtnSubmit": "新增題目",
+      "errorMinOptions": "多選題至少需要 2 個有效選項",
+      "errorEmpty": "題目內容不得為空",
+      "errorFailed": "新增失敗，請稍後再試。",
+      "notFound": "找不到此模板。"
+    },
+    "questionType": {
+      "Text": "文字",
+      "Rating": "評分（1–5）",
+      "MultipleChoice": "多選題"
+    }
+  },
+  "goals": {
+    "pageTitle": "我的目標",
+    "pageDesc": "設定並追蹤這個績效週期的 SMART 目標。",
+    "addBtn": "+ 新增目標",
+    "stats": {
+      "total": "目標總數",
+      "active": "進行中",
+      "completed": "已完成"
+    },
+    "empty": {
+      "title": "還沒有任何目標",
+      "desc": "設定你的第一個 SMART 目標，讓這個績效週期有個好的開始。",
+      "btn": "設定第一個目標"
+    },
+    "statusLabel": {
+      "Draft": "草稿",
+      "PendingApproval": "待審核",
+      "Approved": "進行中",
+      "Completed": "已完成"
+    },
+    "type": {
+      "Personal": "個人目標",
+      "Team": "團隊目標"
+    },
+    "deadline": {
+      "completed": "已完成",
+      "overdue": "已逾期 {days} 天",
+      "remaining": "還剩 {days} 天",
+      "due": "截止 {date}"
+    },
+    "progressCount": "{count} 次進度更新",
+    "detail": {
+      "notFound": "找不到此目標。",
+      "breadcrumb": "我的目標",
+      "milestonesProgress": "{done} / {total} 個里程碑已完成",
+      "milestone": {
+        "heading": "里程碑",
+        "addBtn": "+ 新增",
+        "placeholder": "里程碑名稱...",
+        "add": "新增",
+        "empty": "尚無里程碑，點擊「+ 新增」開始規劃。",
+        "notePlaceholder": "新增備註...（Enter 確認，Esc 略過）",
+        "urlPlaceholder": "貼上連結...（Enter 確認）",
+        "addNote": "+ 備註",
+        "addUrl": "+ 連結"
+      },
+      "smart": {
+        "description": "你想達成什麼目標？",
+        "metric": "如何衡量達成？",
+        "targetValue": "目標數字或標準",
+        "relevance": "這個目標為何重要？"
+      },
+      "submit": {
+        "draftNote": "此草稿尚未提交，主管看不到。",
+        "submitBtn": "提交審核",
+        "submitting": "提交中...",
+        "pendingNote": "此目標正等待你的審核。",
+        "rejectBtn": "退回草稿",
+        "approveBtn": "核准目標",
+        "processing": "處理中..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "我的績效評核",
+    "myDesc": "查看並完成你的績效評核表單。",
+    "teamTitle": "團隊評核",
+    "teamDesc": "查看團隊評核狀態，進入校準發布流程。",
+    "teamDescSupervisor": "查看並完成下屬的績效評核表單。",
+    "empty": {
+      "title": "目前沒有評核",
+      "desc": "週期開始後系統會自動建立評核表單。"
+    },
+    "teamEmpty": {
+      "title": "目前沒有團隊評核",
+      "desc": "員工提交自評後，評核記錄將顯示於此。"
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "待您填寫自評",
+      "PendingSupervisorReview": "主管評核中",
+      "PendingManagerApproval": "經理審核中",
+      "Published": "已發布",
+      "Appealed": "申訴中"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "待員工",
+      "PendingSupervisorReview": "待主管初評",
+      "PendingManagerApproval": "待校準",
+      "Published": "已發布",
+      "Appealed": "申訴中"
+    },
+    "cycleType": {
+      "Annual": "年度",
+      "Quarterly": "季度",
+      "Probation": "試用期"
+    },
+    "grade": "等第 {grade}",
+    "actionRequired": "→ 需要您的操作",
+    "teamActionPending": "→ 待你初評",
+    "teamActionManager": "待校準發布",
+    "teamPendingBanner": "你有 {count} 份評核待處理",
+    "teamPendingCalibration": "{count} 份待校準發布",
+    "calibrateBtn": "進入校準",
+    "meta": {
+      "cycle": "週期",
+      "template": "模板",
+      "employee": "員工",
+      "supervisor": "直屬主管",
+      "defaultSupervisor": "（直屬主管）"
+    },
+    "detail": {
+      "title": "績效評核",
+      "breadcrumbMy": "我的評核",
+      "breadcrumbTeam": "團隊評核",
+      "notFound": "找不到此評核。",
+      "saveFailed": "儲存失敗，請再試一次。",
+      "submitFailed": "提交失敗，請再試一次。",
+      "appealFailed": "申訴提交失敗，請再試一次。",
+      "waitingEmployee": "等待員工填寫自評",
+      "waitingEmployeeDesc": "員工（{name}）尚未完成自評表單。",
+      "published": {
+        "appealed": "申訴中",
+        "result": "評核結果已發布",
+        "supervisorComment": "主管評語：",
+        "appealBtn": "有異議？提出申訴 →",
+        "appealSubmitted": "你的申訴已提交，正等待經理審閱。",
+        "appealLabel": "申訴原因",
+        "appealPlaceholder": "請詳細說明你認為評核結果有誤的原因（至少 10 個字）...",
+        "appealNote": "你的申訴將直接傳送給你的經理，直屬主管不會看到內容。",
+        "appealSubmitting": "提交中...",
+        "appealConfirm": "提交申訴",
+        "cancel": "取消"
+      },
+      "sections": {
+        "answerPlaceholder": "請輸入你的回答...",
+        "employeeSelf": "員工自評",
+        "submitted": "（已提交，不可修改）",
+        "supervisorPerQ": "主管逐題評語",
+        "noAnswer": "（未回答）",
+        "supervisorReview": "主管評核",
+        "leftCol": "員工自評",
+        "rightCol": "主管評語",
+        "supAnswerPlaceholder": "請輸入此題的評語（選填）...",
+        "selfReadOnly": "員工自評",
+        "supReadOnly": "主管評語",
+        "noAnswerFilled": "（未填寫）",
+        "overallLabel": "整體評核評語",
+        "overallPlaceholder": "請描述你的整體評核及員工表現...",
+        "overallEmpty": "—",
+        "gradeLabel": "等第",
+        "gradeWarnO": "⚠ O（Outstanding）僅適用少數頂尖員工，請審慎評估。",
+        "gradeWarnU": "⚠ U（Unsatisfactory）將觸發 PMD 追蹤，請確保有充分依據。",
+        "saving": "儲存中...",
+        "saveDraft": "儲存草稿",
+        "submitSelf": "送出自評",
+        "submitSup": "送出評核",
+        "gradeRequired": "請在送出前選擇等第",
+        "confirmSelfTitle": "確認送出自評？",
+        "confirmSupTitle": "確認送出評核？",
+        "confirmSelfDesc": "送出後將無法修改，確認送出？",
+        "confirmSupDesc": "送出後將無法修改，確認送出？",
+        "confirming": "送出中...",
+        "confirm": "確認送出"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding（傑出）",      "desc": "少數頂尖 — 全面大幅超越期望" },
+      "S_Plus":  { "label": "Excellent（優秀）",         "desc": "全面超越期望，具有顯著貢獻" },
+      "S":       { "label": "Satisfactory（達標）",      "desc": "完全達成所有目標與期望" },
+      "S_Minus": { "label": "Partially Sat.（部分達標）", "desc": "大致達成期望，部分領域需改善" },
+      "I":       { "label": "Needs Improvement（待改善）","desc": "未完全達成期望，需要指導" },
+      "U":       { "label": "Unsatisfactory（不符標準）", "desc": "明顯低於標準，將進入 PMD 追蹤" },
+      "tooltip": "ⓘ 等第說明",
+      "noAnswer": "（未填寫）"
+    },
+    "calibrate": {
+      "title": "校準：{cycleName}",
+      "desc": "為每位員工設定等第與排名，確認後一次發布所有結果。",
+      "breadcrumb": "團隊評核",
+      "breadcrumbCalib": "校準發布",
+      "summary": "{total} 份評核 · {pending} 份待發布",
+      "compareBtn": "並排比較 →",
+      "publishBtn": "發布全部（{count}）",
+      "publishing": "發布中...",
+      "empty": "此週期目前沒有進入校準階段的評核。",
+      "table": {
+        "employee": "員工",
+        "titleGrade": "職稱 / 職等",
+        "status": "狀態",
+        "grade": "等第",
+        "rank": "排名",
+        "detail": "詳情",
+        "viewBtn": "查看",
+        "rankPlaceholder": "請先選擇等第",
+        "rankTitle": "請先選擇等第，再設定排名"
+      },
+      "publishConfirm": {
+        "title": "確認發布所有評核？",
+        "desc": "即將發布 {count} 份評核結果，員工將可查看自己的等第，此操作無法復原。",
+        "btn": "確認發布"
+      }
+    },
+    "compare": {
+      "title": "並排比較：{cycleName}",
+      "desc": "查看所有員工的等第與主管評語，協助校準決策。",
+      "breadcrumb": "團隊評核",
+      "breadcrumbCalib": "校準發布",
+      "breadcrumbCompare": "並排比較",
+      "empty": "此週期尚無評核資料。",
+      "summary": "{count} 份評核，依等第排序（O → U）",
+      "supComment": "主管評語",
+      "noComment": "無評語",
+      "viewBtn": "查看完整評核",
+      "rank": "排名第 {rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "申訴管理",
+    "pageDesc": "審閱並回應員工的績效申訴。",
+    "empty": {
+      "title": "尚無申訴",
+      "desc": "目前尚無員工提交申訴。"
+    },
+    "cycle": "週期：{name}",
+    "submitted": "提交時間：{date}",
+    "resolved": "· 解決時間：{date}",
+    "reviewBtn": "審閱申訴",
+    "viewBtn": "查看詳情",
+    "detail": {
+      "pageTitle": "申訴詳情",
+      "breadcrumbManager": "申訴管理",
+      "breadcrumbEmployee": "我的評核",
+      "breadcrumb": "申訴詳情",
+      "notFound": "找不到此申訴或無存取權限。",
+      "respondFailed": "回應失敗，請再試一次。",
+      "backToReview": "← 返回評核",
+      "meta": {
+        "employee": "員工",
+        "cycle": "週期",
+        "grade": "評核等第",
+        "submitted": "提交時間"
+      },
+      "supComment": "主管評語",
+      "reason": "員工申訴原因",
+      "response": {
+        "title": "經理回應 · {date}",
+        "formTitle": "回應申訴",
+        "gradeLabel": "調整等第",
+        "gradeDetail": "（選填 — 若未選擇，保留原等第 {grade}）",
+        "textPlaceholder": "請說明你的決定與理由（至少 5 個字）...",
+        "note": "回應後，申訴將標記為「已解決」，評核將回到「已發布」狀態，員工可查看你的回應。",
+        "submitting": "提交中...",
+        "submitBtn": "提交回應並解決申訴"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "我的團隊",
+    "pageDescManager": "依直屬主管分組，檢視各組員工績效狀況。",
+    "pageDescSupervisor": "管理你的直屬員工。",
+    "table": {
+      "name": "姓名",
+      "employeeId": "員工編號",
+      "title": "職稱",
+      "grade": "職等",
+      "role": "角色",
+      "view": "查看"
+    },
+    "empty": {
+      "title": "尚無團隊成員",
+      "desc": "目前沒有任何人被指派到你的部門。"
+    },
+    "notFound": "找不到任何團隊成員。",
+    "supervisor": {
+      "view": "查看 →",
+      "noReports": "此主管目前沒有直屬員工。",
+      "count": "共 {count} 位員工"
+    },
+    "directReports": {
+      "title": "直屬員工",
+      "subtitle": "（直接匯報給你，無直屬主管）",
+      "count": "共 {count} 位員工"
+    },
+    "employee": {
+      "department": "部門",
+      "breadcrumb": "我的團隊",
+      "notFound": "找不到此員工。",
+      "goals": "目標",
+      "noGoals": "尚未設定目標。",
+      "deadline": "截止：{date}",
+      "reviews": "評核紀錄",
+      "noReviews": "尚無評核紀錄。"
     }
   }
 }

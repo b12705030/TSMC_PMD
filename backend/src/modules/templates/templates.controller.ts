@@ -34,7 +34,7 @@ export class TemplatesController {
   }
 
   @Post()
-  @Roles(Role.Admin, Role.RegionalHR)
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
   createTemplate(@Body() dto: CreateTemplateDto, @CurrentUser() user: SessionUser) {
     return this.templatesService.createTemplate(dto, user)
   }
@@ -60,7 +60,7 @@ export class TemplatesController {
   }
 
   @Patch(':id/publish')
-  @Roles(Role.Admin, Role.RegionalHR)
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
   publishTemplate(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.templatesService.publishTemplate(id, user)
   }

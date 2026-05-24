@@ -18,6 +18,29 @@
 
 ---
 
+## RegionConfig
+
+### 決策
+- 獨立 `RegionConfig` 表，以 `(regionId, key)` 唯一鍵儲存各地區政策設定
+- `key` 為字串（e.g. `appeal_window_days`）、`value` 為字串（所有型別統一序列化）、`label` 供 UI 顯示
+- `@@unique([regionId, key])` 確保同一地區同一 key 不重複
+
+### 種子資料範例
+
+| Region | Key | Value |
+|--------|-----|-------|
+| TW | `appeal_window_days` | `7` |
+| TW | `grade_distribution_required` | `true` |
+| JP | `appeal_window_days` | `14` |
+| JP | `overtime_policy` | `"fixed"` |
+| EU | `gdpr_data_retention_days` | `365` |
+
+### API
+- `GET /config` — 取得本 region 所有設定（RegionalHR 限本地區；Admin/GlobalHR 可指定 regionId）
+- `PATCH /config/:key` — 更新單一設定值
+
+---
+
 ## Department
 
 ### 決策
@@ -49,26 +72,26 @@
 ## PerformanceCycle
 
 ### 決策
-- 保留 `regions String[]`（region name 字串陣列）
-- 沒有改成 junction table（`CycleRegion`）
+- 改用 `regionId String`（FK → `Region.id`），每個 Cycle 隸屬單一地區
+- 舊版設計 `regions String[]`（region name 字串陣列）已廢棄
 
-### 理由
-- 週期與地區的關係是建立時決定、後續幾乎不變
-- 陣列讀取簡單，不需要 JOIN；Prisma `hasSome`/`has` 可直接篩選
-- 若未來需要 per-region 狀態機（不同 region 不同進度），再考慮 junction table
+### 改版理由
+- 一個 Cycle 對應一個地區，資料模型更清晰，可直接 JOIN 做地區篩選
+- 不需要 `hasSome`/`has` 查詢，FK 索引效率更高
+- 若未來需要跨地區共用 Cycle，再考慮 junction table
 
-### CycleStatus 狀態機（6 步，migration `20260506_refine_cycle_status`）
+### CycleStatus 狀態機（6 步）
 
 | 狀態 | 前端顯示 | 觸發動作 |
 |------|----------|----------|
 | `GoalSetting` | 目標設定 | 初始狀態 |
 | `InProgress` | 執行中 | HR 手動推進 |
-| `EmployeeReview` | 員工自評 | HR 推進；系統檢查已發布模板 + 自動建立 PerformanceReview |
+| `EmployeeReview` | 員工自評 | HR 推進；系統自動建立 PerformanceReview |
 | `SupervisorReview` | 主管初評 | HR 手動推進 |
 | `Calibration` | 校準發布 | HR 手動推進 |
 | `Completed` | 已完成 | HR 手動推進 |
 
-原 `UnderReview` 已拆為三個獨立狀態，現有 `UnderReview` 資料在 migration 時轉換為 `EmployeeReview`。
+推進到 `EmployeeReview` 時自動建立 PerformanceReview：找出該地區所有 Employee，對每人匹配一份 `Published` 模板（`appliesGrades` 包含 `jobLevel` **且** `applyTitles` 包含 `jobTitle`）。
 
 ---
 
@@ -95,6 +118,11 @@
 - `null` → HR 公版題（所有部門可見）
 - 有值 → 該 Manager 為自己部門加的自訂題
 - 儲存 `Department.id`（FK），不再儲存部門名稱字串
+
+### `isCustom` / `isGlobal`
+- `isCustom = false`：HR 建立的公版題
+- `isCustom = true`：Manager 為部門新增的自訂題
+- `isGlobal = true`：Admin 鎖定，任何地區 HR 均不得刪除
 
 ---
 
@@ -143,6 +171,11 @@ RegionalHR(tw-hr001)
 - `status GoalStatus @default(Draft)`：Draft → PendingApproval → Approved → Completed
 - `type GoalType @default(Personal)`：Personal / Team
 
+### 審核流程
+- Employee 提交（`PATCH /goals/:id/submit`）→ status 變 `PendingApproval`
+- Supervisor 核准（`PATCH /goals/:id/approve`）→ status 變 `Approved`
+- Supervisor 退回（`PATCH /goals/:id/reject`）→ status 退回 `Draft`
+
 ### 進度計算（前端邏輯）
 - 有里程碑時：`completedCount / totalCount * 100`
 - 無里程碑時：status 對應固定百分比（Draft=0, PendingApproval=30, Approved=65, Completed=100）
@@ -155,6 +188,7 @@ RegionalHR(tw-hr001)
 - 屬於 Goal 的條列式子任務，`orderIndex Int` 控制順序
 - `completedAt DateTime?`：null = 未完成；有值 = 完成時間
 - `note String?`：完成時附加的備注，只在 complete 動作時儲存，取消完成時清空
+- `url String?`：里程碑附加連結（佐證文件、外部 ticket 等）
 - `onDelete: Cascade`：Goal 刪除時所有里程碑一起刪
 
 ### Toggle 行為（前端 UX）
@@ -165,9 +199,8 @@ RegionalHR(tw-hr001)
 ### Reorder 設計
 - 端點：`PUT /goals/:id/milestones/reorder`，body `{ ids: string[] }`（完整排序後的 ID 陣列）
 - 使用 `$transaction` 批次更新所有 `orderIndex`（index 0 = 第一筆）
-- 前端用 HTML5 DnD（`draggable`、`onDragStart/Over/Drop/End`），不依賴額外函式庫
-- 拖拉結束後重算陣列順序再呼叫 API，送完後 `refetch()`（不做樂觀更新，避免與後端不同步）
-- 為何不用 swap-two-items endpoint：一次傳整個順序更直接，且與未來的拖拉任意位置相容
+- 前端用 HTML5 DnD，不依賴額外函式庫
+- 拖拉結束後重算陣列順序再呼叫 API，送完後 `refetch()`（不做樂觀更新）
 
 ---
 
@@ -195,20 +228,14 @@ RegionalHR(tw-hr001)
 - 答案存 JSON 的理由：題目可能隨版本不同，不用 FK 關聯；審計時快照即答案
 
 ### 評核自動建立
-- 觸發點：`CycleStatus` 推進到 `EmployeeReview` 時（非 `InProgress`）
+- 觸發點：`CycleStatus` 推進到 `EmployeeReview` 時
 - 匹配邏輯：找出 cycle region 內所有 Employee，對每人找一份 `Published` 模板，條件 `appliesGrades` 包含 `user.jobLevel` **且** `applyTitles` 包含 `user.jobTitle`
 - 若無匹配模板 → 跳過該員工（不報錯，但記錄 log）
 - `supervisorId` = `user.supervisorId`（直屬 Supervisor；若員工直接匯報 Manager 則為 null）
 
 ### 等第制度（對應 TSMC 實際制度）
-- `O`（Outstanding，傑出）、`S_Plus`（S+）、`S`、`S_Minus`（S-）、`I`（Improvement needed）、`U`（Unacceptable）
-- 前端顯示：`S_Plus` → `S+`，`S_Minus` → `S-`（Prisma enum 不支援特殊字元，DB 存 `S_Plus`/`S_Minus`）
-- `B`（原 A/B/C/D）已廢棄，migration `20260505160000` 將舊資料 A→O、B→S、C→I、D→U
-
-### 等第提示
-- O：「極少數頂尖員工，請謹慎評定」soft warning
-- U：「將進入 PMD 追蹤，請確認績效佐證資料充足」soft warning
-- 原 spec：硬限制；**實作決策：改為前端提示**（不阻擋送出，開發階段測試資料少）
+- `O`（Outstanding）、`S_Plus`（S+）、`S`、`S_Minus`（S-）、`I`（Improvement needed）、`U`（Unacceptable）
+- 前端顯示：`S_Plus` → `S+`，`S_Minus` → `S-`（Prisma enum 不支援特殊字元）
 
 ### 草稿機制
 - 「草稿」不是獨立 status，而是「在自己那一輪尚未送出」
@@ -218,13 +245,57 @@ RegionalHR(tw-hr001)
 
 ---
 
+## Appeal
+
+### 決策
+- `reviewId String @unique`：一份評核最多一個申訴
+- `managerId`：申訴的受理人（通常是 Employee 所在 region 的 Manager）
+- `status AppealStatus`：`Pending` → `Resolved`
+- `managerResponse String?`：Manager 回覆內容，Resolved 時必填
+- `resolvedAt DateTime?`：結案時間戳
+
+---
+
+## Audit Log（Elasticsearch，非 Prisma）
+
+Audit Log 不存於 PostgreSQL，而是寫入 **Elasticsearch** index `audit-logs`。
+
+### 欄位結構
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `userId` | keyword | 操作者 UUID |
+| `userName` | keyword | 操作者姓名 |
+| `userRegionId` | keyword | 操作者地區 UUID（RegionalHR 篩選用） |
+| `action` | keyword | 操作代碼（e.g. `GOAL_SUBMIT`、`LOGIN`） |
+| `outcome` | keyword | `SUCCESS` 或 `FORBIDDEN` |
+| `resource` | keyword | 資源類型（e.g. `goal`、`review`） |
+| `resourceId` | keyword | 資源 UUID |
+| `httpMethod` | keyword | `GET`、`POST`、`PUT` 等 |
+| `httpPath` | keyword | 請求路徑（e.g. `/auth/login`） |
+| `httpStatus` | integer | HTTP 狀態碼 |
+| `ipAddress` | ip | 客戶端 IP |
+| `userAgent` | text | 瀏覽器 UA |
+| `detail` | object | 請求 body 快照（passwords/tokens 已清除） |
+| `createdAt` | date | ISO 8601 時間戳 |
+
+### 寫入來源
+1. **AuditWriteInterceptor**：攔截所有 POST/PUT/PATCH/DELETE，成功後非同步寫入
+2. **ForbiddenExceptionFilter**：攔截 403，寫入 `outcome: FORBIDDEN`
+3. **AuthService.login() / logout()**：手動呼叫 `audit.log()`，補上 `httpMethod`/`httpPath`
+
+### 讀取權限
+- `GET /audit`：限 Admin、GlobalHR、RegionalHR
+- RegionalHR 自動以 `userRegionId = user.regionId` 過濾，只看本地區紀錄
+
+---
+
 ## 未實作（刻意跳過）
 
 | 項目 | 說明 |
 |------|------|
-| Review / Appeal | 正在實作 |
-| Department 三層遞迴 | Schema 支援，但查詢/UI 尚未實作 |
-| PerformanceCycle per-region 狀態機 | 目前全 cycle 共用一個 status |
-| FormTemplate per-region admin 指定 | Admin 建 template 時目前預設用 cycle.regions[0] |
-| Goal 審核 workflow | status 目前由員工自行控制，待主管審核流程實作 |
+| Department 三層遞迴 | Schema 支援任意深度，查詢與 UI 尚未實作 |
+| PerformanceCycle 跨地區共用 | 目前每個 Cycle 對應單一 Region |
 | Goal cycleId 關聯 UI | 欄位已預留，待週期選擇介面補上 |
+| Session 閒置登出 | TTL 8 小時固定，30 分鐘閒置登出未實作 |
+| ProgressUpdate UI | 欄位保留，UI 以里程碑取代，自由文字進度頁未顯示 |

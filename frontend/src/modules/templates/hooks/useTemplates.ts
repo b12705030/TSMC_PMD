@@ -7,7 +7,6 @@ import type { ReviewTemplate, TemplateQuestion } from '@/types'
 export interface CreateTemplatePayload {
   name: string
   cycleId: string
-  regionId?: string
   appliesGrades: string[]
   applyTitles: string[]
   questions: {

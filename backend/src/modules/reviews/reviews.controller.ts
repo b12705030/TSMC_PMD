@@ -44,7 +44,7 @@ export class ReviewsController {
 
   // Manager / HR / Admin: grade distribution + status counts
   @Get('stats')
-  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
+  @Roles(Role.Supervisor, Role.Manager, Role.GlobalHR, Role.RegionalHR, Role.Admin)
   getReviewStats(@CurrentUser() user: SessionUser) {
     return this.reviewsService.getReviewStats(user)
   }

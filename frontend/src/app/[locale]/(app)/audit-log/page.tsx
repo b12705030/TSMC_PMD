@@ -60,6 +60,16 @@ export default function AuditLogPage() {
     { key: 'action',    label: t('colAction'),   sortable: true },
     { key: 'resource',  label: t('colResource'), sortable: true },
     {
+      key: 'httpPath',
+      label: t('colRequest'),
+      render: (row: AuditLog) => row.httpPath ? (
+        <span className="font-mono text-xs text-gray-500">
+          {row.httpMethod && <span className="mr-1 font-semibold text-gray-700">{row.httpMethod}</span>}
+          {row.httpPath.length > 40 ? row.httpPath.slice(0, 40) + '…' : row.httpPath}
+        </span>
+      ) : <span className="text-gray-300">—</span>,
+    },
+    {
       key: 'outcome',
       label: t('colOutcome'),
       render: (row: AuditLog) => <OutcomeBadge outcome={row.outcome} />,
