@@ -29,7 +29,7 @@ export class ConfigController {
 
   // PUT /config/region/:key — 更新一筆設定（Admin 可跨地區；RegionalHR 限自己地區）
   @Put('region/:key')
-  @Roles(Role.Admin, Role.RegionalHR)
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
   updateConfig(
     @Param('key') key: string,
     @Body() dto: UpdateConfigDto,
