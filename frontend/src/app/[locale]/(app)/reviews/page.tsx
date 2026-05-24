@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -12,34 +13,36 @@ const GRADE_DISPLAY: Record<ReviewGrade, string> = {
   O: 'O', S_Plus: 'S+', S: 'S', S_Minus: 'S-', I: 'I', U: 'U',
 }
 
-const STATUS_LABEL: Record<ReviewStatus, string> = {
-  PendingEmployeeSubmit:   '待您填寫自評',
-  PendingSupervisorReview: '主管評核中',
-  PendingManagerApproval:  '經理審核中',
-  Published:               '已發布',
-  Appealed:                '申訴中',
-}
-
 export default function ReviewsPage() {
+  const t = useTranslations('reviews')
+  const tCommon = useTranslations('common')
   const { reviews, isLoading, error, refetch } = useReviews()
+
+  const STATUS_LABEL: Record<ReviewStatus, string> = {
+    PendingEmployeeSubmit:   t('statusLabel.PendingEmployeeSubmit'),
+    PendingSupervisorReview: t('statusLabel.PendingSupervisorReview'),
+    PendingManagerApproval:  t('statusLabel.PendingManagerApproval'),
+    Published:               t('statusLabel.Published'),
+    Appealed:                t('statusLabel.Appealed'),
+  }
 
   return (
     <div>
       <PageHeader
-        title="我的績效評核"
-        description="查看並完成你的績效評核表單。"
+        title={t('myTitle')}
+        description={t('myDesc')}
       />
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (
-        <EmptyState title="目前沒有評核" description="週期開始後系統會自動建立評核表單。" />
+        <EmptyState title={t('empty.title')} description={t('empty.desc')} />
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
+            <ReviewCard key={review.id} review={review} statusLabel={STATUS_LABEL} />
           ))}
         </div>
       )}
@@ -47,8 +50,15 @@ export default function ReviewsPage() {
   )
 }
 
-function ReviewCard({ review }: { review: PerformanceReviewDetail }) {
+function ReviewCard({ review, statusLabel }: { review: PerformanceReviewDetail; statusLabel: Record<ReviewStatus, string> }) {
+  const t = useTranslations('reviews')
   const isActionRequired = review.status === 'PendingEmployeeSubmit'
+
+  const cycleTypeLabel = review.cycle.type === 'Annual'
+    ? t('cycleType.Annual')
+    : review.cycle.type === 'Quarterly'
+    ? t('cycleType.Quarterly')
+    : t('cycleType.Probation')
 
   return (
     <Link
@@ -62,21 +72,21 @@ function ReviewCard({ review }: { review: PerformanceReviewDetail }) {
           <div className="flex items-center gap-2">
             <p className="font-semibold text-gray-900">{review.cycle.name}</p>
             <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-              {review.cycle.type === 'Annual' ? '年度' : review.cycle.type === 'Quarterly' ? '季度' : '試用期'}
+              {cycleTypeLabel}
             </span>
           </div>
-          <p className="mt-0.5 text-sm text-gray-500">{STATUS_LABEL[review.status]}</p>
+          <p className="mt-0.5 text-sm text-gray-500">{statusLabel[review.status]}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatusBadge status={review.status} />
           {review.grade && (
-            <span className="text-lg font-bold text-gray-800">等第 {GRADE_DISPLAY[review.grade]}</span>
+            <span className="text-lg font-bold text-gray-800">{t('grade', { grade: GRADE_DISPLAY[review.grade] })}</span>
           )}
         </div>
       </div>
 
       {isActionRequired && (
-        <p className="mt-3 text-xs font-medium text-indigo-600">→ 需要您的操作</p>
+        <p className="mt-3 text-xs font-medium text-indigo-600">{t('actionRequired')}</p>
       )}
     </Link>
   )

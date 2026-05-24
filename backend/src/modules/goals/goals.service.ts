@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { Role } from '../../common/enums/role.enum'
+import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateGoalDto, UpdateGoalDto } from './dto/goal.dto'
 
@@ -35,8 +36,8 @@ export class GoalsService {
     if (dto.cycleId) {
       const cycle = await this.prisma.performanceCycle.findUnique({ where: { id: dto.cycleId } })
       if (!cycle) throw new BadRequestException('Cycle not found')
-      if (!cycle.regions.includes(user.region)) {
-        throw new ForbiddenException('Cycle does not include your region')
+      if (!isGlobalRole(user) && cycle.regionId !== user.regionId) {
+        throw new ForbiddenException('Cycle does not belong to your region')
       }
       if (cycle.status !== 'GoalSetting' && cycle.status !== 'InProgress') {
         throw new BadRequestException('Goals can only be linked to active cycles (GoalSetting or InProgress)')
@@ -88,7 +89,7 @@ export class GoalsService {
     const isSupervisor = user.role === Role.Supervisor
     const isManager    = user.role === Role.Manager
 
-    if (!isSupervisor && !isManager && user.role !== Role.Admin) {
+    if (!isSupervisor && !isManager && !isGlobalRole(user)) {
       throw new ForbiddenException()
     }
 
@@ -97,6 +98,9 @@ export class GoalsService {
       include: { supervisor: true },
     })
     if (!employee) throw new NotFoundException('Employee not found')
+
+    // Region isolation: non-global roles cannot access employees outside their region
+    if (!isGlobalRole(user) && employee.regionId !== user.regionId) throw new ForbiddenException()
 
     if (isSupervisor && employee.supervisorId !== user.id) throw new ForbiddenException()
     if (isManager) {
@@ -113,7 +117,7 @@ export class GoalsService {
   }
 
   async approveGoal(id: string, user: SessionUser) {
-    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && !isGlobalRole(user)) {
       throw new ForbiddenException()
     }
     const goal = await this.prisma.goal.findUnique({ where: { id } })
@@ -124,7 +128,7 @@ export class GoalsService {
   }
 
   async rejectGoal(id: string, user: SessionUser) {
-    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && !isGlobalRole(user)) {
       throw new ForbiddenException()
     }
     const goal = await this.prisma.goal.findUnique({ where: { id } })
@@ -214,16 +218,21 @@ export class GoalsService {
     await this.prisma.goalMilestone.delete({ where: { id: milestoneId } })
   }
 
-  // Only the goal owner (or Admin) may create/edit/delete content
   private assertOwner(goalOwnerId: string, user: SessionUser) {
-    if (user.role === Role.Admin) return
+    if (isGlobalRole(user)) return
     if (goalOwnerId !== user.id) throw new ForbiddenException()
   }
 
-  // Supervisors and Managers may read a subordinate's goals
   private async assertCanRead(goalOwnerId: string, user: SessionUser) {
-    if (user.role === Role.Admin) return
+    if (isGlobalRole(user)) return
     if (goalOwnerId === user.id) return
+
+    // RegionalHR can read any goal within their region
+    if (user.role === Role.RegionalHR) {
+      const employee = await this.prisma.user.findUnique({ where: { id: goalOwnerId } })
+      if (!employee || employee.regionId !== user.regionId) throw new ForbiddenException()
+      return
+    }
 
     if (user.role === Role.Supervisor || user.role === Role.Manager) {
       const employee = await this.prisma.user.findUnique({
@@ -231,6 +240,9 @@ export class GoalsService {
         include: { supervisor: true },
       })
       if (!employee) throw new ForbiddenException()
+
+      // Region check: supervisor/manager cannot cross region boundaries
+      if (employee.regionId !== user.regionId) throw new ForbiddenException()
 
       if (user.role === Role.Supervisor && employee.supervisorId === user.id) return
       if (user.role === Role.Manager) {

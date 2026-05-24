@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -9,22 +10,24 @@ import { useAppeals } from '@/modules/appeals/hooks/useAppeals'
 import type { Appeal } from '@/types'
 
 function fmt(date: string) {
-  return new Date(date).toLocaleDateString('zh-TW', { year: 'numeric', month: 'short', day: 'numeric' })
+  return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 export default function AppealsPage() {
+  const t = useTranslations('appeals')
+  const tCommon = useTranslations('common')
   const { appeals, isLoading, error, refetch } = useAppeals()
 
   return (
     <div>
-      <PageHeader title="申訴管理" description="審閱並回應員工的績效申訴。" />
+      <PageHeader title={t('pageTitle')} description={t('pageDesc')} />
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : appeals.length === 0 ? (
-        <EmptyState title="尚無申訴" description="目前尚無員工提交申訴。" />
+        <EmptyState title={t('empty.title')} description={t('empty.desc')} />
       ) : (
         <div className="space-y-3">
           {appeals.map((appeal: Appeal) => (
@@ -40,18 +43,18 @@ export default function AppealsPage() {
                   <StatusBadge status={appeal.status} />
                 </div>
                 <p className="text-sm text-gray-500 truncate max-w-xl">
-                  週期：{appeal.review?.cycle.name ?? '—'}
+                  {t('cycle', { name: appeal.review?.cycle.name ?? '—' })}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  提交時間：{fmt(appeal.createdAt)}
-                  {appeal.resolvedAt && ` · 解決時間：${fmt(appeal.resolvedAt)}`}
+                  {t('submitted', { date: fmt(appeal.createdAt) })}
+                  {appeal.resolvedAt && t('resolved', { date: fmt(appeal.resolvedAt) })}
                 </p>
               </div>
               <Link
                 href={`/appeals/${appeal.id}`}
                 className="btn-secondary text-xs shrink-0"
               >
-                {appeal.status === 'Pending' ? '審閱申訴' : '查看詳情'}
+                {appeal.status === 'Pending' ? t('reviewBtn') : t('viewBtn')}
               </Link>
             </div>
           ))}

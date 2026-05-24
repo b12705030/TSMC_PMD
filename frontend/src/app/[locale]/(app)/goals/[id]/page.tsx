@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useGoal } from '@/modules/goals/hooks/useGoals'
@@ -8,24 +9,26 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
 import type { GoalMilestone, GoalStatus } from '@/types'
 
-const STATUS_CONFIG: Record<GoalStatus, { label: string; pct: number; color: string }> = {
-  Draft:             { label: '草稿',   pct: 0,   color: 'bg-gray-300' },
-  PendingApproval:   { label: '待審核', pct: 30,  color: 'bg-yellow-400' },
-  Approved:          { label: '進行中', pct: 65,  color: 'bg-indigo-500' },
-  Completed:         { label: '已完成', pct: 100, color: 'bg-green-500' },
-}
-
-const SMART_LABELS = [
-  { key: 'description', label: '你想達成什麼？' },
-  { key: 'metric',      label: '怎麼知道你成功了？' },
-  { key: 'targetValue', label: '目標數字或標準' },
-  { key: 'relevance',   label: '為什麼這個目標重要？' },
-]
-
 export default function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('goals')
+  const tCommon = useTranslations('common')
   const { goal, isLoading, error, refetch } = useGoal(id)
   const { user } = useAuth()
+
+  const STATUS_CONFIG: Record<GoalStatus, { label: string; pct: number; color: string }> = {
+    Draft:             { label: t('statusLabel.Draft'),           pct: 0,   color: 'bg-gray-300' },
+    PendingApproval:   { label: t('statusLabel.PendingApproval'), pct: 30,  color: 'bg-yellow-400' },
+    Approved:          { label: t('statusLabel.Approved'),        pct: 65,  color: 'bg-indigo-500' },
+    Completed:         { label: t('statusLabel.Completed'),       pct: 100, color: 'bg-green-500' },
+  }
+
+  const SMART_LABELS = [
+    { key: 'description', label: t('detail.smart.description') },
+    { key: 'metric',      label: t('detail.smart.metric') },
+    { key: 'targetValue', label: t('detail.smart.targetValue') },
+    { key: 'relevance',   label: t('detail.smart.relevance') },
+  ]
 
   const [newTitle, setNewTitle]           = useState('')
   const [adding, setAdding]               = useState(false)
@@ -51,9 +54,9 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     if (goal) setLocalMilestones(goal.milestones ?? [])
   }, [goal])
 
-  if (isLoading) return <p className="text-sm text-gray-400 p-8">載入中...</p>
+  if (isLoading) return <p className="text-sm text-gray-400 p-8">{tCommon('loading')}</p>
   if (error)    return <ErrorBanner message={error} />
-  if (!goal)    return <p className="text-sm text-red-500 p-8">找不到此目標。</p>
+  if (!goal)    return <p className="text-sm text-red-500 p-8">{t('detail.notFound')}</p>
 
   const config     = STATUS_CONFIG[goal.status]
   const milestones = localMilestones
@@ -72,6 +75,12 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const canApprove = (user?.role === 'Supervisor' || user?.role === 'Manager') && goal.status === 'PendingApproval'
   const isOwner    = user?.id === goal.userId
   const canSubmit  = isOwner && goal.status === 'Draft'
+
+  const deadlineLabel = goal.status === 'Completed'
+    ? t('deadline.completed')
+    : isOverdue
+    ? t('deadline.overdue', { days: Math.abs(Math.ceil((dueDate.getTime() - Date.now()) / 86400000)) })
+    : t('deadline.due', { date: dueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) })
 
   async function handleSubmitForApproval() {
     setSubmitting(true)
@@ -185,7 +194,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     <div>
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-2 text-sm text-gray-400">
-        <Link href="/goals" className="hover:text-gray-600">我的目標</Link>
+        <Link href="/goals" className="hover:text-gray-600">{t('detail.breadcrumb')}</Link>
         <span>/</span>
         <span className="text-gray-600 truncate max-w-xs">{goal.title}</span>
       </div>
@@ -215,21 +224,17 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
         </div>
         <div className="flex justify-between text-xs text-gray-400 mb-4">
           <span>
-            {totalCount > 0 ? `${doneCount} / ${totalCount} 個里程碑完成` : config.label}
+            {totalCount > 0
+              ? t('detail.milestonesProgress', { done: doneCount, total: totalCount })
+              : config.label}
           </span>
           <span>{progressPct}%</span>
         </div>
 
         {/* Meta */}
         <div className="flex flex-wrap gap-4 text-xs text-gray-400 mb-5">
-          <span className={isOverdue ? 'text-red-500 font-medium' : ''}>
-            {goal.status === 'Completed'
-              ? '已完成'
-              : isOverdue
-              ? `已逾期 ${Math.abs(Math.ceil((dueDate.getTime() - Date.now()) / 86400000))} 天`
-              : `截止 ${dueDate.toLocaleDateString('zh-TW')}`}
-          </span>
-          <span>{goal.type === 'Personal' ? '個人目標' : '團隊目標'}</span>
+          <span className={isOverdue ? 'text-red-500 font-medium' : ''}>{deadlineLabel}</span>
+          <span>{goal.type === 'Personal' ? t('type.Personal') : t('type.Team')}</span>
         </div>
 
         {/* SMART breakdown */}
@@ -248,13 +253,13 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
         {/* Employee: submit draft for approval */}
         {canSubmit && (
           <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
-            <p className="text-xs text-gray-400">草稿尚未提交，主管看不到此目標</p>
+            <p className="text-xs text-gray-400">{t('detail.submit.draftNote')}</p>
             <button
               onClick={handleSubmitForApproval}
               disabled={submitting}
               className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
             >
-              {submitting ? '提交中...' : '提交審核'}
+              {submitting ? t('detail.submit.submitting') : t('detail.submit.submitBtn')}
             </button>
           </div>
         )}
@@ -262,20 +267,20 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
         {/* Supervisor / Manager approval actions */}
         {canApprove && (
           <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
-            <p className="flex-1 text-xs text-yellow-700">此目標正在等待您審核</p>
+            <p className="flex-1 text-xs text-yellow-700">{t('detail.submit.pendingNote')}</p>
             <button
               onClick={handleReject}
               disabled={approving}
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
             >
-              退回草稿
+              {t('detail.submit.rejectBtn')}
             </button>
             <button
               onClick={handleApprove}
               disabled={approving}
               className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
             >
-              {approving ? '處理中...' : '核准目標'}
+              {approving ? t('detail.submit.processing') : t('detail.submit.approveBtn')}
             </button>
           </div>
         )}
@@ -284,13 +289,13 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
       {/* Milestones */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">里程碑</h2>
+          <h2 className="text-sm font-semibold text-gray-700">{t('detail.milestone.heading')}</h2>
           {isOwner && (
             <button
               onClick={() => setShowInput((v) => !v)}
               className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
             >
-              + 新增
+              {t('detail.milestone.addBtn')}
             </button>
           )}
         </div>
@@ -301,15 +306,15 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
             <input
               autoFocus
               className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-200"
-              placeholder="里程碑名稱..."
+              placeholder={t('detail.milestone.placeholder')}
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
             <button type="submit" disabled={adding || !newTitle.trim()} className="btn-primary text-sm disabled:opacity-40">
-              新增
+              {t('detail.milestone.add')}
             </button>
             <button type="button" onClick={() => setShowInput(false)} className="text-sm text-gray-400 hover:text-gray-600 px-2">
-              取消
+              {tCommon('cancel')}
             </button>
           </form>
         )}
@@ -317,7 +322,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
         {/* Milestone list */}
         {milestones.length === 0 && !showInput ? (
           <p className="text-sm text-gray-400 text-center py-4">
-            還沒有里程碑，點「+ 新增」開始規劃進度。
+            {t('detail.milestone.empty')}
           </p>
         ) : (
           <ul className="space-y-1">
@@ -363,6 +368,8 @@ function MilestoneItem({
   onDrop: () => void
   onDragEnd: () => void
 }) {
+  const t = useTranslations('goals')
+
   const [noteInput, setNoteInput]       = useState('')
   const [showNoteInput, setShowNoteInput] = useState(false)  // new note after check-off
   const [editingNote, setEditingNote]   = useState(false)    // editing existing note
@@ -457,7 +464,7 @@ function MilestoneItem({
             <input autoFocus value={noteInput} onChange={(e) => setNoteInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') submitNewNote(); if (e.key === 'Escape') { setShowNoteInput(false); setNoteInput('') } }}
               onBlur={submitNewNote}
-              placeholder="加個備注... (Enter 確認，Esc 跳過)"
+              placeholder={t('detail.milestone.notePlaceholder')}
               className="mt-1.5 w-full text-xs text-gray-500 placeholder-gray-300 bg-transparent outline-none border-b border-gray-200 pb-0.5 focus:border-indigo-300"
             />
           )}
@@ -484,7 +491,7 @@ function MilestoneItem({
           {done && isOwner && !showNoteInput && !editingNote && !milestone.note && (
             <button onClick={() => { setShowNoteInput(true); setNoteInput('') }}
               className="mt-1 text-xs text-gray-300 hover:text-gray-500 transition-colors">
-              + 備注
+              {t('detail.milestone.addNote')}
             </button>
           )}
 
@@ -493,7 +500,7 @@ function MilestoneItem({
             <input autoFocus value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') submitUrl(); if (e.key === 'Escape') { setShowUrlInput(false); setUrlInput('') } }}
               onBlur={submitUrl}
-              placeholder="貼上連結... (Enter 確認)"
+              placeholder={t('detail.milestone.urlPlaceholder')}
               className="mt-1.5 w-full text-xs text-gray-500 placeholder-gray-300 bg-transparent outline-none border-b border-gray-200 pb-0.5 focus:border-indigo-300"
             />
           )}
@@ -514,7 +521,7 @@ function MilestoneItem({
           {isOwner && !showUrlInput && !milestone.url && (
             <button onClick={() => { setShowUrlInput(true); setUrlInput('') }}
               className="mt-1 text-xs text-gray-300 hover:text-gray-500 transition-colors">
-              + 連結
+              {t('detail.milestone.addUrl')}
             </button>
           )}
         </div>

@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Client } from '@elastic/elasticsearch'
 import type { AuditLogEntry } from './audit-log.interface'
+import { isGlobalRole } from '../../common/utils/region.util'
+import type { SessionUser } from '../../common/types/request.types'
 
 const INDEX = 'audit-logs'
 
@@ -41,30 +43,39 @@ export class AuditService {
   async ensureIndex(): Promise<void> {
     try {
       const exists = await this.es.indices.exists({ index: INDEX })
-      if (exists) return
 
-      await this.es.indices.create({
-        index: INDEX,
-        mappings: {
-          dynamic: 'strict',
-          properties: {
-            userId:     { type: 'keyword' },
-            userName:   { type: 'keyword' },
-            action:     { type: 'keyword' },
-            outcome:    { type: 'keyword' },
-            resource:   { type: 'keyword' },
-            resourceId: { type: 'keyword' },
-            httpMethod: { type: 'keyword' },
-            httpPath:   { type: 'keyword' },
-            httpStatus: { type: 'integer' },
-            ipAddress:  { type: 'ip' },
-            userAgent:  { type: 'text', index: false },
-            detail:     { type: 'object', dynamic: true },
-            createdAt:  { type: 'date' },
+      if (!exists) {
+        await this.es.indices.create({
+          index: INDEX,
+          mappings: {
+            dynamic: 'strict',
+            properties: {
+              userId:       { type: 'keyword' },
+              userName:     { type: 'keyword' },
+              userRegionId: { type: 'keyword' },
+              action:       { type: 'keyword' },
+              outcome:      { type: 'keyword' },
+              resource:     { type: 'keyword' },
+              resourceId:   { type: 'keyword' },
+              httpMethod:   { type: 'keyword' },
+              httpPath:     { type: 'keyword' },
+              httpStatus:   { type: 'integer' },
+              ipAddress:    { type: 'ip' },
+              userAgent:    { type: 'text', index: false },
+              detail:       { type: 'object', dynamic: true },
+              createdAt:    { type: 'date' },
+            },
           },
-        },
-      } as any)
-      this.logger.log('audit-logs index created')
+        } as any)
+        this.logger.log('audit-logs index created')
+      } else {
+        // Add userRegionId to existing index (no-op if already present)
+        await this.es.indices.putMapping({
+          index: INDEX,
+          properties: { userRegionId: { type: 'keyword' } },
+        } as any)
+        this.logger.log('audit-logs mapping updated')
+      }
     } catch (err) {
       this.logger.error('Failed to ensure audit-logs index', err)
     }
@@ -78,10 +89,11 @@ export class AuditService {
     toDate?: string
     from?: number
     size?: number
-  } = {}): Promise<{ data: object[]; total: number }> {
+  } = {}, user?: SessionUser): Promise<{ data: object[]; total: number }> {
     const { q, outcome, resource, fromDate, toDate, from = 0, size = 50 } = opts
     try {
       const filters: object[] = []
+      if (user && !isGlobalRole(user)) filters.push({ term: { userRegionId: user.regionId } })
       if (outcome)              filters.push({ term: { outcome } })
       if (resource)             filters.push({ term: { resource } })
       if (fromDate || toDate)   filters.push({ range: { createdAt: { ...(fromDate && { gte: fromDate }), ...(toDate && { lte: toDate }) } } })

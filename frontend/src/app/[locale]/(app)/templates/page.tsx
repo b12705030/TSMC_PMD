@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
@@ -19,6 +20,8 @@ type QuestionDraft = { questionText: string; questionType: QuestionType; require
 const EMPTY_QUESTION: Omit<QuestionDraft, 'orderIndex'> = { questionText: '', questionType: 'Text', required: true, options: [] }
 
 export default function TemplatesPage() {
+  const t = useTranslations('templates')
+  const tCommon = useTranslations('common')
   const { user } = useAuth()
   const { templates, isLoading, error: loadError, createTemplate, publishTemplate } = useTemplates()
   const { cycles } = useCycles()
@@ -40,19 +43,14 @@ export default function TemplatesPage() {
   const [error, setError] = useState('')
   const [pendingPublishId, setPendingPublishId] = useState<string | null>(null)
 
-  const [regions, setRegions] = useState<{ id: string; name: string; code: string }[]>([])
   const [form, setForm] = useState<Omit<CreateTemplatePayload, 'questions'>>({
-    name: '', cycleId: '', regionId: undefined, appliesGrades: [], applyTitles: [],
+    name: '', cycleId: '', appliesGrades: [], applyTitles: [],
   })
-
-  useEffect(() => {
-    api.get<{ id: string; name: string; code: string }[]>('/users/regions').then(setRegions).catch(() => {})
-  }, [])
   const [titleSearch, setTitleSearch] = useState('')
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ ...EMPTY_QUESTION, orderIndex: 0 }])
 
-  const filteredTitles = jobTitles.filter((t) =>
-    t.toLowerCase().includes(titleSearch.toLowerCase())
+  const filteredTitles = jobTitles.filter((title) =>
+    title.toLowerCase().includes(titleSearch.toLowerCase())
   )
 
   const isHR = user?.role === 'RegionalHR' || user?.role === 'Admin'
@@ -96,7 +94,7 @@ export default function TemplatesPage() {
 
   function resetModal() {
     setShowModal(false)
-    setForm({ name: '', cycleId: '', regionId: undefined, appliesGrades: [], applyTitles: [] })
+    setForm({ name: '', cycleId: '', appliesGrades: [], applyTitles: [] })
     setQuestions([{ ...EMPTY_QUESTION, orderIndex: 0 }])
     setTitleSearch('')
     setError('')
@@ -107,24 +105,21 @@ export default function TemplatesPage() {
     try {
       await publishTemplate(pendingPublishId)
     } catch (e) {
-      alert(e instanceof Error ? e.message : '發布失敗')
+      alert(e instanceof Error ? e.message : t('errors.publishFailed'))
     } finally {
       setPendingPublishId(null)
     }
   }
 
   const publishedCycles = cycles.filter((c) => c.status !== 'Completed')
-  const selectedCycle = publishedCycles.find((c) => c.id === form.cycleId)
-  const isAdminMultiRegion = user?.role === 'Admin' && (selectedCycle?.regions?.length ?? 0) > 1
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
-    if (isAdminMultiRegion && !form.regionId) { setError('跨地區週期請選擇此模板適用的地區'); return }
-    if (form.appliesGrades.length === 0) { setError('請選擇至少一個職等'); return }
-    if (form.applyTitles.length === 0)   { setError('請選擇至少一個職稱'); return }
-    if (questions.some((q) => !q.questionText.trim())) { setError('題目內容不得為空'); return }
+    if (form.appliesGrades.length === 0) { setError(t('errors.noGrade')); return }
+    if (form.applyTitles.length === 0)   { setError(t('errors.noTitle')); return }
+    if (questions.some((q) => !q.questionText.trim())) { setError(t('errors.emptyQuestion')); return }
     if (questions.some((q) => q.questionType === 'MultipleChoice' && q.options.filter((o) => o.trim()).length < 2)) {
-      setError('多選題至少需要 2 個有效選項'); return
+      setError(t('errors.minOptions')); return
     }
     setError('')
     setSubmitting(true)
@@ -132,7 +127,7 @@ export default function TemplatesPage() {
       await createTemplate({ ...form, questions })
       resetModal()
     } catch {
-      setError('建立失敗，請稍後再試。')
+      setError(t('errors.createFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -141,36 +136,36 @@ export default function TemplatesPage() {
   return (
     <div>
       <PageHeader
-        title="評核模板管理"
-        description="依職等與職稱管理績效評核表單模板。"
+        title={t('pageTitle')}
+        description={t('pageDesc')}
         actions={isHR ? (
-          <button className="btn-primary" onClick={() => setShowModal(true)}>+ 新增模板</button>
+          <button className="btn-primary" onClick={() => setShowModal(true)}>{t('addBtn')}</button>
         ) : undefined}
       />
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : loadError ? (
         <ErrorBanner message={loadError} />
       ) : templates.length === 0 ? (
         <EmptyState
-          title="尚無評核模板"
-          description="建立模板以統一績效評核標準。"
-          action={isHR ? <button className="btn-primary" onClick={() => setShowModal(true)}>+ 新增模板</button> : undefined}
+          title={t('empty.title')}
+          description={t('empty.desc')}
+          action={isHR ? <button className="btn-primary" onClick={() => setShowModal(true)}>{t('empty.btn')}</button> : undefined}
         />
       ) : (
         <div className="space-y-3">
-          {templates.map((t) => (
-            <TemplateRow key={t.id} template={t} onPublish={() => setPendingPublishId(t.id)} isHR={isHR} />
+          {templates.map((tmpl) => (
+            <TemplateRow key={tmpl.id} template={tmpl} onPublish={() => setPendingPublishId(tmpl.id)} isHR={isHR} />
           ))}
         </div>
       )}
 
       <ConfirmDialog
         open={!!pendingPublishId}
-        title="確認發布此模板？"
-        description="發布後，此模板將開放評核使用，HR 基礎題目將鎖定無法修改。"
-        confirmLabel="發布"
+        title={t('publishConfirm.title')}
+        description={t('publishConfirm.desc')}
+        confirmLabel={t('publishConfirm.btn')}
         onConfirm={handlePublishConfirmed}
         onCancel={() => setPendingPublishId(null)}
       />
@@ -178,68 +173,42 @@ export default function TemplatesPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="mb-5 text-lg font-semibold text-gray-900">新增評核模板</h2>
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">{t('modal.title')}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Basic info */}
               <div className="space-y-4">
                 <div>
-                  <label className="label">模板名稱</label>
+                  <label className="label">{t('modal.name')}</label>
                   <input
                     className="input"
                     required
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                    placeholder="例：工程師 L2–L3 年度考核"
+                    placeholder={t('modal.namePlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="label">績效週期</label>
+                  <label className="label">{t('modal.cycle')}</label>
                   <select
                     className="input"
                     required
                     value={form.cycleId}
                     onChange={(e) => setForm((p) => ({ ...p, cycleId: e.target.value, regionId: undefined }))}
                   >
-                    <option value="">— 選擇週期 —</option>
+                    <option value="">{t('modal.cycleDefault')}</option>
                     {publishedCycles.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
                 </div>
 
-                {isAdminMultiRegion && (
-                  <div>
-                    <label className="label">
-                      適用地區
-                      <span className="ml-1 text-xs font-normal text-red-400">（跨地區週期必填）</span>
-                    </label>
-                    <select
-                      className="input"
-                      value={form.regionId ?? ''}
-                      onChange={(e) => setForm((p) => ({ ...p, regionId: e.target.value || undefined }))}
-                    >
-                      <option value="">— 選擇地區 —</option>
-                      {selectedCycle?.regions.map((regionName) => {
-                        const rec = regions.find((r) => r.name === regionName)
-                        return (
-                          <option key={regionName} value={rec?.id ?? regionName}>
-                            {regionName}
-                          </option>
-                        )
-                      })}
-                    </select>
-                  </div>
-                )}
-
-                {/* Applies to Grade */}
                 <div>
                   <label className="label">
-                    適用職等
-                    <span className="ml-1 text-xs font-normal text-gray-400">（多選）</span>
+                    {t('modal.grades')}
+                    <span className="ml-1 text-xs font-normal text-gray-400">{t('modal.gradesMulti')}</span>
                   </label>
                   {jobLevels.length === 0 ? (
-                    <p className="text-sm text-gray-400">載入中...</p>
+                    <p className="text-sm text-gray-400">{tCommon('loading')}</p>
                   ) : (
                     <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
                       {jobLevels.map((level) => (
@@ -264,19 +233,18 @@ export default function TemplatesPage() {
                   )}
                 </div>
 
-                {/* Applies to Title */}
                 <div>
                   <label className="label">
-                    適用職稱
-                    <span className="ml-1 text-xs font-normal text-gray-400">（多選）</span>
+                    {t('modal.titles')}
+                    <span className="ml-1 text-xs font-normal text-gray-400">{t('modal.titlesMulti')}</span>
                   </label>
                   {jobTitles.length === 0 ? (
-                    <p className="text-sm text-gray-400">載入中...</p>
+                    <p className="text-sm text-gray-400">{tCommon('loading')}</p>
                   ) : (
                     <>
                     <input
                       className="input mb-2"
-                      placeholder="搜尋職稱..."
+                      placeholder={t('modal.titleSearch')}
                       value={titleSearch}
                       onChange={(e) => setTitleSearch(e.target.value)}
                     />
@@ -300,7 +268,7 @@ export default function TemplatesPage() {
                         </label>
                       ))}
                       {filteredTitles.length === 0 && (
-                        <p className="text-sm text-gray-400 p-1">找不到符合的職稱</p>
+                        <p className="text-sm text-gray-400 p-1">{t('modal.noTitles')}</p>
                       )}
                     </div>
                     </>
@@ -308,11 +276,10 @@ export default function TemplatesPage() {
                 </div>
               </div>
 
-              {/* Questions */}
               <div>
                 <p className="label mb-2">
-                  基礎題目
-                  <span className="text-xs font-normal text-gray-400">（發布後鎖定）</span>
+                  {t('modal.questions')}
+                  <span className="text-xs font-normal text-gray-400">{t('modal.questionsLocked')}</span>
                 </p>
                 <div className="space-y-3">
                   {questions.map((q, i) => (
@@ -323,7 +290,7 @@ export default function TemplatesPage() {
                           required
                           value={q.questionText}
                           onChange={(e) => updateQuestion(i, 'questionText', e.target.value)}
-                          placeholder={`Question ${i + 1}`}
+                          placeholder={t('modal.questionPlaceholder', { index: i + 1 })}
                         />
                         <div className="flex gap-2">
                           <select
@@ -331,7 +298,9 @@ export default function TemplatesPage() {
                             value={q.questionType}
                             onChange={(e) => updateQuestion(i, 'questionType', e.target.value)}
                           >
-                            {QUESTION_TYPES.map((t) => <option key={t}>{t}</option>)}
+                            {QUESTION_TYPES.map((type) => (
+                              <option key={type} value={type}>{t(`questionType.${type}`)}</option>
+                            ))}
                           </select>
                           <label className="flex items-center gap-1.5 text-sm text-gray-600">
                             <input
@@ -339,12 +308,12 @@ export default function TemplatesPage() {
                               checked={q.required}
                               onChange={(e) => updateQuestion(i, 'required', e.target.checked)}
                             />
-                            必填
+                            {t('modal.required')}
                           </label>
                         </div>
                         {q.questionType === 'MultipleChoice' && (
                           <div className="space-y-1.5 rounded-lg bg-gray-50 p-3">
-                            <p className="text-xs font-medium text-gray-500">選項（至少 2 個）</p>
+                            <p className="text-xs font-medium text-gray-500">{t('modal.options')}</p>
                             {q.options.map((opt, oi) => (
                               <div key={oi} className="flex gap-2">
                                 <input
@@ -355,7 +324,7 @@ export default function TemplatesPage() {
                                     opts[oi] = e.target.value
                                     updateQuestion(i, 'options', opts)
                                   }}
-                                  placeholder={`選項 ${oi + 1}`}
+                                  placeholder={t('modal.optionPlaceholder', { index: oi + 1 })}
                                 />
                                 {q.options.length > 2 && (
                                   <button
@@ -370,7 +339,7 @@ export default function TemplatesPage() {
                               type="button"
                               onClick={() => updateQuestion(i, 'options', [...q.options, ''])}
                               className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
-                            >+ 新增選項</button>
+                            >{t('modal.addOption')}</button>
                           </div>
                         )}
                       </div>
@@ -387,7 +356,7 @@ export default function TemplatesPage() {
                   ))}
                 </div>
                 <button type="button" onClick={addQuestion} className="btn-link mt-2">
-                  + 新增題目
+                  {t('modal.addQuestion')}
                 </button>
               </div>
 
@@ -395,10 +364,10 @@ export default function TemplatesPage() {
 
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" className="btn-secondary" onClick={resetModal}>
-                  取消
+                  {tCommon('cancel')}
                 </button>
                 <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? '建立中...' : '建立模板'}
+                  {submitting ? t('modal.creating') : t('modal.createBtn')}
                 </button>
               </div>
             </form>
@@ -418,6 +387,7 @@ function TemplateRow({
   onPublish: () => void
   isHR: boolean
 }) {
+  const t = useTranslations('templates')
   const baseCount   = template.questions.filter((q) => !q.isCustom).length
   const customCount = template.questions.filter((q) => q.isCustom).length
 
@@ -432,20 +402,20 @@ function TemplateRow({
           <StatusBadge status={template.status} />
         </div>
         <p className="mt-0.5 text-sm text-gray-500">
-          職等：{gradesLabel} · 職稱：{titlesLabel}
+          {t('card.grades', { value: gradesLabel })} · {t('card.titles', { value: titlesLabel })}
         </p>
         <p className="mt-1 text-xs text-gray-400">
-          {baseCount} 題基礎題目
-          {customCount > 0 && ` · ${customCount} 題自訂題目`}
+          {t('card.baseQ', { count: baseCount })}
+          {customCount > 0 && ` ${t('card.customQ', { count: customCount })}`}
         </p>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
         {isHR && template.status === 'Draft' && (
-          <button className="btn-secondary text-xs" onClick={onPublish}>發布</button>
+          <button className="btn-secondary text-xs" onClick={onPublish}>{t('card.publishBtn')}</button>
         )}
         <Link href={`/templates/${template.id}`} className="btn-link text-sm">
-          查看 →
+          {t('card.viewBtn')}
         </Link>
       </div>
     </div>

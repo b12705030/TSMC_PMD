@@ -4,6 +4,8 @@ import { AuthGuard } from '../../common/guards/auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
 import { Role } from '../../common/enums/role.enum'
+import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import type { SessionUser } from '../../common/types/request.types'
 
 @Controller('audit')
 @UseGuards(AuthGuard, RolesGuard)
@@ -13,6 +15,7 @@ export class AuditController {
 
   @Get()
   async getLogs(
+    @CurrentUser() user: SessionUser,
     @Query('q') q = '',
     @Query('outcome') outcome?: string,
     @Query('resource') resource?: string,
@@ -29,6 +32,6 @@ export class AuditController {
       toDate,
       from: Number(from),
       size: Number(size),
-    })
+    }, user)
   }
 }

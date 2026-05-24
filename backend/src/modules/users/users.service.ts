@@ -54,12 +54,11 @@ export class UsersService {
     }
   }
 
-  async getDistinctRegions(): Promise<string[]> {
-    const regions = await this.prisma.region.findMany({
-      select: { name: true },
+  async getDistinctRegions() {
+    return this.prisma.region.findMany({
+      select: { id: true, name: true, code: true },
       orderBy: { name: 'asc' },
     })
-    return regions.map((r) => r.name)
   }
 
   async getDistinctJobLevels(user: SessionUser): Promise<string[]> {

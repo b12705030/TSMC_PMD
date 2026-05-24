@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateTemplateDto } from './dto/create-template.dto'
 import type { AddCustomQuestionDto } from './dto/add-question.dto'
@@ -15,9 +16,9 @@ export class TemplatesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTemplates(user: SessionUser) {
-    const where = (user.role === Role.Admin || user.role === (Role as any).GlobalHR)
+    const where = isGlobalRole(user)
       ? {}
-      : { region: { name: user.region } }
+      : { regionId: user.regionId }
     const templates = await this.prisma.formTemplate.findMany({
       where,
       include: {
@@ -63,37 +64,12 @@ export class TemplatesService {
   async createTemplate(dto: CreateTemplateDto, user: SessionUser) {
     const cycle = await this.prisma.performanceCycle.findUnique({ where: { id: dto.cycleId } })
     if (!cycle) throw new BadRequestException('Cycle not found')
-    if (user.role !== Role.Admin && !cycle.regions.includes(user.region)) {
+    if (!isGlobalRole(user) && cycle.regionId !== user.regionId) {
       throw new ForbiddenException('Cycle does not belong to your region')
     }
 
-    // Resolve regionId with strict validation
-    let regionId: string
-    if (user.role === Role.Admin) {
-      if (cycle.regions.length === 0) {
-        throw new BadRequestException('此週期尚未設定 Region')
-      }
-      if (cycle.regions.length > 1) {
-        // Multi-region: Admin must explicitly specify regionId
-        if (!dto.regionId) {
-          throw new BadRequestException('此週期跨多個 Region，建立模板時必須指定 regionId')
-        }
-        const region = await this.prisma.region.findUnique({ where: { id: dto.regionId } })
-        if (!region) throw new BadRequestException('指定的 Region 不存在')
-        if (!cycle.regions.includes(region.name)) {
-          throw new BadRequestException('指定的 Region 不屬於此週期')
-        }
-        regionId = region.id
-      } else {
-        // Single-region: Admin inherits the only region (dto.regionId ignored)
-        const region = await this.prisma.region.findFirst({ where: { name: cycle.regions[0] } })
-        if (!region) throw new BadRequestException('找不到對應的 Region')
-        regionId = region.id
-      }
-    } else {
-      // RegionalHR: always uses own region; dto.regionId is ignored
-      regionId = user.regionId
-    }
+    // Template region always follows the cycle's region
+    const regionId = cycle.regionId
 
     return this.prisma.formTemplate.create({
       data: {
@@ -215,7 +191,7 @@ export class TemplatesService {
   }
 
   private assertRegionAccess(templateRegionId: string, user: SessionUser) {
-    if (user.role === Role.Admin || user.role === (Role as any).GlobalHR) return
+    if (isGlobalRole(user)) return
     if (templateRegionId !== user.regionId) throw new ForbiddenException()
   }
 }

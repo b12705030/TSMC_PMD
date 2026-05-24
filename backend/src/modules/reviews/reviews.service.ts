@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { QuestionType, Role, ReviewStatus } from '@prisma/client'
+import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { SaveAnswersDto, SaveSupervisorReviewDto, CalibrateDto } from './dto/review.dto'
 import type { TemplateQuestion } from '@prisma/client'
@@ -8,7 +9,7 @@ import type { TemplateQuestion } from '@prisma/client'
 const REVIEW_INCLUDE = {
   cycle:      true,
   template:   { include: { questions: { orderBy: { orderIndex: 'asc' as const } } } },
-  employee:   { select: { id: true, name: true, employeeId: true, jobLevel: true, jobTitle: true, departmentId: true, managerId: true } },
+  employee:   { select: { id: true, name: true, employeeId: true, jobLevel: true, jobTitle: true, departmentId: true, managerId: true, regionId: true } },
   supervisor: { select: { id: true, name: true, employeeId: true } },
 }
 
@@ -37,8 +38,16 @@ export class ReviewsService {
 
   // Supervisor: reviews waiting for their action
   async getTeamReviews(user: SessionUser) {
-    if (user.role === Role.Admin) {
+    if (isGlobalRole(user)) {
       const reviews = await this.prisma.performanceReview.findMany({
+        include: REVIEW_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      })
+      return reviews.map((r) => this.scopeQuestions(r))
+    }
+    if (user.role === Role.RegionalHR) {
+      const reviews = await this.prisma.performanceReview.findMany({
+        where:   { employee: { regionId: user.regionId } },
         include: REVIEW_INCLUDE,
         orderBy: { createdAt: 'desc' },
       })
@@ -70,8 +79,20 @@ export class ReviewsService {
 
   // Manager: all reviews in a cycle for calibration
   async getCycleReviews(cycleId: string, user: SessionUser) {
-    if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
-    const where = user.role === Role.Admin
+    if (user.role !== Role.Manager && user.role !== Role.RegionalHR && !isGlobalRole(user)) {
+      throw new ForbiddenException()
+    }
+
+    if (user.role === Role.RegionalHR) {
+      const reviews = await this.prisma.performanceReview.findMany({
+        where:   { cycleId, employee: { regionId: user.regionId } },
+        include: REVIEW_INCLUDE,
+        orderBy: [{ grade: 'asc' }, { rank: 'asc' }, { createdAt: 'asc' }],
+      })
+      return reviews.map((r) => this.scopeQuestions(r))
+    }
+
+    const where = isGlobalRole(user)
       ? { cycleId }
       : {
           cycleId,
@@ -183,7 +204,7 @@ export class ReviewsService {
   // Manager: calibrate a single review (set grade / rank)
   async calibrate(id: string, user: SessionUser, dto: CalibrateDto) {
     const review = await this.findAndCheck(id)
-    if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
+    if (user.role !== Role.Manager && !isGlobalRole(user)) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingManagerApproval) throw new ForbiddenException()
     await this.assertAccess(review, user)
     return this.prisma.performanceReview.update({
@@ -194,7 +215,7 @@ export class ReviewsService {
 
   // Supervisor / Manager: reviews for a specific employee
   async getReviewsByEmployee(employeeId: string, user: SessionUser) {
-    if (user.role !== Role.Supervisor && user.role !== Role.Manager && user.role !== Role.Admin) {
+    if (user.role !== Role.Supervisor && user.role !== Role.Manager && !isGlobalRole(user)) {
       throw new ForbiddenException()
     }
     const employee = await this.prisma.user.findUnique({
@@ -202,6 +223,10 @@ export class ReviewsService {
       include: { supervisor: true },
     })
     if (!employee) throw new NotFoundException('Employee not found')
+
+    // Region isolation
+    if (!isGlobalRole(user) && employee.regionId !== user.regionId) throw new ForbiddenException()
+
     if (user.role === Role.Supervisor && employee.supervisorId !== user.id) throw new ForbiddenException()
     if (user.role === Role.Manager) {
       const isDirectReport = employee.managerId === user.id && !employee.supervisorId
@@ -218,7 +243,7 @@ export class ReviewsService {
 
   // Manager: publish all PendingManagerApproval reviews in a cycle
   async publishAll(cycleId: string, user: SessionUser) {
-    if (user.role !== Role.Manager && user.role !== Role.Admin) throw new ForbiddenException()
+    if (user.role !== Role.Manager && !isGlobalRole(user)) throw new ForbiddenException()
     const pending = await this.prisma.performanceReview.findMany({
       where: {
         cycleId,
@@ -342,9 +367,16 @@ export class ReviewsService {
   }
 
   private async assertAccess(review: { employeeId: string; supervisorId: string | null }, user: SessionUser) {
-    if (user.role === Role.Admin) return
+    if (isGlobalRole(user)) return
     if (review.employeeId === user.id) return
     if (review.supervisorId === user.id) return
+
+    // RegionalHR can access any review within their region
+    if (user.role === Role.RegionalHR) {
+      const emp = await this.prisma.user.findUnique({ where: { id: review.employeeId } })
+      if (emp?.regionId !== user.regionId) throw new ForbiddenException()
+      return
+    }
 
     if (user.role === Role.Manager) {
       const employee = await this.prisma.user.findUnique({
@@ -352,6 +384,8 @@ export class ReviewsService {
         include: { supervisor: true },
       })
       if (!employee) throw new ForbiddenException()
+      // Region check
+      if (employee.regionId !== user.regionId) throw new ForbiddenException()
       const isDirectReport = employee.managerId === user.id && !employee.supervisorId
       const isViaSuper     = (employee as any).supervisor?.managerId === user.id
       if (isDirectReport || isViaSuper) return

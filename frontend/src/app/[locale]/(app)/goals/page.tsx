@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
@@ -7,15 +8,17 @@ import { ErrorBanner } from '@/components/ErrorBanner'
 import { useGoals } from '@/modules/goals/hooks/useGoals'
 import type { Goal, GoalStatus } from '@/types'
 
-const STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> = {
-  Draft:             { label: '草稿',   color: 'bg-gray-300',   pct: 0   },
-  PendingApproval:   { label: '待審核', color: 'bg-yellow-400', pct: 30  },
-  Approved:          { label: '進行中', color: 'bg-indigo-500', pct: 65  },
-  Completed:         { label: '已完成', color: 'bg-green-500',  pct: 100 },
-}
-
 export default function GoalsPage() {
+  const t = useTranslations('goals')
+  const tCommon = useTranslations('common')
   const { goals, isLoading, error, refetch } = useGoals()
+
+  const STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> = {
+    Draft:             { label: t('statusLabel.Draft'),           color: 'bg-gray-300',   pct: 0   },
+    PendingApproval:   { label: t('statusLabel.PendingApproval'), color: 'bg-yellow-400', pct: 30  },
+    Approved:          { label: t('statusLabel.Approved'),        color: 'bg-indigo-500', pct: 65  },
+    Completed:         { label: t('statusLabel.Completed'),       color: 'bg-green-500',  pct: 100 },
+  }
 
   const completedCount = goals.filter((g) => g.status === 'Completed').length
   const activeCount    = goals.filter((g) => g.status === 'Approved').length
@@ -23,48 +26,48 @@ export default function GoalsPage() {
   return (
     <div>
       <PageHeader
-        title="我的目標"
-        description="設定並追蹤這個績效週期的 SMART 目標。"
+        title={t('pageTitle')}
+        description={t('pageDesc')}
         actions={
           <Link href="/goals/new" className="btn-primary">
-            + 新增目標
+            {t('addBtn')}
           </Link>
         }
       />
 
       {error && <div className="mb-4"><ErrorBanner message={error} onRetry={refetch} /></div>}
 
-      {/* Summary bar */}
       {!isLoading && !error && goals.length > 0 && (
         <div className="mb-6 flex gap-4">
-          <StatChip icon="total"    value={goals.length}   label="目標總數" />
-          <StatChip icon="active"   value={activeCount}    label="進行中" />
-          <StatChip icon="complete" value={completedCount} label="已完成" />
+          <StatChip icon="total"    value={goals.length}   label={t('stats.total')} />
+          <StatChip icon="active"   value={activeCount}    label={t('stats.active')} />
+          <StatChip icon="complete" value={completedCount} label={t('stats.completed')} />
         </div>
       )}
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <p className="text-muted">{tCommon('loading')}</p>
       ) : error ? null : goals.length === 0 ? (
         <EmptyState
-          title="還沒有任何目標"
-          description="設定你的第一個 SMART 目標，讓這個績效週期有個好的開始。"
+          title={t('empty.title')}
+          description={t('empty.desc')}
           action={
             <Link href="/goals/new" className="btn-primary">
-              設定第一個目標
+              {t('empty.btn')}
             </Link>
           }
         />
       ) : (
         <div className="space-y-3">
-          {goals.map((goal) => <GoalCard key={goal.id} goal={goal} />)}
+          {goals.map((goal) => <GoalCard key={goal.id} goal={goal} STATUS_CONFIG={STATUS_CONFIG} />)}
         </div>
       )}
     </div>
   )
 }
 
-function GoalCard({ goal }: { goal: Goal }) {
+function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> }) {
+  const t = useTranslations('goals')
   const config  = STATUS_CONFIG[goal.status]
   const dueDate = new Date(goal.dueDate)
   const isOverdue = dueDate < new Date() && goal.status !== 'Completed'
@@ -87,7 +90,6 @@ function GoalCard({ goal }: { goal: Goal }) {
         </span>
       </div>
 
-      {/* Progress bar */}
       <div className="mb-3">
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
@@ -97,21 +99,20 @@ function GoalCard({ goal }: { goal: Goal }) {
         </div>
       </div>
 
-      {/* Meta row */}
       <div className="flex items-center gap-4 text-xs text-gray-400">
         <span className={isOverdue ? 'text-red-500 font-medium' : ''}>
           {goal.status === 'Completed'
-            ? `已完成`
+            ? t('deadline.completed')
             : isOverdue
-            ? `已逾期 ${Math.abs(daysLeft)} 天`
+            ? t('deadline.overdue', { days: Math.abs(daysLeft) })
             : daysLeft <= 7
-            ? `還剩 ${daysLeft} 天`
-            : `截止 ${dueDate.toLocaleDateString('zh-TW')}`
+            ? t('deadline.remaining', { days: daysLeft })
+            : t('deadline.due', { date: dueDate.toLocaleDateString() })
           }
         </span>
-        <span>{goal.type === 'Personal' ? '個人目標' : '團隊目標'}</span>
+        <span>{goal.type === 'Personal' ? t('type.Personal') : t('type.Team')}</span>
         {goal.progressUpdates.length > 0 && (
-          <span>{goal.progressUpdates.length} 次進度更新</span>
+          <span>{t('progressCount', { count: goal.progressUpdates.length })}</span>
         )}
       </div>
     </Link>

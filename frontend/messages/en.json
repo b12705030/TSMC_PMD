@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "System Admin",
+    "GlobalHR": "Global HR",
     "RegionalHR": "Regional HR",
     "Manager": "Manager",
     "Supervisor": "Supervisor",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "Loading...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "loadError": "Failed to load"
   },
   "login": {
     "title": "PMS",
@@ -93,6 +96,7 @@
     "colOutcome": "Outcome",
     "colResourceId": "Resource ID",
     "colIpAddress": "IP Address",
+    "colRequest": "Request Path",
     "empty": "No audit records found.",
     "searchPlaceholder": "Search by action, resource, user…",
     "outcomeAll": "All outcomes",
@@ -126,7 +130,7 @@
       "cycleName": "Cycle Name",
       "cycleNamePlaceholder": "e.g. 2025 Annual Performance Review",
       "cycleType": "Type",
-      "regions": "Applicable Regions",
+      "regions": "Applicable Region",
       "autoRegion": "(Your region is applied automatically)",
       "goalPeriod": "Goal Setting Period",
       "reviewPeriod": "Review Period",
@@ -136,7 +140,7 @@
       "createBtn": "Create Cycle",
       "saving": "Saving...",
       "saveBtn": "Save Changes",
-      "errorRegion": "Please select at least one region"
+      "errorRegion": "Please select a region"
     },
     "card": {
       "edit": "Edit",
@@ -277,6 +281,386 @@
       "published": "Published",
       "draftWarning": "{count} template draft(s) not yet published",
       "draftWarningDesc": "Templates must be published before they are automatically applied when advancing the cycle"
+    }
+  },
+  "templates": {
+    "pageTitle": "Template Management",
+    "pageDesc": "Manage performance review form templates by grade and title.",
+    "addBtn": "+ New Template",
+    "empty": {
+      "title": "No Review Templates",
+      "desc": "Create a template to standardize performance reviews.",
+      "btn": "+ New Template"
+    },
+    "publishConfirm": {
+      "title": "Confirm Publish?",
+      "desc": "Once published, this template will be applied to reviews. HR base questions will be locked.",
+      "btn": "Publish"
+    },
+    "modal": {
+      "title": "New Review Template",
+      "name": "Template Name",
+      "namePlaceholder": "e.g. Engineer L2–L3 Annual Review",
+      "cycle": "Performance Cycle",
+      "cycleDefault": "— Select Cycle —",
+      "grades": "Applicable Grades",
+      "gradesMulti": "(Multi-select)",
+      "titles": "Applicable Titles",
+      "titlesMulti": "(Multi-select)",
+      "titleSearch": "Search titles...",
+      "noTitles": "No matching titles",
+      "questions": "Base Questions",
+      "questionsLocked": "(Locked after publishing)",
+      "questionPlaceholder": "Question {index}",
+      "required": "Required",
+      "options": "Options (min. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOption": "+ Add Option",
+      "addQuestion": "+ Add Question",
+      "creating": "Creating...",
+      "createBtn": "Create Template"
+    },
+    "card": {
+      "grades": "Grade: {value}",
+      "titles": "Title: {value}",
+      "baseQ": "{count} base question(s)",
+      "customQ": "· {count} custom question(s)",
+      "publishBtn": "Publish",
+      "viewBtn": "View →"
+    },
+    "errors": {
+      "publishFailed": "Publish failed",
+      "noGrade": "Please select at least one grade",
+      "noTitle": "Please select at least one title",
+      "emptyQuestion": "Question text cannot be empty",
+      "minOptions": "Multiple choice requires at least 2 options",
+      "createFailed": "Creation failed. Please try again."
+    },
+    "detail": {
+      "baseSection": "Base Questions",
+      "baseBadge": "Locked — set by HR",
+      "baseEmpty": "No base questions.",
+      "customSection": "Custom Questions",
+      "customBadge": "Added by Manager",
+      "customEmptyManager": "No custom questions yet. Click the button above to add.",
+      "customEmpty": "No custom questions.",
+      "addBtn": "+ Add Question",
+      "deleteConfirmTitle": "Confirm delete this question?",
+      "deleteConfirmDesc": "This custom question will be permanently removed from the template. This cannot be undone.",
+      "deleteBtn": "Delete",
+      "modalTitle": "New Custom Question",
+      "qLabel": "Question",
+      "qPlaceholder": "Enter question text",
+      "typeLabel": "Type",
+      "optionsLabel": "Options (min. 2)",
+      "optionPlaceholder": "Option {index}",
+      "addOptionBtn": "+ Add Option",
+      "requiredLabel": "Required",
+      "adding": "Adding...",
+      "addBtnSubmit": "Add Question",
+      "errorMinOptions": "Multiple choice requires at least 2 options",
+      "errorEmpty": "Question text cannot be empty",
+      "errorFailed": "Failed to add. Please try again.",
+      "notFound": "Template not found."
+    },
+    "questionType": {
+      "Text": "Text",
+      "Rating": "Rating (1–5)",
+      "MultipleChoice": "Multiple Choice"
+    }
+  },
+  "goals": {
+    "pageTitle": "My Goals",
+    "pageDesc": "Set and track SMART goals for this performance cycle.",
+    "addBtn": "+ New Goal",
+    "stats": {
+      "total": "Total Goals",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "empty": {
+      "title": "No goals yet",
+      "desc": "Set your first SMART goal to start this cycle strong.",
+      "btn": "Set First Goal"
+    },
+    "statusLabel": {
+      "Draft": "Draft",
+      "PendingApproval": "Pending Approval",
+      "Approved": "Active",
+      "Completed": "Completed"
+    },
+    "type": {
+      "Personal": "Personal Goal",
+      "Team": "Team Goal"
+    },
+    "deadline": {
+      "completed": "Completed",
+      "overdue": "Overdue by {days} day(s)",
+      "remaining": "{days} day(s) remaining",
+      "due": "Due {date}"
+    },
+    "progressCount": "{count} progress update(s)",
+    "detail": {
+      "notFound": "Goal not found.",
+      "breadcrumb": "My Goals",
+      "milestonesProgress": "{done} / {total} milestones completed",
+      "milestone": {
+        "heading": "Milestones",
+        "addBtn": "+ Add",
+        "placeholder": "Milestone name...",
+        "add": "Add",
+        "empty": "No milestones yet. Click '+ Add' to start planning.",
+        "notePlaceholder": "Add a note... (Enter to confirm, Esc to skip)",
+        "urlPlaceholder": "Paste link... (Enter to confirm)",
+        "addNote": "+ Note",
+        "addUrl": "+ Link"
+      },
+      "smart": {
+        "description": "What do you want to achieve?",
+        "metric": "How will you know you succeeded?",
+        "targetValue": "Target number or standard",
+        "relevance": "Why is this goal important?"
+      },
+      "submit": {
+        "draftNote": "This draft is not visible to your supervisor yet.",
+        "submitBtn": "Submit for Approval",
+        "submitting": "Submitting...",
+        "pendingNote": "This goal is awaiting your review.",
+        "rejectBtn": "Return to Draft",
+        "approveBtn": "Approve Goal",
+        "processing": "Processing..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "My Performance Reviews",
+    "myDesc": "View and complete your performance review forms.",
+    "teamTitle": "Team Reviews",
+    "teamDesc": "View your team's review status and enter calibration.",
+    "teamDescSupervisor": "View and complete your direct reports' performance reviews.",
+    "empty": {
+      "title": "No reviews",
+      "desc": "The system creates review forms automatically when the cycle starts."
+    },
+    "teamEmpty": {
+      "title": "No team reviews",
+      "desc": "Reviews will appear here once employees submit their self-reviews."
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "Pending Self-Review",
+      "PendingSupervisorReview": "Pending Supervisor Review",
+      "PendingManagerApproval": "Pending Calibration",
+      "Published": "Published",
+      "Appealed": "Under Appeal"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "Pending Employee",
+      "PendingSupervisorReview": "Pending Supervisor",
+      "PendingManagerApproval": "Pending Calibration",
+      "Published": "Published",
+      "Appealed": "Under Appeal"
+    },
+    "cycleType": {
+      "Annual": "Annual",
+      "Quarterly": "Quarterly",
+      "Probation": "Probation"
+    },
+    "grade": "Grade {grade}",
+    "actionRequired": "→ Action Required",
+    "teamActionPending": "→ Pending Your Review",
+    "teamActionManager": "Pending Calibration",
+    "teamPendingBanner": "You have {count} review(s) pending",
+    "teamPendingCalibration": "{count} pending calibration & publish",
+    "calibrateBtn": "Enter Calibration",
+    "meta": {
+      "cycle": "Cycle",
+      "template": "Template",
+      "employee": "Employee",
+      "supervisor": "Supervisor",
+      "defaultSupervisor": "(Direct Supervisor)"
+    },
+    "detail": {
+      "title": "Performance Review",
+      "breadcrumbMy": "My Reviews",
+      "breadcrumbTeam": "Team Reviews",
+      "notFound": "Review not found.",
+      "saveFailed": "Save failed. Please try again.",
+      "submitFailed": "Submit failed. Please try again.",
+      "appealFailed": "Appeal submission failed. Please try again.",
+      "waitingEmployee": "Waiting for employee self-review",
+      "waitingEmployeeDesc": "Employee ({name}) has not completed their self-review yet.",
+      "published": {
+        "appealed": "Under Appeal",
+        "result": "Review Result Published",
+        "supervisorComment": "Supervisor Comment:",
+        "appealBtn": "Disagree? Submit Appeal →",
+        "appealSubmitted": "Your appeal has been submitted and is awaiting manager review.",
+        "appealLabel": "Reason for Appeal",
+        "appealPlaceholder": "Please explain in detail why you believe the review result is incorrect (min. 10 characters)...",
+        "appealNote": "Your appeal will be sent directly to your manager. Your direct supervisor will not see the content.",
+        "appealSubmitting": "Submitting...",
+        "appealConfirm": "Submit Appeal",
+        "cancel": "Cancel"
+      },
+      "sections": {
+        "answerPlaceholder": "Enter your answer...",
+        "employeeSelf": "Employee Self-Review",
+        "submitted": "(Submitted, cannot be edited)",
+        "supervisorPerQ": "Supervisor Comments by Question",
+        "noAnswer": "(No answer)",
+        "supervisorReview": "Supervisor Review",
+        "leftCol": "Employee Self-Review",
+        "rightCol": "Supervisor Comments",
+        "supAnswerPlaceholder": "Enter your comments for this question (optional)...",
+        "selfReadOnly": "Employee Self-Review",
+        "supReadOnly": "Supervisor Comments",
+        "noAnswerFilled": "(Not filled)",
+        "overallLabel": "Overall Review Comments",
+        "overallPlaceholder": "Describe your overall evaluation and the employee's performance...",
+        "overallEmpty": "—",
+        "gradeLabel": "Grade",
+        "gradeWarnO": "⚠ O (Outstanding) is reserved for the top few employees — please evaluate carefully.",
+        "gradeWarnU": "⚠ U (Unsatisfactory) will trigger PMD tracking — ensure sufficient evidence.",
+        "saving": "Saving...",
+        "saveDraft": "Save Draft",
+        "submitSelf": "Submit Self-Review",
+        "submitSup": "Submit Review",
+        "gradeRequired": "Please select a grade before submitting",
+        "confirmSelfTitle": "Confirm Submit Self-Review?",
+        "confirmSupTitle": "Confirm Submit Review?",
+        "confirmSelfDesc": "Once submitted, this cannot be modified. Confirm submission?",
+        "confirmSupDesc": "Once submitted, this cannot be modified. Confirm submission?",
+        "confirming": "Submitting...",
+        "confirm": "Confirm Submit"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding",              "desc": "Top few — significantly exceeds expectations in all areas" },
+      "S_Plus":  { "label": "Excellent",                "desc": "Exceeds expectations across the board with significant contributions" },
+      "S":       { "label": "Satisfactory",             "desc": "Fully meets all goals and expectations" },
+      "S_Minus": { "label": "Partially Satisfactory",   "desc": "Mostly meets expectations; some areas need improvement" },
+      "I":       { "label": "Needs Improvement",        "desc": "Did not fully meet expectations; requires coaching" },
+      "U":       { "label": "Unsatisfactory",           "desc": "Significantly below standard; will enter PMD tracking" },
+      "tooltip": "ⓘ Grade Guide",
+      "noAnswer": "(No answer)"
+    },
+    "calibrate": {
+      "title": "Calibration: {cycleName}",
+      "desc": "Set grades and rankings for each employee, then publish all results at once.",
+      "breadcrumb": "Team Reviews",
+      "breadcrumbCalib": "Calibration",
+      "summary": "{total} review(s) · {pending} pending publish",
+      "compareBtn": "Side-by-Side →",
+      "publishBtn": "Publish All ({count})",
+      "publishing": "Publishing...",
+      "empty": "No reviews in calibration stage for this cycle.",
+      "table": {
+        "employee": "Employee",
+        "titleGrade": "Title / Grade",
+        "status": "Status",
+        "grade": "Grade",
+        "rank": "Rank",
+        "detail": "Detail",
+        "viewBtn": "View",
+        "rankPlaceholder": "Select grade first",
+        "rankTitle": "Please select a grade before setting a rank"
+      },
+      "publishConfirm": {
+        "title": "Confirm Publish All Reviews?",
+        "desc": "About to publish {count} review result(s). Employees will be able to view their grades. This cannot be undone.",
+        "btn": "Confirm Publish"
+      }
+    },
+    "compare": {
+      "title": "Side-by-Side: {cycleName}",
+      "desc": "View all employees' grades and supervisor comments to assist calibration decisions.",
+      "breadcrumb": "Team Reviews",
+      "breadcrumbCalib": "Calibration",
+      "breadcrumbCompare": "Side-by-Side",
+      "empty": "No review data for this cycle.",
+      "summary": "{count} review(s), sorted by grade (O → U)",
+      "supComment": "Supervisor Comment",
+      "noComment": "No comment",
+      "viewBtn": "View Full Review",
+      "rank": "Rank #{rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "Appeals Management",
+    "pageDesc": "Review and respond to employee performance appeals.",
+    "empty": {
+      "title": "No Appeals",
+      "desc": "No employee appeals have been submitted."
+    },
+    "cycle": "Cycle: {name}",
+    "submitted": "Submitted: {date}",
+    "resolved": "· Resolved: {date}",
+    "reviewBtn": "Review Appeal",
+    "viewBtn": "View Details",
+    "detail": {
+      "pageTitle": "Appeal Details",
+      "breadcrumbManager": "Appeals Management",
+      "breadcrumbEmployee": "My Reviews",
+      "breadcrumb": "Appeal Details",
+      "notFound": "Appeal not found or access denied.",
+      "respondFailed": "Response failed. Please try again.",
+      "backToReview": "← Back to Review",
+      "meta": {
+        "employee": "Employee",
+        "cycle": "Cycle",
+        "grade": "Review Grade",
+        "submitted": "Submitted"
+      },
+      "supComment": "Supervisor Comment",
+      "reason": "Employee Appeal Reason",
+      "response": {
+        "title": "Manager Response · {date}",
+        "formTitle": "Respond to Appeal",
+        "gradeLabel": "Adjust Grade",
+        "gradeDetail": "(Optional — if not selected, the original grade {grade} is retained)",
+        "textPlaceholder": "Explain your decision and reasoning (min. 5 characters)...",
+        "note": "After responding, the appeal will be marked as 'Resolved' and the review will return to 'Published'. The employee can view your response.",
+        "submitting": "Submitting...",
+        "submitBtn": "Submit Response & Resolve Appeal"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "My Team",
+    "pageDescManager": "View performance status of employees grouped by direct supervisor.",
+    "pageDescSupervisor": "Manage your direct reports.",
+    "table": {
+      "name": "Name",
+      "employeeId": "Employee ID",
+      "title": "Title",
+      "grade": "Grade",
+      "role": "Role",
+      "view": "View"
+    },
+    "empty": {
+      "title": "No Team Members",
+      "desc": "No one has been assigned to your department."
+    },
+    "notFound": "No matching team members.",
+    "supervisor": {
+      "view": "View →",
+      "noReports": "This supervisor currently has no direct reports.",
+      "count": "{count} employee(s)"
+    },
+    "directReports": {
+      "title": "Direct Reports",
+      "subtitle": "(Reporting directly to you, no direct supervisor)",
+      "count": "{count} employee(s)"
+    },
+    "employee": {
+      "department": "Department",
+      "breadcrumb": "My Team",
+      "notFound": "Employee not found.",
+      "goals": "Goals",
+      "noGoals": "No goals set.",
+      "deadline": "Due: {date}",
+      "reviews": "Review History",
+      "noReviews": "No review records."
     }
   }
 }

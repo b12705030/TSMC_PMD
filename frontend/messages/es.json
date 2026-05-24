@@ -37,6 +37,7 @@
   },
   "roles": {
     "Admin": "Administrador",
+    "GlobalHR": "RRHH Global",
     "RegionalHR": "RRHH Regional",
     "Manager": "Gerente",
     "Supervisor": "Supervisor",
@@ -54,7 +55,9 @@
   },
   "common": {
     "loading": "Cargando...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "loadError": "Error al cargar"
   },
   "login": {
     "title": "PMS",
@@ -93,6 +96,7 @@
     "colOutcome": "Resultado",
     "colResourceId": "ID de recurso",
     "colIpAddress": "Dirección IP",
+    "colRequest": "Ruta de solicitud",
     "empty": "No se encontraron registros de auditoría.",
     "searchPlaceholder": "Buscar por acción, recurso, usuario…",
     "outcomeAll": "Todos los resultados",
@@ -277,6 +281,386 @@
       "published": "Publicado",
       "draftWarning": "{count} borrador(es) de plantilla sin publicar",
       "draftWarningDesc": "Las plantillas deben publicarse antes de que se apliquen automáticamente al avanzar el ciclo"
+    }
+  },
+  "templates": {
+    "pageTitle": "Gestión de plantillas",
+    "pageDesc": "Gestionar plantillas de formularios de evaluación de rendimiento por grado y título.",
+    "addBtn": "+ Nueva plantilla",
+    "empty": {
+      "title": "Sin plantillas de evaluación",
+      "desc": "Cree una plantilla para estandarizar las evaluaciones de rendimiento.",
+      "btn": "+ Nueva plantilla"
+    },
+    "publishConfirm": {
+      "title": "¿Confirmar publicación?",
+      "desc": "Una vez publicada, esta plantilla se aplicará a las evaluaciones. Las preguntas base de RRHH quedarán bloqueadas.",
+      "btn": "Publicar"
+    },
+    "modal": {
+      "title": "Nueva plantilla de evaluación",
+      "name": "Nombre de la plantilla",
+      "namePlaceholder": "ej. Ingeniero L2–L3 Evaluación anual",
+      "cycle": "Ciclo de rendimiento",
+      "cycleDefault": "— Seleccionar ciclo —",
+      "grades": "Grados aplicables",
+      "gradesMulti": "(Selección múltiple)",
+      "titles": "Títulos aplicables",
+      "titlesMulti": "(Selección múltiple)",
+      "titleSearch": "Buscar títulos...",
+      "noTitles": "No hay títulos coincidentes",
+      "questions": "Preguntas base",
+      "questionsLocked": "(Bloqueado después de publicar)",
+      "questionPlaceholder": "Pregunta {index}",
+      "required": "Obligatorio",
+      "options": "Opciones (mín. 2)",
+      "optionPlaceholder": "Opción {index}",
+      "addOption": "+ Añadir opción",
+      "addQuestion": "+ Añadir pregunta",
+      "creating": "Creando...",
+      "createBtn": "Crear plantilla"
+    },
+    "card": {
+      "grades": "Grado: {value}",
+      "titles": "Título: {value}",
+      "baseQ": "{count} pregunta(s) base",
+      "customQ": "· {count} pregunta(s) personalizada(s)",
+      "publishBtn": "Publicar",
+      "viewBtn": "Ver →"
+    },
+    "errors": {
+      "publishFailed": "Error al publicar",
+      "noGrade": "Seleccione al menos un grado",
+      "noTitle": "Seleccione al menos un título",
+      "emptyQuestion": "El texto de la pregunta no puede estar vacío",
+      "minOptions": "Las preguntas de opción múltiple requieren al menos 2 opciones",
+      "createFailed": "Error al crear. Por favor, inténtelo de nuevo."
+    },
+    "detail": {
+      "baseSection": "Preguntas base",
+      "baseBadge": "Bloqueado — establecido por RRHH",
+      "baseEmpty": "Sin preguntas base.",
+      "customSection": "Preguntas personalizadas",
+      "customBadge": "Añadido por el Gerente",
+      "customEmptyManager": "Sin preguntas personalizadas. Haga clic en el botón superior para añadir.",
+      "customEmpty": "Sin preguntas personalizadas.",
+      "addBtn": "+ Añadir pregunta",
+      "deleteConfirmTitle": "¿Confirmar eliminación de esta pregunta?",
+      "deleteConfirmDesc": "Esta pregunta personalizada se eliminará permanentemente de la plantilla. Esta acción no se puede deshacer.",
+      "deleteBtn": "Eliminar",
+      "modalTitle": "Nueva pregunta personalizada",
+      "qLabel": "Pregunta",
+      "qPlaceholder": "Ingrese el texto de la pregunta",
+      "typeLabel": "Tipo",
+      "optionsLabel": "Opciones (mín. 2)",
+      "optionPlaceholder": "Opción {index}",
+      "addOptionBtn": "+ Añadir opción",
+      "requiredLabel": "Obligatorio",
+      "adding": "Añadiendo...",
+      "addBtnSubmit": "Añadir pregunta",
+      "errorMinOptions": "Las preguntas de opción múltiple requieren al menos 2 opciones",
+      "errorEmpty": "El texto de la pregunta no puede estar vacío",
+      "errorFailed": "Error al añadir. Por favor, inténtelo de nuevo.",
+      "notFound": "Plantilla no encontrada."
+    },
+    "questionType": {
+      "Text": "Texto",
+      "Rating": "Calificación (1–5)",
+      "MultipleChoice": "Opción múltiple"
+    }
+  },
+  "goals": {
+    "pageTitle": "Mis Objetivos",
+    "pageDesc": "Establecer y seguir los objetivos SMART para este ciclo de rendimiento.",
+    "addBtn": "+ Nuevo objetivo",
+    "stats": {
+      "total": "Total de objetivos",
+      "active": "Activos",
+      "completed": "Completados"
+    },
+    "empty": {
+      "title": "Sin objetivos todavía",
+      "desc": "Establezca su primer objetivo SMART para comenzar este ciclo con fuerza.",
+      "btn": "Establecer primer objetivo"
+    },
+    "statusLabel": {
+      "Draft": "Borrador",
+      "PendingApproval": "Pendiente de aprobación",
+      "Approved": "Activo",
+      "Completed": "Completado"
+    },
+    "type": {
+      "Personal": "Objetivo personal",
+      "Team": "Objetivo de equipo"
+    },
+    "deadline": {
+      "completed": "Completado",
+      "overdue": "{days} día(s) de retraso",
+      "remaining": "{days} día(s) restante(s)",
+      "due": "Vence {date}"
+    },
+    "progressCount": "{count} actualización(es) de progreso",
+    "detail": {
+      "notFound": "Objetivo no encontrado.",
+      "breadcrumb": "Mis Objetivos",
+      "milestonesProgress": "{done} / {total} hitos completados",
+      "milestone": {
+        "heading": "Hitos",
+        "addBtn": "+ Añadir",
+        "placeholder": "Nombre del hito...",
+        "add": "Añadir",
+        "empty": "Sin hitos aún. Haga clic en '+ Añadir' para empezar a planificar.",
+        "notePlaceholder": "Añadir nota... (Enter para confirmar, Esc para omitir)",
+        "urlPlaceholder": "Pegar enlace... (Enter para confirmar)",
+        "addNote": "+ Nota",
+        "addUrl": "+ Enlace"
+      },
+      "smart": {
+        "description": "¿Qué desea lograr?",
+        "metric": "¿Cómo sabrá que tuvo éxito?",
+        "targetValue": "Número objetivo o estándar",
+        "relevance": "¿Por qué es importante este objetivo?"
+      },
+      "submit": {
+        "draftNote": "Este borrador aún no es visible para su supervisor.",
+        "submitBtn": "Enviar para aprobación",
+        "submitting": "Enviando...",
+        "pendingNote": "Este objetivo está esperando su revisión.",
+        "rejectBtn": "Devolver a borrador",
+        "approveBtn": "Aprobar objetivo",
+        "processing": "Procesando..."
+      }
+    }
+  },
+  "reviews": {
+    "myTitle": "Mis Evaluaciones de rendimiento",
+    "myDesc": "Ver y completar sus formularios de evaluación de rendimiento.",
+    "teamTitle": "Revisiones del equipo",
+    "teamDesc": "Ver el estado de las revisiones del equipo y entrar en calibración.",
+    "teamDescSupervisor": "Ver y completar las evaluaciones de rendimiento de sus subordinados.",
+    "empty": {
+      "title": "Sin evaluaciones",
+      "desc": "El sistema crea formularios de evaluación automáticamente cuando comienza el ciclo."
+    },
+    "teamEmpty": {
+      "title": "Sin revisiones del equipo",
+      "desc": "Las revisiones aparecerán aquí una vez que los empleados envíen sus autoevaluaciones."
+    },
+    "statusLabel": {
+      "PendingEmployeeSubmit": "Autoevaluación pendiente",
+      "PendingSupervisorReview": "Revisión del supervisor pendiente",
+      "PendingManagerApproval": "Calibración pendiente",
+      "Published": "Publicado",
+      "Appealed": "Apelado"
+    },
+    "compareStatus": {
+      "PendingEmployeeSubmit": "Empleado pendiente",
+      "PendingSupervisorReview": "Supervisor pendiente",
+      "PendingManagerApproval": "Calibración pendiente",
+      "Published": "Publicado",
+      "Appealed": "Apelado"
+    },
+    "cycleType": {
+      "Annual": "Anual",
+      "Quarterly": "Trimestral",
+      "Probation": "Período de prueba"
+    },
+    "grade": "Calificación {grade}",
+    "actionRequired": "→ Acción requerida",
+    "teamActionPending": "→ Su revisión pendiente",
+    "teamActionManager": "Calibración pendiente",
+    "teamPendingBanner": "{count} revisión(es) pendiente(s)",
+    "teamPendingCalibration": "{count} calibración / publicación pendiente(s)",
+    "calibrateBtn": "Entrar en calibración",
+    "meta": {
+      "cycle": "Ciclo",
+      "template": "Plantilla",
+      "employee": "Empleado",
+      "supervisor": "Supervisor directo",
+      "defaultSupervisor": "(Supervisor directo)"
+    },
+    "detail": {
+      "title": "Evaluación de Desempeño",
+      "breadcrumbMy": "Mis Evaluaciones",
+      "breadcrumbTeam": "Revisiones del equipo",
+      "notFound": "Evaluación no encontrada.",
+      "saveFailed": "Error al guardar. Por favor, inténtelo de nuevo.",
+      "submitFailed": "Error al enviar. Por favor, inténtelo de nuevo.",
+      "appealFailed": "Error al enviar la apelación. Por favor, inténtelo de nuevo.",
+      "waitingEmployee": "Esperando autoevaluación del empleado",
+      "waitingEmployeeDesc": "El empleado ({name}) aún no ha completado su autoevaluación.",
+      "published": {
+        "appealed": "Apelado",
+        "result": "Resultado de la evaluación publicado",
+        "supervisorComment": "Comentario del supervisor:",
+        "appealBtn": "¿No está de acuerdo? Enviar apelación →",
+        "appealSubmitted": "Su apelación ha sido enviada y está esperando la revisión del gerente.",
+        "appealLabel": "Motivo de la apelación",
+        "appealPlaceholder": "Explique en detalle por qué cree que el resultado de la evaluación es incorrecto (mín. 10 caracteres)...",
+        "appealNote": "Su apelación se enviará directamente a su gerente. Su supervisor directo no verá el contenido.",
+        "appealSubmitting": "Enviando...",
+        "appealConfirm": "Enviar apelación",
+        "cancel": "Cancelar"
+      },
+      "sections": {
+        "answerPlaceholder": "Ingrese su respuesta...",
+        "employeeSelf": "Autoevaluación del empleado",
+        "submitted": "(Enviado, no se puede editar)",
+        "supervisorPerQ": "Comentarios del supervisor por pregunta",
+        "noAnswer": "(Sin respuesta)",
+        "supervisorReview": "Revisión del supervisor",
+        "leftCol": "Autoevaluación",
+        "rightCol": "Comentarios del supervisor",
+        "supAnswerPlaceholder": "Ingrese sus comentarios para esta pregunta (opcional)...",
+        "selfReadOnly": "Autoevaluación",
+        "supReadOnly": "Comentarios del supervisor",
+        "noAnswerFilled": "(No rellenado)",
+        "overallLabel": "Comentarios generales",
+        "overallPlaceholder": "Describa su evaluación general y el desempeño del empleado...",
+        "overallEmpty": "—",
+        "gradeLabel": "Calificación",
+        "gradeWarnO": "⚠ O (Outstanding) está reservado para los mejores empleados — evalúe cuidadosamente.",
+        "gradeWarnU": "⚠ U (Unsatisfactory) activará el seguimiento PMD — asegúrese de tener evidencia suficiente.",
+        "saving": "Guardando...",
+        "saveDraft": "Guardar borrador",
+        "submitSelf": "Enviar autoevaluación",
+        "submitSup": "Enviar evaluación",
+        "gradeRequired": "Seleccione una calificación antes de enviar",
+        "confirmSelfTitle": "¿Confirmar envío de autoevaluación?",
+        "confirmSupTitle": "¿Confirmar envío de evaluación?",
+        "confirmSelfDesc": "Una vez enviado, no se puede modificar. ¿Confirmar?",
+        "confirmSupDesc": "Una vez enviado, no se puede modificar. ¿Confirmar?",
+        "confirming": "Enviando...",
+        "confirm": "Confirmar envío"
+      }
+    },
+    "grades": {
+      "O":       { "label": "Outstanding (Sobresaliente)",       "desc": "Los mejores — supera significativamente las expectativas en todas las áreas" },
+      "S_Plus":  { "label": "Excellent (Excelente)",             "desc": "Supera las expectativas en general con contribuciones significativas" },
+      "S":       { "label": "Satisfactory (Satisfactorio)",      "desc": "Cumple completamente todos los objetivos y expectativas" },
+      "S_Minus": { "label": "Partially Sat. (Parcialmente)",     "desc": "Cumple en su mayoría las expectativas; algunas áreas necesitan mejora" },
+      "I":       { "label": "Needs Improvement (Necesita mejorar)", "desc": "No cumplió completamente las expectativas; requiere orientación" },
+      "U":       { "label": "Unsatisfactory (Insatisfactorio)",  "desc": "Significativamente por debajo del estándar; se iniciará seguimiento PMD" },
+      "tooltip": "ⓘ Guía de calificaciones",
+      "noAnswer": "(Sin respuesta)"
+    },
+    "calibrate": {
+      "title": "Calibración: {cycleName}",
+      "desc": "Establecer calificaciones y rankings para cada empleado, luego publicar todos los resultados a la vez.",
+      "breadcrumb": "Revisiones del equipo",
+      "breadcrumbCalib": "Calibración",
+      "summary": "{total} revisión(es) · {pending} pendiente(s) de publicar",
+      "compareBtn": "Comparación →",
+      "publishBtn": "Publicar todo ({count})",
+      "publishing": "Publicando...",
+      "empty": "No hay revisiones en fase de calibración para este ciclo.",
+      "table": {
+        "employee": "Empleado",
+        "titleGrade": "Título / Grado",
+        "status": "Estado",
+        "grade": "Calificación",
+        "rank": "Rango",
+        "detail": "Detalle",
+        "viewBtn": "Ver",
+        "rankPlaceholder": "Seleccione primero una calificación",
+        "rankTitle": "Seleccione una calificación antes de establecer un rango"
+      },
+      "publishConfirm": {
+        "title": "¿Confirmar publicación de todas las evaluaciones?",
+        "desc": "A punto de publicar {count} resultado(s) de evaluación. Los empleados podrán ver sus calificaciones. Esta acción no se puede deshacer.",
+        "btn": "Confirmar publicación"
+      }
+    },
+    "compare": {
+      "title": "Comparación: {cycleName}",
+      "desc": "Ver calificaciones y comentarios de supervisores de todos los empleados para ayudar en las decisiones de calibración.",
+      "breadcrumb": "Revisiones del equipo",
+      "breadcrumbCalib": "Calibración",
+      "breadcrumbCompare": "Comparación",
+      "empty": "Sin datos de evaluación para este ciclo.",
+      "summary": "{count} revisión(es), ordenadas por calificación (O → U)",
+      "supComment": "Comentario del supervisor",
+      "noComment": "Sin comentario",
+      "viewBtn": "Ver evaluación completa",
+      "rank": "Rango #{rank}"
+    }
+  },
+  "appeals": {
+    "pageTitle": "Gestión de apelaciones",
+    "pageDesc": "Revisar y responder a las apelaciones de rendimiento de los empleados.",
+    "empty": {
+      "title": "Sin apelaciones",
+      "desc": "No se han enviado apelaciones de empleados."
+    },
+    "cycle": "Ciclo: {name}",
+    "submitted": "Enviado: {date}",
+    "resolved": "· Resuelto: {date}",
+    "reviewBtn": "Revisar apelación",
+    "viewBtn": "Ver detalles",
+    "detail": {
+      "pageTitle": "Detalles de la apelación",
+      "breadcrumbManager": "Gestión de apelaciones",
+      "breadcrumbEmployee": "Mis Evaluaciones",
+      "breadcrumb": "Detalles de la apelación",
+      "notFound": "Apelación no encontrada o acceso denegado.",
+      "respondFailed": "Error al responder. Por favor, inténtelo de nuevo.",
+      "backToReview": "← Volver a la evaluación",
+      "meta": {
+        "employee": "Empleado",
+        "cycle": "Ciclo",
+        "grade": "Calificación de la evaluación",
+        "submitted": "Enviado"
+      },
+      "supComment": "Comentario del supervisor",
+      "reason": "Motivo de apelación del empleado",
+      "response": {
+        "title": "Respuesta del gerente · {date}",
+        "formTitle": "Responder a la apelación",
+        "gradeLabel": "Ajustar calificación",
+        "gradeDetail": "(Opcional — si no se selecciona, se retiene la calificación original {grade})",
+        "textPlaceholder": "Explique su decisión y razonamiento (mín. 5 caracteres)...",
+        "note": "Tras responder, la apelación se marcará como 'Resuelta' y la evaluación volverá a 'Publicada'. El empleado podrá ver su respuesta.",
+        "submitting": "Enviando...",
+        "submitBtn": "Enviar respuesta y resolver apelación"
+      }
+    }
+  },
+  "team": {
+    "pageTitle": "Mi Equipo",
+    "pageDescManager": "Ver el estado de rendimiento de los empleados agrupados por supervisor directo.",
+    "pageDescSupervisor": "Gestionar sus subordinados directos.",
+    "table": {
+      "name": "Nombre",
+      "employeeId": "ID de empleado",
+      "title": "Título",
+      "grade": "Grado",
+      "role": "Rol",
+      "view": "Ver"
+    },
+    "empty": {
+      "title": "Sin miembros del equipo",
+      "desc": "Nadie ha sido asignado a su departamento."
+    },
+    "notFound": "No se encontraron miembros del equipo.",
+    "supervisor": {
+      "view": "Ver →",
+      "noReports": "Este supervisor actualmente no tiene subordinados directos.",
+      "count": "{count} empleado(s)"
+    },
+    "directReports": {
+      "title": "Subordinados directos",
+      "subtitle": "(Reportando directamente a usted, sin supervisor directo)",
+      "count": "{count} empleado(s)"
+    },
+    "employee": {
+      "department": "Departamento",
+      "breadcrumb": "Mi Equipo",
+      "notFound": "Empleado no encontrado.",
+      "goals": "Objetivos",
+      "noGoals": "Sin objetivos establecidos.",
+      "deadline": "Vence: {date}",
+      "reviews": "Historial de evaluaciones",
+      "noReviews": "Sin registros de evaluación."
     }
   }
 }

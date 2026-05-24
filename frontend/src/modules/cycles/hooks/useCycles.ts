@@ -7,7 +7,7 @@ import type { PerformanceCycle } from '@/types'
 export interface CreateCyclePayload {
   name: string
   type: 'Annual' | 'Quarterly' | 'Probation'
-  regions: string[]
+  regionId?: string
   goalSettingStart: string
   goalSettingEnd: string
   reviewStart: string
@@ -16,7 +16,6 @@ export interface CreateCyclePayload {
 
 export interface UpdateCyclePayload {
   name?: string
-  regions?: string[]
   goalSettingStart?: string
   goalSettingEnd?: string
   reviewStart?: string

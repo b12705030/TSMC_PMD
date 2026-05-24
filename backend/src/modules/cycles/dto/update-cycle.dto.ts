@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsArray, Validate } from 'class-validator'
+import { IsString, IsNotEmpty, IsDateString, IsOptional, Validate } from 'class-validator'
 import { ValidatorConstraint } from 'class-validator'
 import type { ValidationArguments, ValidatorConstraintInterface } from 'class-validator'
 
@@ -24,11 +24,6 @@ export class UpdateCycleDto {
   @IsString()
   @IsNotEmpty()
   name?: string
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  regions?: string[]
 
   @IsOptional()
   @IsDateString()
