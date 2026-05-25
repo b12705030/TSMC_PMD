@@ -10,7 +10,8 @@
     "cycles": "週期管理",
     "templates": "評核模板",
     "appeals": "申訴管理",
-    "auditLog": "稽核日誌"
+    "auditLog": "稽核日誌",
+    "users": "使用者管理"
   },
   "sidebar": {
     "logout": "登出",
@@ -70,21 +71,21 @@
     "invalidCredentials": "帳號或密碼錯誤，請再試一次。"
   },
   "cycleStepper": {
-    "companyGoal":        "公司/部門目標公布",
-    "companyGoalDesc":    "提供員工設定目標的方向",
-    "goalSetting":        "目標設定",
-    "goalSettingDesc":    "員工設定 SMART 目標",
-    "inProgress":         "執行中",
-    "inProgressDesc":     "目標追蹤進行中",
-    "reviewStart":        "績效評核期開始",
-    "employeeReview":     "員工自評",
+    "companyGoal": "公司/部門目標公布",
+    "companyGoalDesc": "提供員工設定目標的方向",
+    "goalSetting": "目標設定",
+    "goalSettingDesc": "員工設定 SMART 目標",
+    "inProgress": "執行中",
+    "inProgressDesc": "目標追蹤進行中",
+    "reviewStart": "績效評核期開始",
+    "employeeReview": "員工自評",
     "employeeReviewDesc": "填寫績效表單",
-    "supervisorReview":     "主管初評",
+    "supervisorReview": "主管初評",
     "supervisorReviewDesc": "主管進行評核",
-    "calibration":        "校準發布",
-    "calibrationDesc":    "經理調整並發布結果",
-    "completed":          "已完成",
-    "completedDesc":      "結果已發布"
+    "calibration": "校準發布",
+    "calibrationDesc": "經理調整並發布結果",
+    "completed": "已完成",
+    "completedDesc": "結果已發布"
   },
   "auditLog": {
     "pageTitle": "稽核日誌",
@@ -241,7 +242,9 @@
       "reviewRange": "評核期：{start} – {end}",
       "publishRange": "結果發布：{date}"
     },
-    "activeCycles": { "title": "進行中的週期" },
+    "activeCycles": {
+      "title": "進行中的週期"
+    },
     "goals": {
       "title": "我的目標",
       "empty": "尚未設定任何目標",
@@ -535,12 +538,30 @@
       }
     },
     "grades": {
-      "O":       { "label": "Outstanding（傑出）",      "desc": "少數頂尖 — 全面大幅超越期望" },
-      "S_Plus":  { "label": "Excellent（優秀）",         "desc": "全面超越期望，具有顯著貢獻" },
-      "S":       { "label": "Satisfactory（達標）",      "desc": "完全達成所有目標與期望" },
-      "S_Minus": { "label": "Partially Sat.（部分達標）", "desc": "大致達成期望，部分領域需改善" },
-      "I":       { "label": "Needs Improvement（待改善）","desc": "未完全達成期望，需要指導" },
-      "U":       { "label": "Unsatisfactory（不符標準）", "desc": "明顯低於標準，將進入 PMD 追蹤" },
+      "O": {
+        "label": "Outstanding（傑出）",
+        "desc": "少數頂尖 — 全面大幅超越期望"
+      },
+      "S_Plus": {
+        "label": "Excellent（優秀）",
+        "desc": "全面超越期望，具有顯著貢獻"
+      },
+      "S": {
+        "label": "Satisfactory（達標）",
+        "desc": "完全達成所有目標與期望"
+      },
+      "S_Minus": {
+        "label": "Partially Sat.（部分達標）",
+        "desc": "大致達成期望，部分領域需改善"
+      },
+      "I": {
+        "label": "Needs Improvement（待改善）",
+        "desc": "未完全達成期望，需要指導"
+      },
+      "U": {
+        "label": "Unsatisfactory（不符標準）",
+        "desc": "明顯低於標準，將進入 PMD 追蹤"
+      },
       "tooltip": "ⓘ 等第說明",
       "noAnswer": "（未填寫）"
     },
@@ -662,5 +683,47 @@
       "reviews": "評核紀錄",
       "noReviews": "尚無評核紀錄。"
     }
+  },
+  "users": {
+    "pageTitle": "使用者管理",
+    "pageDesc": "管理所有帳號的角色、地區、部門與職等職稱",
+    "newUser": "新建帳號",
+    "searchPlaceholder": "搜尋員工編號 / 姓名 / Email",
+    "allRoles": "所有角色",
+    "allRegions": "所有地區",
+    "empty": "找不到符合條件的使用者",
+    "total": "共 {count} 位使用者",
+    "prev": "上一頁",
+    "next": "下一頁",
+    "edit": "編輯",
+    "colEmployeeId": "員工編號",
+    "colName": "姓名",
+    "colEmail": "Email",
+    "colRole": "Role",
+    "colRegion": "地區",
+    "colDepartment": "部門",
+    "colJobLevel": "職等",
+    "colJobTitle": "職稱",
+    "editTitle": "編輯使用者",
+    "createTitle": "新建帳號",
+    "defaultPasswordNote": "初始密碼為 TSMC@1234，請提醒使用者登入後自行更改。",
+    "fieldEmployeeId": "員工編號",
+    "fieldName": "姓名",
+    "fieldEmail": "Email",
+    "fieldRole": "角色",
+    "fieldRegion": "地區",
+    "fieldDepartment": "部門",
+    "fieldJobLevel": "職等",
+    "fieldJobTitle": "職稱",
+    "selectRegion": "選擇地區",
+    "selectDepartment": "選擇部門",
+    "requiredFields": "請填寫所有必填欄位（*）",
+    "save": "儲存",
+    "saving": "儲存中...",
+    "create": "建立帳號",
+    "creating": "建立中...",
+    "cancel": "取消",
+    "saveError": "儲存失敗，請再試一次",
+    "createError": "建立失敗，請再試一次"
   }
 }

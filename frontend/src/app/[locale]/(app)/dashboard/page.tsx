@@ -566,7 +566,7 @@ export default function DashboardPage() {
 
   const isEmployee        = user.role === 'Employee'
   const isSupervisorOrMgr = user.role === 'Supervisor' || user.role === 'Manager'
-  const isHROrAdmin       = user.role === 'RegionalHR' || user.role === 'Admin'
+  const isHROrAdmin       = user.role === 'RegionalHR' || user.role === 'Admin' || user.role === 'GlobalHR'
 
   return (
     <div>

@@ -74,7 +74,7 @@ export default function CyclesPage() {
   const { cycles, isLoading, error: loadError, createCycle, updateCycle, advanceStatus } = useCycles()
   const { user } = useAuth()
   const isAdmin   = user?.role === 'Admin'
-  const isHR      = user?.role === 'RegionalHR'
+  const isHR      = user?.role === 'RegionalHR' || user?.role === 'GlobalHR'
   const isManager = user?.role === 'Manager'
   const canEdit   = isAdmin || isHR
 
