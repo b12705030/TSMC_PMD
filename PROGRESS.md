@@ -13,7 +13,7 @@
 | Session-based 登入 / 登出 / 取得當前使用者 | ✅ 完成 | cookie `sessionId`，8 小時有效 |
 | RBAC（5 種角色）| ✅ 完成 | `RolesGuard` + `@Roles()` decorator |
 | 地區資料隔離（RegionalHR 只看自己 region）| ✅ 完成 | Service 層 where 條件 |
-| Session 閒置 30 分鐘自動登出 | ⬜ 待做 | 目前固定 8 小時 TTL |
+| Session 閒置 30 分鐘自動登出 | ✅ 完成 | 後端 `lastActiveAt` + 每次請求刷新；前端 `IdleWatcher` 25 min 倒數 Toast，30 min 自動登出；登入頁顯示 idle/expired 提示 |
 | 偵測同一 Session IP 異常變更並記錄警示 | ⬜ 待做 | |
 | MFA 多因素認證 | ⬜ 待做 | Spec 有列，開發階段跳過 |
 | SSO 整合 | ⬜ 待做 | 開發階段以帳密替代 |
@@ -99,7 +99,7 @@
 | 直屬主管不可見申訴內容 | ✅ 完成 | `getAppealById` 只允許當事員工和 Manager 存取，Supervisor 呼叫會拋 403 |
 | 經理審核並回覆申訴 | ✅ 完成 | `/appeals/[id]`；Manager 可回覆 + 調整等第（選填），回覆後申訴標記已解決 |
 | 申訴列表頁（經理側）| ✅ 完成 | `/appeals` 頁面顯示所有收到的申訴，可點入詳情 |
-| 申訴結果通知員工 | ⬜ 待做 | 目前需員工主動查看評核頁或申訴頁，未實作推播通知 |
+| 申訴結果通知員工 | ✅ 完成 | Sidebar「我的評核」顯示紅色數字 badge（`Appeal.seenByEmployee`）；員工查看後自動已讀；`GET /appeals/my-unread-count` 每 60 秒輪詢 |
 | 前端 `/appeals` 頁面串接真實資料 | ✅ 完成 | `useAppeals` hook 已串接 `GET /appeals` |
 
 ---
@@ -109,7 +109,7 @@
 | 項目 | 狀態 | 備註 |
 |------|------|------|
 | 登入 / 登出事件寫入 | ✅ 完成 | 非同步寫入 Elasticsearch（無 PostgreSQL 持久化備份） |
-| 所有 CRUD 操作記錄 | ⬜ 待做 | 目前只有登入/登出；其餘 mutation 尚未覆蓋 |
+| 所有 CRUD 操作記錄 | ✅ 完成 | `AuditWriteInterceptor` 全域掛載（`APP_INTERCEPTOR`），涵蓋 Goals / Reviews / Appeals / Cycles / Templates / Users 共 28 個 CRUD 端點；Auth 端點保留手動記錄 |
 | Elasticsearch Append-only 儲存 | ✅ 已串接 | `audit.service.ts` 直接寫 ES；失敗只 log error，無重試或 outbox |
 | 前端 Audit Log 查閱頁 | ✅ 完成 | 頁面已完成並接 ES 資料 |
 
@@ -144,11 +144,17 @@
 
 ### 功能待做（建議優先順序）
 
+- [x] **週期自動推進確認流程** — 評核期 7 天前對 HR 顯示藍色確認橫幅（確認如期開始 / 延期）；HR 確認後系統於 `reviewStart` 當天自動推進並通知所有參與者；延期時更新日期並發送延期通知；Cron 排程每天 00:05 執行；`@nestjs/schedule`；Sidebar 通知鈴鐺（藍色 badge）
+
 - [x] **申訴機制** — 已完成（schema + backend + frontend）
 - [x] **目標與週期關聯 UI** — 已完成
 - [x] **主管多員工並排比較介面** — 已完成
 - [x] **Dashboard 等第分布圖表** — 已完成
-- [ ] **Audit Log CRUD** — 目前只記錄登入/登出
+- [x] **Audit Log CRUD** — 已完成（`AuditWriteInterceptor` 全域攔截）
+- [x] **登入 rate limit** — `@nestjs/throttler` IP 層（10 次/分鐘）+ `AuthService` 帳號鎖定（失敗 5 次鎖 10 分鐘）
+- [x] **Session 閒置偵測** — 後端 `AuthGuard` 每次請求更新 `lastActiveAt`，超 30 分鐘拋 401；前端 `IdleWatcher` 25 分鐘出現倒數 Toast，30 分鐘自動登出；登入頁顯示對應提示（idle / expired）
+- [x] **申訴通知 badge** — 後端 `Appeal.seenByEmployee` 欄位，回覆申訴時設 false；`GET /appeals/my-unread-count`；Sidebar「我的評核」顯示紅色數字 badge，員工查看後自動已讀
+- [x] **目標截止日提醒** — `DeadlineToast` 元件，7 天內到期的未完成目標顯示右下角 Toast，當日關閉後不再打擾
 
 ### 模板設計優化（已討論，待實作）
 
@@ -162,8 +168,8 @@
 ### 技術債
 
 - [x] 員工可直接透過 `PUT /goals/:id` body `{ status }` 把目標改為 `PendingApproval`，已改為獨立 endpoint `PATCH /goals/:id/submit`；目標詳情頁草稿狀態下顯示「提交審核」按鈕
-- [ ] `AuditService` CRUD 操作只記錄登入/登出，缺少 mutation 覆蓋；ES 寫入失敗只 log error，無重試或 outbox
-- [ ] Session 閒置 30 分鐘自動登出尚未實作（目前固定 8 小時 TTL）
+- [x] `AuditService` CRUD 操作已透過 `AuditWriteInterceptor` 全域覆蓋；ES 寫入失敗只 log error，無重試或 outbox（設計決策：接受）
+- [x] Session 閒置 30 分鐘自動登出已實作（後端 `lastActiveAt` + 前端 `IdleWatcher`）
 - [ ] Audit Log 直接打 ES（`audit.service.ts`），失敗僅 log error，不影響主流程但審計不可靠
 
 ### 安全漏洞修補（第二輪 Codex Review，已全數修復）
@@ -229,7 +235,7 @@
 
 ### 待改善（中期，非立即阻塞）
 
-- [ ] **[中高] 登入無 rate limit / lockout** → `POST /auth/login` 無節流，帳密可暴力嘗試。修法：加 NestJS rate limiter，登入失敗超過 N 次鎖定帳號並寫 audit。
+- [x] **[中高] 登入無 rate limit / lockout** → `@nestjs/throttler` IP 層（10 次/分鐘）+ `AuthService` 帳號鎖定（失敗 5 次鎖 10 分鐘）。
 - [ ] **[中] CSRF 防護不完整** → 目前依賴 `SameSite=Lax`；正式部署若涉及跨子網域需明確 CSRF token 或 double-submit cookie。
 
 ### 架構層優化（長期）

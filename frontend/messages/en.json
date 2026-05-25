@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "myGoals": "My Goals",
+    "teamGoals": "Team Goals",
     "myReviews": "My Reviews",
     "myReviewsSub": "My performance forms",
     "teamReviews": "Team Reviews",
@@ -390,7 +391,8 @@
       "Draft": "Draft",
       "PendingApproval": "Pending Approval",
       "Approved": "Active",
-      "Completed": "Completed"
+      "Completed": "Completed",
+      "Rejected": "Rejected"
     },
     "type": {
       "Personal": "Personal Goal",

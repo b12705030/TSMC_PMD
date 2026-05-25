@@ -27,15 +27,15 @@ export default function TemplatesPage() {
   const { cycles } = useCycles()
 
   const [jobLevels, setJobLevels] = useState<string[]>([])
-  const [jobTitles, setJobTitles] = useState<string[]>([])
+  const [groupedTitles, setGroupedTitles] = useState<{ management: string[]; staff: string[] }>({ management: [], staff: [] })
 
   useEffect(() => {
     api.get<string[]>('/users/job-levels')
       .then(setJobLevels)
       .catch(() => setJobLevels(['L1', 'L2', 'L3', 'L4', 'L5', 'L6']))
-    api.get<string[]>('/users/job-titles')
-      .then(setJobTitles)
-      .catch(() => setJobTitles([]))
+    api.get<{ management: string[]; staff: string[] }>('/users/job-titles-grouped')
+      .then(setGroupedTitles)
+      .catch(() => setGroupedTitles({ management: [], staff: [] }))
   }, [])
 
   const [showModal, setShowModal] = useState(false)
@@ -49,9 +49,22 @@ export default function TemplatesPage() {
   const [titleSearch, setTitleSearch] = useState('')
   const [questions, setQuestions] = useState<QuestionDraft[]>([{ ...EMPTY_QUESTION, orderIndex: 0 }])
 
-  const filteredTitles = jobTitles.filter((title) =>
-    title.toLowerCase().includes(titleSearch.toLowerCase())
-  )
+  const allTitles = [...groupedTitles.management, ...groupedTitles.staff]
+  const totalCount = allTitles.length
+
+  function filterGroup(titles: string[]) {
+    if (!titleSearch.trim()) return titles
+    return titles.filter((t) => t.toLowerCase().includes(titleSearch.toLowerCase()))
+  }
+
+  function toggleGroup(titles: string[]) {
+    const allSelected = titles.every((t) => form.applyTitles.includes(t))
+    if (allSelected) {
+      setForm((prev) => ({ ...prev, applyTitles: prev.applyTitles.filter((t) => !titles.includes(t)) }))
+    } else {
+      setForm((prev) => ({ ...prev, applyTitles: [...new Set([...prev.applyTitles, ...titles])] }))
+    }
+  }
 
   const isHR = user?.role === 'RegionalHR' || user?.role === 'Admin' || user?.role === 'GlobalHR'
 
@@ -234,43 +247,104 @@ export default function TemplatesPage() {
                 </div>
 
                 <div>
-                  <label className="label">
-                    {t('modal.titles')}
-                    <span className="ml-1 text-xs font-normal text-gray-400">{t('modal.titlesMulti')}</span>
-                  </label>
-                  {jobTitles.length === 0 ? (
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="label mb-0">
+                      {t('modal.titles')}
+                      <span className="ml-1 text-xs font-normal text-gray-400">{t('modal.titlesMulti')}</span>
+                    </label>
+                    {totalCount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">已選 {form.applyTitles.length} / {totalCount}</span>
+                        <button
+                          type="button"
+                          className="text-xs text-indigo-600 hover:underline"
+                          onClick={() => setForm((prev) => ({ ...prev, applyTitles: allTitles }))}
+                        >全選</button>
+                        {form.applyTitles.length > 0 && (
+                          <button
+                            type="button"
+                            className="text-xs text-gray-400 hover:underline"
+                            onClick={() => setForm((prev) => ({ ...prev, applyTitles: [] }))}
+                          >清除</button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {totalCount === 0 ? (
                     <p className="text-sm text-gray-400">{tCommon('loading')}</p>
                   ) : (
                     <>
-                    <input
-                      className="input mb-2"
-                      placeholder={t('modal.titleSearch')}
-                      value={titleSearch}
-                      onChange={(e) => setTitleSearch(e.target.value)}
-                    />
-                    <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
-                      {filteredTitles.map((title) => (
-                        <label
-                          key={title}
-                          className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors
-                            ${form.applyTitles.includes(title)
-                              ? 'bg-indigo-100 text-indigo-700 font-medium'
-                              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                            }`}
-                        >
-                          <input
-                            type="checkbox"
-                            className="hidden"
-                            checked={form.applyTitles.includes(title)}
-                            onChange={() => toggleTitle(title)}
-                          />
-                          {title}
-                        </label>
-                      ))}
-                      {filteredTitles.length === 0 && (
-                        <p className="text-sm text-gray-400 p-1">{t('modal.noTitles')}</p>
-                      )}
-                    </div>
+                      <input
+                        className="input mb-3"
+                        placeholder={t('modal.titleSearch')}
+                        value={titleSearch}
+                        onChange={(e) => setTitleSearch(e.target.value)}
+                      />
+                      <div className="space-y-3">
+                        {/* 管理職群 */}
+                        {filterGroup(groupedTitles.management).length > 0 && (
+                          <div>
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">主管 / 管理職</span>
+                              <button
+                                type="button"
+                                className="text-[11px] text-indigo-500 hover:underline"
+                                onClick={() => toggleGroup(groupedTitles.management)}
+                              >
+                                {groupedTitles.management.every((t) => form.applyTitles.includes(t)) ? '取消全選' : '全選此群'}
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 rounded-lg border border-indigo-100 bg-indigo-50/40 p-2">
+                              {filterGroup(groupedTitles.management).map((title) => (
+                                <label
+                                  key={title}
+                                  className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors
+                                    ${form.applyTitles.includes(title)
+                                      ? 'bg-indigo-500 text-white font-medium'
+                                      : 'bg-white text-gray-600 hover:bg-indigo-50 border border-indigo-200'
+                                    }`}
+                                >
+                                  <input type="checkbox" className="hidden" checked={form.applyTitles.includes(title)} onChange={() => toggleTitle(title)} />
+                                  {title}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {/* 一般員工群 */}
+                        {filterGroup(groupedTitles.staff).length > 0 && (
+                          <div>
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">工程師 / 員工</span>
+                              <button
+                                type="button"
+                                className="text-[11px] text-indigo-500 hover:underline"
+                                onClick={() => toggleGroup(groupedTitles.staff)}
+                              >
+                                {groupedTitles.staff.every((t) => form.applyTitles.includes(t)) ? '取消全選' : '全選此群'}
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+                              {filterGroup(groupedTitles.staff).map((title) => (
+                                <label
+                                  key={title}
+                                  className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-sm transition-colors
+                                    ${form.applyTitles.includes(title)
+                                      ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                >
+                                  <input type="checkbox" className="hidden" checked={form.applyTitles.includes(title)} onChange={() => toggleTitle(title)} />
+                                  {title}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {filterGroup(groupedTitles.management).length === 0 && filterGroup(groupedTitles.staff).length === 0 && (
+                          <p className="text-sm text-gray-400 p-1">{t('modal.noTitles')}</p>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>

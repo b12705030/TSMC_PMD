@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "儀表板",
     "myGoals": "我的目標",
+    "teamGoals": "團隊目標",
     "myReviews": "我的評核",
     "myReviewsSub": "自己的績效表單",
     "teamReviews": "團隊評核",
@@ -390,6 +391,7 @@
       "Draft": "草稿",
       "PendingApproval": "待審核",
       "Approved": "進行中",
+      "Rejected": "已退回",
       "Completed": "已完成"
     },
     "type": {

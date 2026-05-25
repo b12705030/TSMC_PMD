@@ -1,10 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-import { CycleStatus, ReviewStatus, Role, TemplateStatus } from '@prisma/client'
+import { CycleStatus, NotificationType, ReviewStatus, Role, TemplateStatus } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateCycleDto } from './dto/create-cycle.dto'
 import type { UpdateCycleDto } from './dto/update-cycle.dto'
+import type { PostponeCycleDto } from './dto/postpone-cycle.dto'
 
 // Valid forward-only status transitions
 const NEXT_STATUS: Record<CycleStatus, CycleStatus | null> = {
@@ -18,7 +20,10 @@ const NEXT_STATUS: Record<CycleStatus, CycleStatus | null> = {
 
 @Injectable()
 export class CyclesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async getCycles(user: SessionUser) {
     const where = isGlobalRole(user) ? {} : { regionId: user.regionId }
@@ -147,6 +152,69 @@ export class CyclesService {
         await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
       }
       return result
+    })
+
+    return updated
+  }
+
+  /** HR 確認週期將在 reviewStart 當天自動推進 */
+  async confirmAdvance(id: string, user: SessionUser) {
+    const cycle = await this.getCycle(id, user)
+
+    if (cycle.status !== CycleStatus.InProgress) {
+      throw new BadRequestException('只有執行中（InProgress）的週期才能確認自動推進')
+    }
+    if (cycle.advanceConfirmed) {
+      throw new BadRequestException('此週期已確認過自動推進')
+    }
+
+    const updated = await this.prisma.performanceCycle.update({
+      where: { id },
+      data:  { advanceConfirmed: true, advanceConfirmedAt: new Date() },
+    })
+
+    // 通知 HR 自己確認成功（即時）
+    await this.notifications.createForUsers([user.id], {
+      type:    NotificationType.CycleAdvanceReminder,
+      title:   '已確認自動推進',
+      message: `【${cycle.name}】將於 ${cycle.reviewStart.toLocaleDateString('zh-TW')} 自動推進至員工自評期。`,
+      cycleId: id,
+    })
+
+    return updated
+  }
+
+  /** HR 延期：更新 reviewStart，並通知所有參與者 */
+  async postpone(id: string, dto: PostponeCycleDto, user: SessionUser) {
+    const cycle = await this.getCycle(id, user)
+
+    if (cycle.status !== CycleStatus.InProgress) {
+      throw new BadRequestException('只有執行中（InProgress）的週期才能延期')
+    }
+
+    const newDate = new Date(dto.newReviewStart)
+    const today   = new Date(); today.setHours(0, 0, 0, 0)
+    if (newDate <= today) {
+      throw new BadRequestException('新的評核開始日期必須在今天之後')
+    }
+
+    const updated = await this.prisma.performanceCycle.update({
+      where: { id },
+      data:  {
+        reviewStart:       newDate,
+        advanceConfirmed:  false,   // 延期後重置確認狀態
+        advanceConfirmedAt: null,
+      },
+    })
+
+    // 通知所有參與者
+    const participantIds = await this.notifications.getCycleParticipantIds(id)
+    const newDateStr = newDate.toLocaleDateString('zh-TW')
+    await this.notifications.createForUsers(participantIds, {
+      type:    NotificationType.CyclePostponed,
+      title:   '評核期延期通知',
+      message: `【${cycle.name}】的評核開始日期已延期至 ${newDateStr}，請留意新的時程安排。`,
+      cycleId: id,
     })
 
     return updated

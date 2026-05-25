@@ -296,7 +296,11 @@ export class ReviewsService {
     const statusCount: Record<string, number> = {}
     for (const r of reviews) {
       if (r.grade) gradeDistribution[r.grade] = (gradeDistribution[r.grade] ?? 0) + 1
-      statusCount[r.status] = (statusCount[r.status] ?? 0) + 1
+      // Supervisors must not know a review is under appeal — count Appealed as Published
+      const displayStatus = user.role === Role.Supervisor && r.status === ReviewStatus.Appealed
+        ? ReviewStatus.Published
+        : r.status
+      statusCount[displayStatus] = (statusCount[displayStatus] ?? 0) + 1
     }
 
     return { total: reviews.length, gradeDistribution, statusCount }

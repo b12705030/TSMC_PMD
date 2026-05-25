@@ -27,6 +27,13 @@ export class AppealsController {
     return this.appealsService.createAppeal(user, dto)
   }
 
+  // 員工查詢未讀的申訴結果通知數
+  @Get('my-unread-count')
+  @Roles(Role.Employee)
+  getUnreadCount(@CurrentUser() user: SessionUser) {
+    return this.appealsService.getUnreadCount(user)
+  }
+
   // 取得單筆申訴（員工看自己的、Manager 看收到的）
   @Get(':id')
   @Roles(Role.Employee, Role.Manager, Role.Admin)

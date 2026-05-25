@@ -18,6 +18,7 @@ export default function GoalsPage() {
     PendingApproval:   { label: t('statusLabel.PendingApproval'), color: 'bg-yellow-400', pct: 30  },
     Approved:          { label: t('statusLabel.Approved'),        color: 'bg-indigo-500', pct: 65  },
     Completed:         { label: t('statusLabel.Completed'),       color: 'bg-green-500',  pct: 100 },
+    Rejected:          { label: t('statusLabel.Rejected'),        color: 'bg-red-400',    pct: 0   },
   }
 
   const completedCount = goals.filter((g) => g.status === 'Completed').length

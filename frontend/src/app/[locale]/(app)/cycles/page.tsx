@@ -71,7 +71,7 @@ export default function CyclesPage() {
   const t       = useTranslations('cycles')
   const tCommon = useTranslations('common')
   const locale  = useLocale()
-  const { cycles, isLoading, error: loadError, createCycle, updateCycle, advanceStatus } = useCycles()
+  const { cycles, isLoading, error: loadError, createCycle, updateCycle, advanceStatus, refetch } = useCycles()
   const { user } = useAuth()
   const isAdmin   = user?.role === 'Admin'
   const isHR      = user?.role === 'RegionalHR' || user?.role === 'GlobalHR'
@@ -87,6 +87,42 @@ export default function CyclesPage() {
   const [managerQStatus, setManagerQStatus] = useState<{ complete: {id:string;name:string}[]; pending: {id:string;name:string}[] } | null>(null)
   const [templates, setTemplates] = useState<ReviewTemplate[]>([])
   const showTemplatTrack = canEdit || isManager
+
+  // 確認自動推進 / 延期
+  const [confirmingCycle, setConfirmingCycle]   = useState<PerformanceCycle | null>(null)
+  const [postponingCycle, setPostponingCycle]   = useState<PerformanceCycle | null>(null)
+  const [newReviewStart, setNewReviewStart]     = useState('')
+  const [actionLoading, setActionLoading]       = useState(false)
+  const [actionError, setActionError]           = useState('')
+
+  async function handleConfirmAdvance() {
+    if (!confirmingCycle) return
+    setActionLoading(true); setActionError('')
+    try {
+      await api.patch(`/cycles/${confirmingCycle.id}/confirm-advance`, {})
+      setConfirmingCycle(null)
+      refetch()
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : '操作失敗')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handlePostpone(e: React.SyntheticEvent) {
+    e.preventDefault()
+    if (!postponingCycle || !newReviewStart) return
+    setActionLoading(true); setActionError('')
+    try {
+      await api.patch(`/cycles/${postponingCycle.id}/postpone`, { newReviewStart })
+      setPostponingCycle(null); setNewReviewStart('')
+      refetch()
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : '操作失敗')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   const [form, setForm] = useState<CreateCyclePayload>({
     name:             '',
@@ -228,6 +264,8 @@ export default function CyclesPage() {
               nextStatusLabel={nextStatusLabel}
               onAdvance={canEdit ? () => handleAdvanceClick(cycle) : undefined}
               onEdit={isAdmin ? () => setEditingCycle(cycle) : undefined}
+              onConfirmAdvance={canEdit ? () => setConfirmingCycle(cycle) : undefined}
+              onPostpone={canEdit ? () => { setPostponingCycle(cycle); setNewReviewStart(cycle.reviewStart.slice(0, 10)) } : undefined}
             />
           ))}
         </div>
@@ -279,6 +317,65 @@ export default function CyclesPage() {
           onClose={() => setEditingCycle(null)}
           onSave={updateCycle}
         />
+      )}
+
+      {/* Confirm Auto-Advance Modal */}
+      {confirmingCycle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">確認如期自動推進</h2>
+            <p className="mb-4 text-sm text-gray-600">
+              確認後，系統將於 <strong>{new Date(confirmingCycle.reviewStart).toLocaleDateString('zh-TW')}</strong> 自動將
+              <strong>【{confirmingCycle.name}】</strong>推進至員工自評期，並通知所有參與者。
+            </p>
+            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 mb-4">
+              若需延後，請點「取消」後改用「延期」功能設定新日期。
+            </div>
+            {actionError && <p className="mb-3 text-sm text-red-500">{actionError}</p>}
+            <div className="flex justify-end gap-3">
+              <button className="btn-secondary" onClick={() => { setConfirmingCycle(null); setActionError('') }} disabled={actionLoading}>
+                取消
+              </button>
+              <button className="btn-primary" onClick={handleConfirmAdvance} disabled={actionLoading}>
+                {actionLoading ? '處理中…' : '確認如期開始'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Postpone Modal */}
+      {postponingCycle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">延期評核開始日</h2>
+            <p className="mb-4 text-sm text-gray-600">
+              為 <strong>【{postponingCycle.name}】</strong> 設定新的評核開始日期。系統將自動通知所有員工與主管。
+            </p>
+            <form onSubmit={handlePostpone} className="space-y-4">
+              <div>
+                <label className="label">新的評核開始日期</label>
+                <input
+                  type="date"
+                  className="input"
+                  required
+                  min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
+                  value={newReviewStart}
+                  onChange={(e) => setNewReviewStart(e.target.value)}
+                />
+              </div>
+              {actionError && <p className="text-sm text-red-500">{actionError}</p>}
+              <div className="flex justify-end gap-3 pt-1">
+                <button type="button" className="btn-secondary" onClick={() => { setPostponingCycle(null); setActionError('') }} disabled={actionLoading}>
+                  {tCommon('cancel')}
+                </button>
+                <button type="submit" className="btn-primary" disabled={actionLoading || !newReviewStart}>
+                  {actionLoading ? '處理中…' : '確認延期並通知'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* New Cycle Modal */}
@@ -488,7 +585,7 @@ function TemplatePrepTrack({
 // ─── Cycle Card ───────────────────────────────────────────────────────────────
 
 function CycleCard({
-  cycle, canEdit, isAdmin, cycleTemplates, nextStatusLabel, onAdvance, onEdit,
+  cycle, canEdit, isAdmin, cycleTemplates, nextStatusLabel, onAdvance, onEdit, onConfirmAdvance, onPostpone,
 }: {
   cycle: PerformanceCycle
   canEdit: boolean
@@ -497,12 +594,27 @@ function CycleCard({
   nextStatusLabel: Record<string, string>
   onAdvance?: () => void
   onEdit?: () => void
+  onConfirmAdvance?: () => void
+  onPostpone?: () => void
 }) {
   const t      = useTranslations('cycles')
   const locale = useLocale()
 
   const nextLabel  = nextStatusLabel[cycle.status]
   const regionName = cycle.region?.name ?? ''
+
+  // 7 天前提醒：評核期還沒到、還沒確認、HR 可操作
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const reviewStart = new Date(cycle.reviewStart)
+  const daysUntilReview = Math.ceil((reviewStart.getTime() - today.getTime()) / 86400000)
+  const showAdvanceBanner = (
+    canEdit &&
+    cycle.status === 'InProgress' &&
+    daysUntilReview <= 7 &&
+    !cycle.advanceConfirmed
+  )
+  const showConfirmedBadge = canEdit && cycle.status === 'InProgress' && cycle.advanceConfirmed
+  const reviewStartPast = cycle.status === 'InProgress' && reviewStart < today && !cycle.advanceConfirmed
 
   return (
     <div className="card">
@@ -522,6 +634,57 @@ function CycleCard({
           )}
         </div>
       </div>
+
+      {/* 評核期已過但未確認 → 橘色警示 */}
+      {reviewStartPast && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <div className="flex-1">
+            <p className="font-medium text-amber-800">評核期已於 {reviewStart.toLocaleDateString('zh-TW')} 到期，尚未推進</p>
+            <p className="mt-0.5 text-xs text-amber-600">請確認如期開始，或設定新的評核日期。</p>
+            <div className="mt-2 flex gap-2">
+              {onConfirmAdvance && <button onClick={onConfirmAdvance} className="rounded-md bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600 transition-colors">確認立即推進</button>}
+              {onPostpone && <button onClick={onPostpone} className="rounded-md border border-amber-300 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors">設定新日期</button>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7 天前提醒 → 藍色確認橫幅 */}
+      {showAdvanceBanner && !reviewStartPast && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1">
+            <p className="font-medium text-blue-800">
+              評核期將於 {reviewStart.toLocaleDateString('zh-TW')}（{daysUntilReview} 天後）開始
+            </p>
+            <p className="mt-0.5 text-xs text-blue-600">請確認是否如期開始，或設定延期日期。確認後系統將在當天自動推進並通知所有參與者。</p>
+            <div className="mt-2 flex gap-2">
+              {onConfirmAdvance && <button onClick={onConfirmAdvance} className="rounded-md bg-blue-500 px-3 py-1 text-xs font-medium text-white hover:bg-blue-600 transition-colors">確認如期開始</button>}
+              {onPostpone && <button onClick={onPostpone} className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors">延期</button>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 已確認自動推進 → 綠色標示 */}
+      {showConfirmedBadge && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm">
+          <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-green-700">
+            已確認：系統將於 <strong>{reviewStart.toLocaleDateString('zh-TW')}</strong> 自動推進至員工自評期
+          </p>
+          {onPostpone && (
+            <button onClick={onPostpone} className="ml-auto text-xs text-green-600 underline hover:text-green-800">需要延期？</button>
+          )}
+        </div>
+      )}
 
       {cycleTemplates !== null && cycle.status !== 'Completed' ? (
         <>

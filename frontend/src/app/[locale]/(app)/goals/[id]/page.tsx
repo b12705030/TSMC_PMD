@@ -21,6 +21,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     PendingApproval:   { label: t('statusLabel.PendingApproval'), pct: 30,  color: 'bg-yellow-400' },
     Approved:          { label: t('statusLabel.Approved'),        pct: 65,  color: 'bg-indigo-500' },
     Completed:         { label: t('statusLabel.Completed'),       pct: 100, color: 'bg-green-500' },
+    Rejected:          { label: t('statusLabel.Rejected'),        pct: 0,   color: 'bg-red-400' },
   }
 
   const SMART_LABELS = [

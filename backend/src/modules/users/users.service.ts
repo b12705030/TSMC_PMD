@@ -85,6 +85,36 @@ export class UsersService {
     return rows.map((r) => r.jobTitle)
   }
 
+  async getGroupedJobTitles(user: SessionUser): Promise<{ management: string[]; staff: string[] }> {
+    const isGlobal = user.role === Role.Admin || user.role === Role.GlobalHR
+    const where = isGlobal ? {} : { regionId: user.regionId }
+
+    const rows = await this.prisma.user.findMany({
+      where,
+      select: { jobTitle: true, role: true },
+      orderBy: { jobTitle: 'asc' },
+    })
+
+    const managementTitles = new Set<string>()
+    const staffTitles      = new Set<string>()
+
+    for (const row of rows) {
+      if (row.role === Role.Supervisor || row.role === Role.Manager) {
+        managementTitles.add(row.jobTitle)
+      } else {
+        staffTitles.add(row.jobTitle)
+      }
+    }
+
+    // 若某職稱同時有主管和非主管，歸類到主管群
+    for (const t of managementTitles) staffTitles.delete(t)
+
+    return {
+      management: [...managementTitles].sort(),
+      staff:      [...staffTitles].sort(),
+    }
+  }
+
   async getEmployee(id: string, currentUser: SessionUser) {
     const target = await this.prisma.user.findUnique({
       where:   { id },

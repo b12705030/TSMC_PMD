@@ -19,6 +19,12 @@ export class GoalsController {
     return this.goalsService.getMyGoals(user.id)
   }
 
+  @Get('team')
+  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
+  getTeamGoals(@CurrentUser() user: SessionUser) {
+    return this.goalsService.getTeamGoals(user)
+  }
+
   @Get('employee/:employeeId')
   @Roles(Role.Supervisor, Role.Manager, Role.Admin)
   getEmployeeGoalsInline(

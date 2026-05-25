@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../../prisma/prisma.service'
 import type { RequestWithUser } from '../types/request.types'
 
+const IDLE_TIMEOUT_MS = 1000 * 60 * 30 // 30 分鐘閒置自動過期
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
@@ -25,6 +27,19 @@ export class AuthGuard implements CanActivate {
     if (!session || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Session expired or invalid')
     }
+
+    // 閒置逾時檢查
+    const idleMs = Date.now() - session.lastActiveAt.getTime()
+    if (idleMs > IDLE_TIMEOUT_MS) {
+      await this.prisma.session.delete({ where: { id: sessionId } })
+      throw new UnauthorizedException('Session idle timeout')
+    }
+
+    // 非同步更新 lastActiveAt（不阻塞請求）
+    void this.prisma.session.update({
+      where: { id: sessionId },
+      data:  { lastActiveAt: new Date() },
+    })
 
     const { user } = session
     request.user = {

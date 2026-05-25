@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import { useEmployee } from '@/modules/users/hooks/useTeam'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { ReviewGrade } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
@@ -18,6 +19,8 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
   const t = useTranslations('team')
   const tCommon = useTranslations('common')
   const { employee, goals, reviews, isLoading } = useEmployee(employeeId)
+  const { user } = useAuth()
+  const isSupervisor = user?.role === 'Supervisor'
 
   if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
   if (!employee) return <p className="text-error">{t('employee.notFound')}</p>
@@ -82,7 +85,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
                 {review.grade && (
                   <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>
                 )}
-                <StatusBadge status={review.status} />
+                <StatusBadge status={isSupervisor && review.status === 'Appealed' ? 'Published' : review.status} />
               </div>
             </Link>
           ))}

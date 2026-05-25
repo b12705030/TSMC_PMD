@@ -85,6 +85,55 @@ export class GoalsService {
     })
   }
 
+  async getTeamGoals(user: SessionUser) {
+    // 根據角色決定哪些員工屬於這個主管/經理
+    let subordinateIds: string[] = []
+
+    if (user.role === Role.Supervisor) {
+      const members = await this.prisma.user.findMany({
+        where:  { supervisorId: user.id },
+        select: { id: true },
+      })
+      subordinateIds = members.map((m) => m.id)
+    } else if (user.role === Role.Manager) {
+      // 直屬（無 supervisor）+ supervisor 底下的員工
+      const direct = await this.prisma.user.findMany({
+        where:  { managerId: user.id, supervisorId: null },
+        select: { id: true },
+      })
+      const viaSup = await this.prisma.user.findMany({
+        where:  { supervisor: { managerId: user.id } },
+        select: { id: true },
+      })
+      subordinateIds = [...direct, ...viaSup].map((m) => m.id)
+    } else if (isGlobalRole(user)) {
+      // GlobalHR / Admin：看整個 region 或全部
+      const members = await this.prisma.user.findMany({
+        where:  user.role === Role.Admin ? {} : { regionId: user.regionId },
+        select: { id: true },
+      })
+      subordinateIds = members.map((m) => m.id)
+    } else {
+      throw new ForbiddenException()
+    }
+
+    if (subordinateIds.length === 0) return []
+
+    const goals = await this.prisma.goal.findMany({
+      where: {
+        userId:   { in: subordinateIds },
+        status:   { not: 'Draft' },   // 草稿不給主管看，員工送出後才可見
+      },
+      include: {
+        ...GOAL_INCLUDE,
+        user:  { select: { id: true, name: true, employeeId: true, jobTitle: true, jobLevel: true } },
+        cycle: { select: { id: true, name: true } },
+      },
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+    })
+    return goals
+  }
+
   async getGoalsByEmployee(employeeId: string, user: SessionUser) {
     const isSupervisor = user.role === Role.Supervisor
     const isManager    = user.role === Role.Manager
@@ -110,7 +159,7 @@ export class GoalsService {
     }
 
     return this.prisma.goal.findMany({
-      where:   { userId: employeeId },
+      where:   { userId: employeeId, status: { not: 'Draft' } },  // 草稿不給主管看
       include: GOAL_INCLUDE,
       orderBy: { createdAt: 'desc' },
     })

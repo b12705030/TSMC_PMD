@@ -54,5 +54,5 @@ export function useCycles() {
     setCycles((prev) => prev.map((c) => (c.id === id ? updated : c)))
   }
 
-  return { cycles, isLoading, error, createCycle, updateCycle, advanceStatus }
+  return { cycles, isLoading, error, createCycle, updateCycle, advanceStatus, refetch: fetchCycles }
 }

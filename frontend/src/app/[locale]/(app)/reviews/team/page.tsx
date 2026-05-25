@@ -28,12 +28,8 @@ export default function TeamReviewsPage() {
   const tCommon = useTranslations('common')
   const { reviews, isLoading, error, refetch } = useTeamReviews()
   const { user } = useAuth()
-  const isManager = user?.role === 'Manager'
-
-  const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
-    PendingSupervisorReview: t('teamActionPending'),
-    PendingManagerApproval:  t('teamActionManager'),
-  }
+  const isManager    = user?.role === 'Manager'
+  const isSupervisor = user?.role === 'Supervisor'
 
   const pendingCount = reviews.filter((r) => r.status === 'PendingSupervisorReview').length
 
@@ -94,7 +90,7 @@ export default function TeamReviewsPage() {
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <TeamReviewCard key={review.id} review={review} statusAction={STATUS_ACTION} />
+            <TeamReviewCard key={review.id} review={review} isManager={isManager} isSupervisor={isSupervisor} />
           ))}
         </div>
       )}
@@ -104,13 +100,36 @@ export default function TeamReviewsPage() {
 
 function TeamReviewCard({
   review,
-  statusAction,
+  isManager,
+  isSupervisor,
 }: {
   review: PerformanceReviewDetail
-  statusAction: Partial<Record<ReviewStatus, string>>
+  isManager: boolean
+  isSupervisor: boolean
 }) {
-  const actionLabel = statusAction[review.status]
-  const needsAction = review.status === 'PendingSupervisorReview'
+  // Supervisors should not know an appeal was filed — show Appealed as Published
+  const displayStatus = isSupervisor && review.status === 'Appealed' ? 'Published' : review.status
+
+  // 依角色決定「是否需要我動作」與顯示文字
+  let actionLabel: string | null = null
+  let needsAction = false
+
+  if (isManager) {
+    if (displayStatus === 'PendingSupervisorReview') {
+      // 這是主管的工作，對 Manager 只是資訊提示
+      actionLabel = `待主管初評（${review.supervisor?.name ?? '主管'}）`
+      needsAction = false
+    } else if (displayStatus === 'PendingManagerApproval') {
+      actionLabel = '→ 待你校準確認'
+      needsAction = true
+    }
+  } else {
+    // Supervisor
+    if (displayStatus === 'PendingSupervisorReview') {
+      actionLabel = '→ 待你初評'
+      needsAction = true
+    }
+  }
 
   return (
     <Link
@@ -137,7 +156,7 @@ function TeamReviewCard({
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge status={review.status} />
+          <StatusBadge status={displayStatus as ReviewStatus} />
           {review.grade && (
             <span className={`text-xl font-bold ${GRADE_TEXT_COLOR[review.grade]}`}>
               {GRADE_DISPLAY[review.grade]}

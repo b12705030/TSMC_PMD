@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
 import { Sidebar } from '@/components/Sidebar'
+import { IdleWatcher } from '@/components/IdleWatcher'
+import { DeadlineToast } from '@/components/DeadlineToast'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { api } from '@/lib/api'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, setUser } = useAuth()
   const t = useTranslations('common')
 
   useEffect(() => {
@@ -16,6 +19,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.push('/login')
     }
   }, [user, isLoading, router])
+
+  const handleIdle = useCallback(async () => {
+    await api.post('/auth/logout', {}).catch(() => {})
+    setUser(null)
+    router.push('/login')
+  }, [router, setUser])
 
   if (isLoading) {
     return (
@@ -31,6 +40,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <DeadlineToast />
+      <IdleWatcher onIdle={handleIdle} />
     </div>
   )
 }

@@ -2,7 +2,11 @@ import { PrismaClient, Role, CycleType, CycleStatus, GoalStatus, GoalType, Revie
 import bcrypt from 'bcryptjs'
 import { Client as EsClient } from '@elastic/elasticsearch'
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  datasources: {
+    db: { url: process.env.DIRECT_URL ?? process.env.DATABASE_URL },
+  },
+})
 
 // ─── Regions ──────────────────────────────────────────────────────────────────
 
@@ -442,10 +446,10 @@ async function main() {
       id: 'seed-tw-annual-2026',
       name: '2026 年度績效考核',
       type: CycleType.Annual,
-      status: CycleStatus.GoalSetting,
+      status: CycleStatus.InProgress,   // 目標設定期(1-3月)已過，現為執行追蹤期
       regionCode: 'TW',
       goalSettingStart: new Date('2026-01-01'),
-      goalSettingEnd:   new Date('2026-03-31'),
+      goalSettingEnd:   new Date('2026-09-30'),  // 目標可追蹤至評核開始前
       reviewStart:      new Date('2026-10-01'),
       reviewEnd:        new Date('2026-12-15'),
     },

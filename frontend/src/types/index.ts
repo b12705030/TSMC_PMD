@@ -38,14 +38,30 @@ export interface PerformanceCycle {
   goalSettingEnd: string
   reviewStart: string
   reviewEnd: string
+  advanceConfirmed: boolean
+  advanceConfirmedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+export type NotificationType = 'CycleAdvanceReminder' | 'CycleAutoAdvanced' | 'CyclePostponed'
+
+export interface AppNotification {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  read: boolean
+  cycleId: string | null
+  createdAt: string
 }
 
 // ─── Goal ─────────────────────────────────────────────────────────────────────
 
 export type GoalType = 'Personal' | 'Team'
-export type GoalStatus = 'Draft' | 'PendingApproval' | 'Approved' | 'Completed'
+export type GoalStatus = 'Draft' | 'PendingApproval' | 'Approved' | 'Completed' | 'Rejected'
 
 export interface Goal {
   id: string
@@ -173,6 +189,8 @@ export interface Appeal {
     id: string
     grade?: ReviewGrade
     supervisorComment?: string
+    employeeAnswers?:   ReviewAnswer[]
+    supervisorAnswers?: ReviewAnswer[]
     cycle:    { id: string; name: string }
     template?: { id: string; name: string; questions: TemplateQuestion[] }
   }

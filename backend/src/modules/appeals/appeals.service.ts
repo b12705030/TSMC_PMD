@@ -16,8 +16,10 @@ const APPEAL_INCLUDE = {
   review: {
     select: {
       id: true, grade: true, supervisorComment: true,
+      employeeAnswers:   true,  // 員工自評答案（申訴審查時需要）
+      supervisorAnswers: true,  // 主管評核答案（申訴審查時需要）
       cycle:    { select: { id: true, name: true } },
-      template: { select: { id: true, name: true, questions: true } },
+      template: { select: { id: true, name: true, questions: { orderBy: { orderIndex: 'asc' as const } } } },
     },
   },
 } as const
@@ -85,6 +87,7 @@ export class AppealsService {
   }
 
   // 取得單筆申訴（當事員工、指定 Manager、RegionalHR 同地區、或 Admin/GlobalHR 可看）
+  // 員工查看時自動標為已讀
   async getAppealById(id: string, user: SessionUser) {
     const appeal = await this.prisma.appeal.findUnique({
       where:   { id },
@@ -103,7 +106,28 @@ export class AppealsService {
     if (user.id !== appeal.employeeId && user.id !== appeal.managerId) {
       throw new ForbiddenException()
     }
+
+    // 員工查看後標為已讀
+    if (user.id === appeal.employeeId && !appeal.seenByEmployee) {
+      void this.prisma.appeal.update({
+        where: { id },
+        data:  { seenByEmployee: true },
+      })
+    }
+
     return appeal
+  }
+
+  // 員工查詢未讀的申訴結果通知數
+  async getUnreadCount(user: SessionUser): Promise<{ count: number }> {
+    const count = await this.prisma.appeal.count({
+      where: {
+        employeeId:    user.id,
+        status:        'Resolved',
+        seenByEmployee: false,
+      },
+    })
+    return { count }
   }
 
   // Manager / Admin 回覆並解決申訴（可選調整等第）
@@ -116,7 +140,8 @@ export class AppealsService {
     const [updatedAppeal] = await this.prisma.$transaction([
       this.prisma.appeal.update({
         where:   { id },
-        data:    { managerResponse: dto.response, status: 'Resolved', resolvedAt: new Date() },
+        // seenByEmployee = false → 員工下次進系統會看到通知
+        data:    { managerResponse: dto.response, status: 'Resolved', resolvedAt: new Date(), seenByEmployee: false },
         include: APPEAL_INCLUDE,
       }),
       this.prisma.performanceReview.update({

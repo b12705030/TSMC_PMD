@@ -20,9 +20,9 @@ export class ReviewsController {
     return this.reviewsService.getMyReviews(user.id)
   }
 
-  // Supervisor / Manager / Admin: team reviews
+  // Supervisor / Manager / RegionalHR / Admin: team reviews
   @Get('team')
-  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
+  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
   getTeamReviews(@CurrentUser() user: SessionUser) {
     return this.reviewsService.getTeamReviews(user)
   }

@@ -24,6 +24,24 @@ export function useAppeals() {
   return { appeals, isLoading, error, refetch: fetch }
 }
 
+// 員工：查詢未讀的申訴結果通知數（每 60 秒輪詢一次）
+export function useAppealUnreadCount() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const load = () => {
+      api.get<{ count: number }>('/appeals/my-unread-count')
+        .then((data) => setCount(data.count))
+        .catch(() => {}) // 非關鍵功能，靜默失敗
+    }
+    load()
+    const timer = setInterval(load, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return count
+}
+
 export function useAppeal(id: string) {
   const [appeal, setAppeal] = useState<Appeal | null>(null)
   const [isLoading, setIsLoading] = useState(true)

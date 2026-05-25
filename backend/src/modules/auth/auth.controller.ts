@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
+import { Throttle, SkipThrottle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { AuthGuard } from '../../common/guards/auth.guard'
@@ -25,11 +26,15 @@ const COOKIE_OPTIONS = {
 }
 
 @Controller('auth')
+@SkipThrottle() // 預設跳過全域 throttle，只在 login 單獨設定
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // IP throttle：每分鐘最多 10 次（超過回 429）
+  // 帳號鎖定邏輯在 AuthService（5 次失敗鎖 10 分鐘）
   @Post('login')
   @HttpCode(200)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const ip = (req.ip ?? req.socket.remoteAddress) ?? 'unknown'
     const { sessionId, user } = await this.authService.login(dto, ip)

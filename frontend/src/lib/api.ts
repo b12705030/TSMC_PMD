@@ -12,6 +12,12 @@ class ApiError extends Error {
   }
 }
 
+// 全域 401 事件：讓 AuthContext 監聽並清除 user
+// reason: 'idle' | 'expired'
+export function dispatchUnauthorized(reason: 'idle' | 'expired') {
+  window.dispatchEvent(new CustomEvent('app:unauthorized', { detail: { reason } }))
+}
+
 async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}/api${path}`, {
     method,
@@ -22,7 +28,17 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ message: res.statusText }))
-    throw new ApiError(res.status, errorBody.message ?? res.statusText)
+    const msg = errorBody.message ?? res.statusText
+
+    // 全域 401 處理：通知 AuthContext 登出
+    if (res.status === 401) {
+      const reason = typeof msg === 'string' && msg.toLowerCase().includes('idle')
+        ? 'idle'
+        : 'expired'
+      dispatchUnauthorized(reason)
+    }
+
+    throw new ApiError(res.status, msg)
   }
 
   // 204 No Content

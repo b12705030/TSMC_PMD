@@ -80,6 +80,12 @@ export class UsersController {
     return this.usersService.getDistinctJobTitles(user)
   }
 
+  @Get('job-titles-grouped')
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  getJobTitlesGrouped(@CurrentUser() user: SessionUser) {
+    return this.usersService.getGroupedJobTitles(user)
+  }
+
   // PATCH 必須在 :id GET 之前，避免路由衝突
   @Patch(':id')
   @Roles(Role.Admin)

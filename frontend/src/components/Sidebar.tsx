@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { api } from '@/lib/api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { useAppealUnreadCount } from '@/modules/appeals/hooks/useAppeals'
+import { useNotifications } from '@/modules/notifications/hooks/useNotifications'
 import { RoleBadge } from '@/components/RoleBadge'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import type { Role } from '@/types'
+import type { Role, AppNotification } from '@/types'
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +25,7 @@ function Icon({ path, path2 }: { path: string; path2?: string }) {
 const ICONS: Record<string, React.ReactNode> = {
   '/dashboard':   <Icon path="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" path2="M9 22V12h6v10" />,
   '/goals':       <Icon path="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3" />,
+  '/goals/team':  <Icon path="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2zm-1 8h8m-8 4h5" />,
   '/reviews':     <Icon path="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" path2="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2zm0 8h6m-6 4h4" />,
   '/reviews/team':<Icon path="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" path2="M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8 4a4 4 0 0 1 0 7.75M23 21v-2a4 4 0 0 0-3-3.87" />,
   '/team':        <Icon path="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />,
@@ -35,7 +38,7 @@ const ICONS: Record<string, React.ReactNode> = {
 
 // ─── Nav items (using translation keys) ──────────────────────────────────────
 
-type NavKey = 'dashboard' | 'myGoals' | 'myReviews' | 'myReviewsSub' | 'teamReviews' | 'teamReviewsSub' | 'myTeam' | 'cycles' | 'templates' | 'users' | 'appeals' | 'auditLog'
+type NavKey = 'dashboard' | 'myGoals' | 'teamGoals' | 'myReviews' | 'myReviewsSub' | 'teamReviews' | 'teamReviewsSub' | 'myTeam' | 'cycles' | 'templates' | 'users' | 'appeals' | 'auditLog'
 
 interface NavItem {
   labelKey: NavKey
@@ -46,7 +49,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { labelKey: 'dashboard',   href: '/dashboard',    roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor'] },
+  { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor', 'Manager'] },
+  { labelKey: 'teamGoals',   href: '/goals/team',    roles: ['Supervisor', 'Manager'] },
   { labelKey: 'myReviews',   subKey: 'myReviewsSub', href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'] },
   { labelKey: 'teamReviews', subKey: 'teamReviewsSub', href: '/reviews/team', roles: ['Supervisor', 'Manager'] },
   { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'] },
@@ -86,11 +90,30 @@ export function Sidebar() {
     router.push('/login')
   }
 
+  // 員工身份時才查詢未讀申訴數（其他角色 hook 內部會拿到 403，已靜默處理）
+  const appealUnreadCount = useAppealUnreadCount()
+
+  // 通知鈴鐺
+  const { notifications, unreadCount: notifUnread, markRead, markAllRead } = useNotifications()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  // 點外部關閉通知面板
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
   if (!user) return null
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role))
   const activeHref   = visibleItems
-    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/') || pathname.includes(`/${item.href.split('/')[1]}`))
+    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href
 
   const initials = (user.name ?? '?')[0]
@@ -113,10 +136,11 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="space-y-0.5">
           {visibleItems.map((item) => {
-            const isActive = item.href === activeHref
-            const icon     = ICONS[item.href]
-            const label    = tNav(item.labelKey)
-            const sub      = item.subKey ? tNav(item.subKey) : undefined
+            const isActive  = item.href === activeHref
+            const icon      = ICONS[item.href]
+            const label     = tNav(item.labelKey)
+            const sub       = item.subKey ? tNav(item.subKey) : undefined
+            const showBadge = item.href === '/reviews' && appealUnreadCount > 0
             return (
               <li key={item.href}>
                 {collapsed ? (
@@ -124,13 +148,16 @@ export function Sidebar() {
                   <div className="group relative">
                     <Link
                       href={item.href}
-                      className={`flex h-10 w-10 items-center justify-center rounded-md transition-colors ${
+                      className={`relative flex h-10 w-10 items-center justify-center rounded-md transition-colors ${
                         isActive
                           ? 'bg-primary-50 text-primary-700'
                           : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                       }`}
                     >
                       {icon}
+                      {showBadge && (
+                        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+                      )}
                     </Link>
                     {/* Tooltip */}
                     <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap">
@@ -150,7 +177,7 @@ export function Sidebar() {
                     <span className={isActive ? 'text-primary-600' : 'text-gray-400'}>
                       {icon}
                     </span>
-                    <span className="flex flex-col min-w-0">
+                    <span className="flex flex-col min-w-0 flex-1">
                       <span className="truncate">{label}</span>
                       {sub && (
                         <span className={`text-xs font-normal truncate ${isActive ? 'text-primary-500' : 'text-gray-400'}`}>
@@ -158,6 +185,11 @@ export function Sidebar() {
                         </span>
                       )}
                     </span>
+                    {showBadge && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                        {appealUnreadCount}
+                      </span>
+                    )}
                   </Link>
                 )}
               </li>
@@ -176,6 +208,82 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" d={collapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'} />
         </svg>
       </button>
+
+      {/* Notification Bell */}
+      <div ref={notifRef} className="relative border-t border-gray-200 px-2 py-2">
+        {collapsed ? (
+          <div className="group relative">
+            <button
+              onClick={() => setNotifOpen((v) => !v)}
+              className="relative flex h-10 w-10 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {notifUnread > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-500" />
+              )}
+            </button>
+            <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap">
+              通知
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setNotifOpen((v) => !v)}
+            className="relative flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          >
+            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span>通知</span>
+            {notifUnread > 0 && (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-xs font-bold text-white">
+                {notifUnread}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Notification Panel */}
+        {notifOpen && (
+          <div className="absolute bottom-full left-0 z-50 mb-1 w-80 rounded-xl border border-gray-200 bg-white shadow-xl"
+               style={{ left: collapsed ? '3.5rem' : '0' }}>
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <span className="text-sm font-semibold text-gray-900">通知</span>
+              {notifUnread > 0 && (
+                <button onClick={markAllRead} className="text-xs text-blue-500 hover:text-blue-700">
+                  全部標為已讀
+                </button>
+              )}
+            </div>
+            <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+              {notifications.length === 0 ? (
+                <li className="px-4 py-6 text-center text-sm text-gray-400">沒有通知</li>
+              ) : (
+                notifications.map((n: AppNotification) => (
+                  <li
+                    key={n.id}
+                    onClick={() => { if (!n.read) markRead(n.id) }}
+                    className={`cursor-pointer px-4 py-3 hover:bg-gray-50 transition-colors ${n.read ? '' : 'bg-blue-50/50'}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />}
+                      <div className={!n.read ? '' : 'ml-4'}>
+                        <p className="text-xs font-semibold text-gray-800">{n.title}</p>
+                        <p className="mt-0.5 text-xs text-gray-500 leading-snug">{n.message}</p>
+                        <p className="mt-1 text-xs text-gray-300">
+                          {new Date(n.createdAt).toLocaleDateString('zh-TW')}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
 
       {/* Language switcher */}
       {!collapsed && (

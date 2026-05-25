@@ -194,6 +194,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   const isManager     = user.role === 'Manager' || user.role === 'Admin'
   // Direct-report: supervisorId is null, manager handles the review directly
   const isDirectReportManager = isManager && review.supervisorId === null && user.id === review.employee.managerId
+  // Supervisors should not see that an appeal was filed — show Appealed reviews as Published to them
+  const displayAsAppealed = review.status === 'Appealed' && !isSupervisor
 
   const canEmployeeEdit   = isEmployee && review.status === 'PendingEmployeeSubmit'
   const canSupervisorEdit = (isSupervisor || isDirectReportManager) && review.status === 'PendingSupervisorReview'
@@ -303,7 +305,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           },
           { label: review.cycle.name },
         ]}
-        actions={<StatusBadge status={review.status} />}
+        actions={<StatusBadge status={isSupervisor && review.status === 'Appealed' ? 'Published' : review.status} />}
       />
 
       {/* Status banner: supervisor/manager viewing before employee submits */}
@@ -350,17 +352,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {/* ── Published result ── */}
       {(review.status === 'Published' || review.status === 'Appealed') && review.grade && (
         <div className={`mb-6 rounded-xl border p-5 ${
-          review.status === 'Appealed' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+          displayAsAppealed ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
         }`}>
           <div className="flex items-start justify-between">
             <div>
-              <p className={`text-sm font-semibold mb-1 ${review.status === 'Appealed' ? 'text-red-700' : 'text-green-700'}`}>
-                {review.status === 'Appealed' ? t('detail.published.appealed') : t('detail.published.result')}
+              <p className={`text-sm font-semibold mb-1 ${displayAsAppealed ? 'text-red-700' : 'text-green-700'}`}>
+                {displayAsAppealed ? t('detail.published.appealed') : t('detail.published.result')}
               </p>
-              <p className={`text-4xl font-bold mb-1 ${review.status === 'Appealed' ? 'text-red-800' : 'text-green-800'}`}>
+              <p className={`text-4xl font-bold mb-1 ${displayAsAppealed ? 'text-red-800' : 'text-green-800'}`}>
                 {GRADE_DISPLAY[review.grade]}
               </p>
-              <p className={`text-sm font-medium ${review.status === 'Appealed' ? 'text-red-600' : 'text-green-600'}`}>
+              <p className={`text-sm font-medium ${displayAsAppealed ? 'text-red-600' : 'text-green-600'}`}>
                 {GRADE_SCALE.find(g => g.grade === review.grade)?.label}
                 <span className="mx-1.5 opacity-50">·</span>
                 <span className="font-normal">{GRADE_SCALE.find(g => g.grade === review.grade)?.desc}</span>
@@ -370,7 +372,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {review.supervisorComment && (
-            <p className={`text-sm border-t pt-3 mt-3 ${review.status === 'Appealed' ? 'text-red-700 border-red-200' : 'text-green-700 border-green-200'}`}>
+            <p className={`text-sm border-t pt-3 mt-3 ${displayAsAppealed ? 'text-red-700 border-red-200' : 'text-green-700 border-green-200'}`}>
               <span className="font-medium">{t('detail.published.supervisorComment')}</span>{review.supervisorComment}
             </p>
           )}
@@ -416,7 +418,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             </div>
           )}
 
-          {isEmployee && review.status === 'Appealed' && (
+          {isEmployee && displayAsAppealed && (
             <p className="mt-4 text-xs text-red-600 border-t border-red-200 pt-3">
               {t('detail.published.appealSubmitted')}
             </p>
