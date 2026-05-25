@@ -110,6 +110,8 @@ export class AuthService {
         department:   user!.department.name,
         jobLevel:     user!.jobLevel,
         jobTitle:     user!.jobTitle,
+        managerId:    user!.managerId    ?? undefined,
+        supervisorId: user!.supervisorId ?? undefined,
       },
     }
   }
@@ -146,17 +148,19 @@ export class AuthService {
 
     const { user } = session
     return {
-      id: user.id,
-      employeeId: user.employeeId,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      regionId: user.regionId,
-      region: user.region.name,
+      id:           user.id,
+      employeeId:   user.employeeId,
+      name:         user.name,
+      email:        user.email,
+      role:         user.role,
+      regionId:     user.regionId,
+      region:       user.region.name,
       departmentId: user.departmentId,
-      department: user.department.name,
-      jobLevel: user.jobLevel,
-      jobTitle: user.jobTitle,
+      department:   user.department.name,
+      jobLevel:     user.jobLevel,
+      jobTitle:     user.jobTitle,
+      managerId:    user.managerId    ?? undefined,
+      supervisorId: user.supervisorId ?? undefined,
     }
   }
 }

@@ -13,6 +13,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params)
   const t = useTranslations('goals')
   const tCommon = useTranslations('common')
+  const tNav = useTranslations('nav')
   const { goal, isLoading, error, refetch } = useGoal(id)
   const { user } = useAuth()
 
@@ -38,6 +39,8 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const [localMilestones, setLocalMilestones] = useState<GoalMilestone[]>([])
   const [approving, setApproving]         = useState(false)
   const [submitting, setSubmitting]        = useState(false)
+  const [showRejectPanel, setShowRejectPanel] = useState(false)
+  const [rejectReason, setRejectReason]       = useState('')
 
   // Auto-open milestone input when redirected from goal creation (?m=1)
   useEffect(() => {
@@ -71,11 +74,15 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     ? (progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500')
     : config.color
 
-  const dueDate   = new Date(goal.dueDate)
-  const isOverdue = dueDate < new Date() && goal.status !== 'Completed'
+  const dueDate    = new Date(goal.dueDate)
+  const isOverdue  = dueDate < new Date() && goal.status !== 'Completed'
   const canApprove = (user?.role === 'Supervisor' || user?.role === 'Manager') && goal.status === 'PendingApproval'
   const isOwner    = user?.id === goal.userId
-  const canSubmit  = isOwner && goal.status === 'Draft'
+  const canSubmit  = isOwner && (goal.status === 'Draft' || goal.status === 'Rejected')
+
+  // 麵包屑：擁有者 → 我的目標；主管/經理看別人 → 團隊目標
+  const breadcrumbLabel = isOwner ? t('detail.breadcrumb') : tNav('teamGoals')
+  const breadcrumbHref  = isOwner ? '/goals' : '/goals/team'
 
   const deadlineLabel = goal.status === 'Completed'
     ? t('deadline.completed')
@@ -95,7 +102,14 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
   async function handleReject() {
     setApproving(true)
-    try { await api.patch(`/goals/${id}/reject`, {}); refetch() } finally { setApproving(false) }
+    try {
+      await api.patch(`/goals/${id}/reject`, { reason: rejectReason.trim() || undefined })
+      setShowRejectPanel(false)
+      setRejectReason('')
+      refetch()
+    } finally {
+      setApproving(false)
+    }
   }
 
   async function handleAddMilestone(e: React.FormEvent) {
@@ -195,7 +209,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     <div>
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-2 text-sm text-gray-400">
-        <Link href="/goals" className="hover:text-gray-600">{t('detail.breadcrumb')}</Link>
+        <Link href={breadcrumbHref} className="hover:text-gray-600">{breadcrumbLabel}</Link>
         <span>/</span>
         <span className="text-gray-600 truncate max-w-xs">{goal.title}</span>
       </div>
@@ -208,6 +222,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
             ${goal.status === 'Completed'       ? 'bg-green-100 text-green-700'
             : goal.status === 'Approved'        ? 'bg-indigo-100 text-indigo-700'
             : goal.status === 'PendingApproval' ? 'bg-yellow-100 text-yellow-700'
+            : goal.status === 'Rejected'        ? 'bg-red-100 text-red-700'
             : 'bg-gray-100 text-gray-500'}`}
           >
             {config.label}
@@ -251,6 +266,14 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
           ))}
         </div>
 
+        {/* 退回原因 banner（員工看到） */}
+        {goal.status === 'Rejected' && goal.rejectionReason && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-xs font-semibold text-red-700 mb-1">退回原因</p>
+            <p className="text-sm text-red-600">{goal.rejectionReason}</p>
+          </div>
+        )}
+
         {/* Employee: submit draft for approval */}
         {canSubmit && (
           <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
@@ -266,11 +289,11 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
         )}
 
         {/* Supervisor / Manager approval actions */}
-        {canApprove && (
+        {canApprove && !showRejectPanel && (
           <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
             <p className="flex-1 text-xs text-yellow-700">{t('detail.submit.pendingNote')}</p>
             <button
-              onClick={handleReject}
+              onClick={() => setShowRejectPanel(true)}
               disabled={approving}
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
             >
@@ -283,6 +306,36 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
             >
               {approving ? t('detail.submit.processing') : t('detail.submit.approveBtn')}
             </button>
+          </div>
+        )}
+
+        {/* 退回確認 inline 面板 */}
+        {canApprove && showRejectPanel && (
+          <div className="mt-5 border-t border-red-100 pt-4 space-y-3">
+            <p className="text-xs font-semibold text-red-700">確定要退回此目標嗎？</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="請填寫退回原因（選填），員工將看到此訊息"
+              rows={3}
+              className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-red-300 resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleReject}
+                disabled={approving}
+                className="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40"
+              >
+                {approving ? t('detail.submit.processing') : '確定退回'}
+              </button>
+              <button
+                onClick={() => { setShowRejectPanel(false); setRejectReason('') }}
+                disabled={approving}
+                className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              >
+                取消
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { api } from '@/lib/api'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -45,27 +46,30 @@ interface NavItem {
   subKey?: NavKey
   href: string
   roles: Role[]
+  isTeam?: boolean   // 縮排顯示，代表「查看下屬」類功能
+  dividerBefore?: boolean  // 在此項目前加一條分隔線
 }
 
 const NAV_ITEMS: NavItem[] = [
   { labelKey: 'dashboard',   href: '/dashboard',    roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor', 'Manager'] },
+  { labelKey: 'myGoals',     href: '/goals',         roles: ['Employee', 'Supervisor', 'Manager'], dividerBefore: true },
   { labelKey: 'teamGoals',   href: '/goals/team',    roles: ['Supervisor', 'Manager'] },
-  { labelKey: 'myReviews',   subKey: 'myReviewsSub', href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'] },
+  { labelKey: 'myReviews',   subKey: 'myReviewsSub', href: '/reviews',       roles: ['Employee', 'Supervisor', 'Manager'], dividerBefore: true },
   { labelKey: 'teamReviews', subKey: 'teamReviewsSub', href: '/reviews/team', roles: ['Supervisor', 'Manager'] },
-  { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'] },
-  { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
+  { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'], dividerBefore: true },
+  { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'], dividerBefore: true },
   { labelKey: 'templates',   href: '/templates',     roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager'] },
   { labelKey: 'users',       href: '/users',         roles: ['Admin'] },
-  { labelKey: 'appeals',     href: '/appeals',       roles: ['Manager'] },
+  { labelKey: 'appeals',     href: '/appeals',       roles: ['Manager', 'Admin', 'GlobalHR', 'RegionalHR'] },
   { labelKey: 'auditLog',    href: '/audit-log',     roles: ['Admin', 'GlobalHR', 'RegionalHR'] },
 ]
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 export function Sidebar() {
-  const pathname  = usePathname()
-  const router    = useRouter()
+  const pathname      = usePathname()
+  const searchParams  = useSearchParams()
+  const router        = useRouter()
   const { user, setUser } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
   const tNav     = useTranslations('nav')
@@ -90,13 +94,39 @@ export function Sidebar() {
     router.push('/login')
   }
 
-  // 員工身份時才查詢未讀申訴數（其他角色 hook 內部會拿到 403，已靜默處理）
-  const appealUnreadCount = useAppealUnreadCount()
+  // 只有 Employee 才需要查詢未讀申訴數，其他角色傳 enabled=false 避免每分鐘觸發 403
+  const appealUnreadCount = useAppealUnreadCount(user?.role === 'Employee')
 
   // 通知鈴鐺
   const { notifications, unreadCount: notifUnread, markRead, markAllRead } = useNotifications()
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+
+  // 通知點擊導航對應頁面
+  function getNotificationHref(type: string, role: string): string | null {
+    switch (type) {
+      case 'GoalSubmitted':
+        return role === 'Employee' ? '/goals' : '/goals/team'
+      case 'GoalRejected':
+      case 'GoalApproved':
+        return '/goals'
+      case 'AppealFiled':
+        return '/appeals'
+      case 'AppealResolved':
+        return '/appeals'
+      case 'ReviewSubmitted':
+      case 'ReviewApproved':
+        return '/reviews/team'
+      case 'ReviewPublished':
+        return '/reviews'
+      case 'CycleAutoAdvanced':
+      case 'CyclePostponed':
+      case 'CycleAdvanceReminder':
+        return '/cycles'
+      default:
+        return null
+    }
+  }
 
   // 點外部關閉通知面板
   useEffect(() => {
@@ -112,9 +142,27 @@ export function Sidebar() {
   if (!user) return null
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role))
-  const activeHref   = visibleItems
-    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href
+
+  // ?from=team 參數：從團隊目標/團隊評核點進詳細頁時，正確高亮對應的 sidebar 項目
+  // 否則 /goals/:id 會因前綴匹配而錯誤高亮「我的目標」
+  // 注意：不能用前綴比對找 teamItem，因為 /goals/{uuid} 不會 startsWith /goals/team/
+  // 正確做法：找「href 結尾為 /team」且「去掉 /team 後的基底路徑是當前路徑的前綴」的 item
+  const fromParam = searchParams.get('from')
+  const activeHref = (() => {
+    if (fromParam === 'team') {
+      const teamItem = visibleItems.find((item) => {
+        if (!item.href.endsWith('/team')) return false
+        const baseSection = item.href.slice(0, -'/team'.length) // e.g. /goals/team → /goals
+        return pathname === baseSection || pathname.startsWith(baseSection + '/')
+      })
+      if (teamItem) return teamItem.href
+    }
+
+    const matched = visibleItems
+      .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+      .sort((a, b) => b.href.length - a.href.length)
+    return matched[0]?.href
+  })()
 
   const initials = (user.name ?? '?')[0]
 
@@ -143,6 +191,10 @@ export function Sidebar() {
             const showBadge = item.href === '/reviews' && appealUnreadCount > 0
             return (
               <li key={item.href}>
+                {/* 分隔線 */}
+                {item.dividerBefore && !collapsed && (
+                  <div className="my-1 border-t border-gray-100" />
+                )}
                 {collapsed ? (
                   // Collapsed: icon only + tooltip
                   <div className="group relative">
@@ -210,18 +262,18 @@ export function Sidebar() {
       </button>
 
       {/* Notification Bell */}
-      <div ref={notifRef} className="relative border-t border-gray-200 px-2 py-2">
+      <div ref={notifRef} className="relative border-t border-gray-200 px-4 py-2">
         {collapsed ? (
-          <div className="group relative">
+          <div className="group relative flex justify-center">
             <button
               onClick={() => setNotifOpen((v) => !v)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              className="relative flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               {notifUnread > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-500" />
+                <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
               )}
             </button>
             <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap">
@@ -231,14 +283,14 @@ export function Sidebar() {
         ) : (
           <button
             onClick={() => setNotifOpen((v) => !v)}
-            className="relative flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="relative flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
           >
-            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span>通知</span>
+            <span className="truncate">通知</span>
             {notifUnread > 0 && (
-              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-xs font-bold text-white">
+              <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-white">
                 {notifUnread}
               </span>
             )}
@@ -264,7 +316,11 @@ export function Sidebar() {
                 notifications.map((n: AppNotification) => (
                   <li
                     key={n.id}
-                    onClick={() => { if (!n.read) markRead(n.id) }}
+                    onClick={() => {
+                      if (!n.read) markRead(n.id)
+                      const href = getNotificationHref(n.type, user.role)
+                      if (href) { setNotifOpen(false); router.push(href) }
+                    }}
                     className={`cursor-pointer px-4 py-3 hover:bg-gray-50 transition-colors ${n.read ? '' : 'bg-blue-50/50'}`}
                   >
                     <div className="flex items-start gap-2">

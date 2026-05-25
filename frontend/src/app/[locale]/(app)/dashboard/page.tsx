@@ -336,15 +336,32 @@ function EmployeeSection() {
     pendingApproval: goals.filter((g) => g.status === 'PendingApproval').length,
     approved:        goals.filter((g) => g.status === 'Approved').length,
     completed:       goals.filter((g) => g.status === 'Completed').length,
+    rejected:        goals.filter((g) => g.status === 'Rejected').length,
   }
+
+  const hasActionItems = (!gl && goalStats.rejected > 0) || (!rl && pendingReviews.length > 0)
 
   return (
     <>
-      {!rl && pendingReviews.length > 0 && (
+      {hasActionItems && (
         <section className="mb-6">
           <h2 className="section-heading">{t('actionsRequired')}</h2>
           <div className="space-y-2">
-            {pendingReviews.map((r) => (
+            {!gl && goalStats.rejected > 0 && (
+              <Link
+                href="/goals"
+                className="flex items-center justify-between rounded-lg border-l-4 border-l-red-500 bg-red-50 p-4 hover:bg-red-100 transition-colors"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {t('goals.rejectedWarning', { count: goalStats.rejected })}
+                  </p>
+                  <p className="text-sm text-gray-600">{t('goals.rejectedWarningDesc')}</p>
+                </div>
+                <span className="text-sm font-medium text-red-600">{t('goTo')}</span>
+              </Link>
+            )}
+            {!rl && pendingReviews.map((r) => (
               <Link
                 key={r.id}
                 href={`/reviews/${r.id}`}
@@ -384,6 +401,7 @@ function EmployeeSection() {
                 { label: t('goals.pendingApproval'), count: goalStats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
                 { label: t('goals.approved'),        count: goalStats.approved,         color: 'bg-green-100 text-green-700' },
                 { label: t('goals.completed'),       count: goalStats.completed,        color: 'bg-indigo-100 text-indigo-700' },
+                ...(goalStats.rejected > 0 ? [{ label: t('goals.rejected'), count: goalStats.rejected, color: 'bg-red-100 text-red-700' }] : []),
               ].map(({ label, count, color }) => (
                 <Link key={label} href="/goals" className={`rounded-lg p-3 text-center ${color} block hover:opacity-80`}>
                   <p className="text-2xl font-bold">{count}</p>

@@ -85,6 +85,7 @@ function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<G
           ${goal.status === 'Completed'       ? 'bg-green-100 text-green-700'
           : goal.status === 'Approved'        ? 'bg-indigo-100 text-indigo-700'
           : goal.status === 'PendingApproval' ? 'bg-yellow-100 text-yellow-700'
+          : goal.status === 'Rejected'        ? 'bg-red-100 text-red-700'
           : 'bg-gray-100 text-gray-500'}`}
         >
           {config.label}

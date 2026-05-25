@@ -32,8 +32,17 @@ async function bootstrap() {
   )
 
   const isDev = process.env.NODE_ENV !== 'production'
+  // In production, FRONTEND_URL can be a comma-separated list of allowed origins
+  // or a single origin. We parse it into a regex/array so subdomains work correctly.
+  const prodOrigin = (() => {
+    const raw = process.env.FRONTEND_URL ?? ''
+    const origins = raw.split(',').map((o) => o.trim()).filter(Boolean)
+    if (origins.length === 0) return false
+    if (origins.length === 1) return origins[0]
+    return origins
+  })()
   app.enableCors({
-    origin: isDev ? /^http:\/\/localhost:\d+$/ : process.env.FRONTEND_URL,
+    origin: isDev ? /^http:\/\/localhost:\d+$/ : prodOrigin,
     credentials: true,
   })
 

@@ -72,8 +72,9 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
   const isManager  = user.id === appeal.managerId
   const isEmployee = user.id === appeal.employeeId
   const isPending  = appeal.status === 'Pending'
+  const isHROrAdmin = ['Admin', 'GlobalHR', 'RegionalHR'].includes(user.role)
 
-  const hasAnswers = isManager && appeal.review?.template &&
+  const hasAnswers = (isManager || isHROrAdmin) && appeal.review?.template &&
     ((appeal.review.employeeAnswers?.length ?? 0) > 0 || (appeal.review.supervisorAnswers?.length ?? 0) > 0)
 
   async function handleRespond() {

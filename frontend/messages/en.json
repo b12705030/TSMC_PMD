@@ -253,7 +253,10 @@
       "draft": "Draft",
       "pendingApproval": "Pending Approval",
       "approved": "Approved",
-      "completed": "Completed"
+      "completed": "Completed",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "My Reviews",
@@ -473,7 +476,8 @@
     "grade": "Grade {grade}",
     "actionRequired": "→ Action Required",
     "teamActionPending": "→ Pending Your Review",
-    "teamActionManager": "Pending Calibration",
+    "teamActionManager": "→ Pending Your Calibration",
+    "teamActionWaitingSup": "Awaiting Supervisor Review ({supervisor})",
     "teamPendingBanner": "You have {count} review(s) pending",
     "teamPendingCalibration": "{count} pending calibration & publish",
     "calibrateBtn": "Enter Calibration",

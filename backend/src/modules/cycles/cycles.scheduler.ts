@@ -35,18 +35,7 @@ export class CyclesScheduler {
 
     for (const cycle of dueForAdvance) {
       try {
-        // 使用 system user 推進（用 Admin 帳號或直接呼叫底層 service）
-        await this.prisma.$transaction(async (tx) => {
-          await tx.performanceCycle.update({
-            where: { id: cycle.id },
-            data:  { status: CycleStatus.EmployeeReview },
-          })
-          // 建立評核（複用 CyclesService 的 buildReviewRows 邏輯）
-          // 這裡直接觸發 advanceStatus 內部的 transaction 邏輯
-        })
-
-        // 直接呼叫 advanceStatus（略過 HTTP 層）
-        // 由於 advanceStatus 內部會做 transaction，這裡用 raw update 並自建 reviews
+        // 直接呼叫 autoAdvanceCycle（一個 transaction：更新 status + 建立 reviews）
         await this.autoAdvanceCycle(cycle.id, cycle.regionId)
 
         // 通知所有參與者

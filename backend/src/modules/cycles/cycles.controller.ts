@@ -40,7 +40,7 @@ export class CyclesController {
   }
 
   @Patch(':id')
-  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  @Roles(Role.Admin)
   updateCycle(@Param('id') id: string, @Body() dto: UpdateCycleDto, @CurrentUser() user: SessionUser) {
     return this.cyclesService.updateCycle(id, dto, user)
   }

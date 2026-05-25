@@ -252,7 +252,10 @@
       "draft": "下書き",
       "pendingApproval": "承認待ち",
       "approved": "承認済み",
-      "completed": "完了"
+      "completed": "完了",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "マイレビュー",
@@ -471,7 +474,8 @@
     "grade": "評価 {grade}",
     "actionRequired": "→ 対応が必要",
     "teamActionPending": "→ レビュー待ち",
-    "teamActionManager": "調整・発布待ち",
+    "teamActionManager": "→ 調整確認待ち",
+    "teamActionWaitingSup": "上司（{supervisor}）の初評待ち",
     "teamPendingBanner": "{count}件のレビューが保留中",
     "teamPendingCalibration": "{count}件の調整・発布待ち",
     "calibrateBtn": "調整へ",

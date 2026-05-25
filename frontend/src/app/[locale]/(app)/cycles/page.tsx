@@ -86,7 +86,7 @@ export default function CyclesPage() {
   const [editingCycle, setEditingCycle]     = useState<PerformanceCycle | null>(null)
   const [managerQStatus, setManagerQStatus] = useState<{ complete: {id:string;name:string}[]; pending: {id:string;name:string}[] } | null>(null)
   const [templates, setTemplates] = useState<ReviewTemplate[]>([])
-  const showTemplatTrack = canEdit || isManager
+  const showTemplateTrack = canEdit || isManager
 
   // 確認自動推進 / 延期
   const [confirmingCycle, setConfirmingCycle]   = useState<PerformanceCycle | null>(null)
@@ -180,10 +180,10 @@ export default function CyclesPage() {
   }, [isAdmin])
 
   useEffect(() => {
-    if (showTemplatTrack) {
+    if (showTemplateTrack) {
       api.get<ReviewTemplate[]>('/templates').then(setTemplates).catch(() => {})
     }
-  }, [showTemplatTrack])
+  }, [showTemplateTrack])
 
   function updateForm<K extends keyof CreateCyclePayload>(field: K, value: CreateCyclePayload[K]) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -260,7 +260,7 @@ export default function CyclesPage() {
               cycle={cycle}
               canEdit={canEdit}
               isAdmin={isAdmin}
-              cycleTemplates={showTemplatTrack ? templates.filter((tt) => tt.cycleId === cycle.id) : null}
+              cycleTemplates={showTemplateTrack ? templates.filter((tt) => tt.cycleId === cycle.id) : null}
               nextStatusLabel={nextStatusLabel}
               onAdvance={canEdit ? () => handleAdvanceClick(cycle) : undefined}
               onEdit={isAdmin ? () => setEditingCycle(cycle) : undefined}

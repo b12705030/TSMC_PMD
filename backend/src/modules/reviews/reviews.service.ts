@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
-import { Role, ReviewStatus } from '@prisma/client'
+import { NotificationsService } from '../notifications/notifications.service'
+import { Prisma, Role, ReviewStatus } from '@prisma/client'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { SaveAnswersDto, SaveSupervisorReviewDto, CalibrateDto } from './dto/review.dto'
@@ -15,7 +16,10 @@ const REVIEW_INCLUDE = {
 
 @Injectable()
 export class ReviewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async getMyReviews(userId: string) {
     const reviews = await this.prisma.performanceReview.findMany({
@@ -141,10 +145,21 @@ export class ReviewsService {
       scopedQuestions,
     )
 
-    return this.prisma.performanceReview.update({
+    const updated = await this.prisma.performanceReview.update({
       where: { id },
       data:  { status: ReviewStatus.PendingSupervisorReview },
     })
+    // 通知 Supervisor（或直屬 Manager）：員工已提交自評
+    const recipientId = review.supervisorId
+      ?? (await this.prisma.user.findUnique({ where: { id: review.employeeId }, select: { managerId: true } }))?.managerId
+    if (recipientId) {
+      void this.notifications.createForUsers([recipientId], {
+        type:    'ReviewSubmitted',
+        title:   '員工自評已完成',
+        message: `${user.name} 已提交自評，請前往填寫評核。`,
+      })
+    }
+    return updated
   }
 
   // Supervisor / Manager (for direct-reports): save review (draft)
@@ -195,10 +210,20 @@ export class ReviewsService {
       throw new BadRequestException('請先選擇等第才能送出評核')
     }
 
-    return this.prisma.performanceReview.update({
+    const updated = await this.prisma.performanceReview.update({
       where: { id },
       data:  { status: ReviewStatus.PendingManagerApproval },
     })
+    // 通知 Manager：Supervisor 已完成初評
+    const managerId = review.employee.managerId
+    if (managerId) {
+      void this.notifications.createForUsers([managerId], {
+        type:    'ReviewApproved',
+        title:   '主管初評已完成',
+        message: `${user.name} 已完成評核初評，請前往進行校準。`,
+      })
+    }
+    return updated
   }
 
   // Manager: calibrate a single review (set grade / rank)
@@ -230,7 +255,7 @@ export class ReviewsService {
     if (user.role === Role.Supervisor && employee.supervisorId !== user.id) throw new ForbiddenException()
     if (user.role === Role.Manager) {
       const isDirectReport = employee.managerId === user.id && !employee.supervisorId
-      const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+      const isViaSuper     = employee.supervisor?.managerId === user.id
       if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
     }
     const reviews = await this.prisma.performanceReview.findMany({
@@ -269,10 +294,22 @@ export class ReviewsService {
       where: { id: { in: pending.map((r) => r.id) } },
       data:  { status: ReviewStatus.Published, publishedAt: new Date() },
     })
+    // 通知所有受影響的員工：評核結果已發布
+    const employeeIds = (await this.prisma.performanceReview.findMany({
+      where:  { id: { in: pending.map((r) => r.id) } },
+      select: { employeeId: true },
+    })).map((r) => r.employeeId)
+    if (employeeIds.length) {
+      void this.notifications.createForUsers(employeeIds, {
+        type:    'ReviewPublished',
+        title:   '績效評核結果已發布',
+        message: '你的績效評核結果已發布，請前往查看。',
+      })
+    }
   }
 
   async getReviewStats(user: SessionUser) {
-    let where: Record<string, unknown> = {}
+    let where: Prisma.PerformanceReviewWhereInput = {}
     if (user.role === Role.Supervisor) {
       where = { supervisorId: user.id }
     } else if (user.role === Role.Manager) {
@@ -288,7 +325,7 @@ export class ReviewsService {
     // Admin 和 GlobalHR：where = {} → 全域統計
 
     const reviews = await this.prisma.performanceReview.findMany({
-      where: where as any,
+      where,
       select: { status: true, grade: true },
     })
 
@@ -348,7 +385,7 @@ export class ReviewsService {
       // Region check
       if (employee.regionId !== user.regionId) throw new ForbiddenException()
       const isDirectReport = employee.managerId === user.id && !employee.supervisorId
-      const isViaSuper     = (employee as any).supervisor?.managerId === user.id
+      const isViaSuper     = employee.supervisor?.managerId === user.id
       if (isDirectReport || isViaSuper) return
     }
 

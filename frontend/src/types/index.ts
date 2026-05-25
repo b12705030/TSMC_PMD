@@ -46,7 +46,18 @@ export interface PerformanceCycle {
 
 // ─── Notification ─────────────────────────────────────────────────────────────
 
-export type NotificationType = 'CycleAdvanceReminder' | 'CycleAutoAdvanced' | 'CyclePostponed'
+export type NotificationType =
+  | 'CycleAdvanceReminder'
+  | 'CycleAutoAdvanced'
+  | 'CyclePostponed'
+  | 'GoalSubmitted'
+  | 'GoalRejected'
+  | 'GoalApproved'
+  | 'AppealFiled'
+  | 'AppealResolved'
+  | 'ReviewSubmitted'
+  | 'ReviewApproved'
+  | 'ReviewPublished'
 
 export interface AppNotification {
   id: string
@@ -75,6 +86,7 @@ export interface Goal {
   dueDate: string        // Time-bound
   type: GoalType
   status: GoalStatus
+  rejectionReason?: string | null
   progressUpdates: ProgressUpdate[]
   milestones: GoalMilestone[]
   createdAt: string

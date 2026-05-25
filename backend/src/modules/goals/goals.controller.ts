@@ -139,8 +139,12 @@ export class GoalsController {
 
   @Patch(':id/reject')
   @Roles(Role.Supervisor, Role.Manager, Role.Admin)
-  rejectGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
-    return this.goalsService.rejectGoal(id, user)
+  rejectGoal(
+    @Param('id') id: string,
+    @CurrentUser() user: SessionUser,
+    @Body() body: { reason?: string },
+  ) {
+    return this.goalsService.rejectGoal(id, user, body.reason)
   }
 
   @Patch(':id/submit')

@@ -252,7 +252,10 @@
       "draft": "草稿",
       "pendingApproval": "待审核",
       "approved": "已核准",
-      "completed": "已完成"
+      "completed": "已完成",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "我的评核",
@@ -471,7 +474,8 @@
     "grade": "等级 {grade}",
     "actionRequired": "→ 需要您的操作",
     "teamActionPending": "→ 待你初评",
-    "teamActionManager": "待校准发布",
+    "teamActionManager": "→ 待你校准确认",
+    "teamActionWaitingSup": "待主管初评（{supervisor}）",
     "teamPendingBanner": "你有 {count} 份评核待处理",
     "teamPendingCalibration": "{count} 份待校准发布",
     "calibrateBtn": "进入校准",

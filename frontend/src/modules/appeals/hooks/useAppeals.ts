@@ -25,10 +25,12 @@ export function useAppeals() {
 }
 
 // 員工：查詢未讀的申訴結果通知數（每 60 秒輪詢一次）
-export function useAppealUnreadCount() {
+// enabled: 僅 Employee 角色傳入 true，其他角色不輪詢以避免 403
+export function useAppealUnreadCount(enabled = false) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
+    if (!enabled) return
     const load = () => {
       api.get<{ count: number }>('/appeals/my-unread-count')
         .then((data) => setCount(data.count))
@@ -37,7 +39,7 @@ export function useAppealUnreadCount() {
     load()
     const timer = setInterval(load, 60000)
     return () => clearInterval(timer)
-  }, [])
+  }, [enabled])
 
   return count
 }

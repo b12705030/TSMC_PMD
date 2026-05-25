@@ -253,7 +253,10 @@
       "draft": "草稿",
       "pendingApproval": "待審核",
       "approved": "已核准",
-      "completed": "已完成"
+      "completed": "已完成",
+      "rejected": "已退回",
+      "rejectedWarning": "{count} 個目標已被退回，請修改後重新提交",
+      "rejectedWarningDesc": "主管已退回你的目標，請前往查看退回原因並修改。"
     },
     "myReviews": {
       "title": "我的評核",
@@ -473,7 +476,8 @@
     "grade": "等第 {grade}",
     "actionRequired": "→ 需要您的操作",
     "teamActionPending": "→ 待你初評",
-    "teamActionManager": "待校準發布",
+    "teamActionManager": "→ 待你校準確認",
+    "teamActionWaitingSup": "待主管初評（{supervisor}）",
     "teamPendingBanner": "你有 {count} 份評核待處理",
     "teamPendingCalibration": "{count} 份待校準發布",
     "calibrateBtn": "進入校準",

@@ -107,6 +107,7 @@ function TeamReviewCard({
   isManager: boolean
   isSupervisor: boolean
 }) {
+  const t = useTranslations('reviews')
   // Supervisors should not know an appeal was filed — show Appealed as Published
   const displayStatus = isSupervisor && review.status === 'Appealed' ? 'Published' : review.status
 
@@ -117,16 +118,16 @@ function TeamReviewCard({
   if (isManager) {
     if (displayStatus === 'PendingSupervisorReview') {
       // 這是主管的工作，對 Manager 只是資訊提示
-      actionLabel = `待主管初評（${review.supervisor?.name ?? '主管'}）`
+      actionLabel = t('teamActionWaitingSup', { supervisor: review.supervisor?.name ?? '-' })
       needsAction = false
     } else if (displayStatus === 'PendingManagerApproval') {
-      actionLabel = '→ 待你校準確認'
+      actionLabel = t('teamActionManager')
       needsAction = true
     }
   } else {
     // Supervisor
     if (displayStatus === 'PendingSupervisorReview') {
-      actionLabel = '→ 待你初評'
+      actionLabel = t('teamActionPending')
       needsAction = true
     }
   }

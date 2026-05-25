@@ -29,6 +29,9 @@ export default function TeamGoalsPage() {
   const [error, setError]       = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [filterStatus, setFilterStatus]   = useState<GoalStatus | 'all'>('all')
+  // 退回確認狀態：null = 未展開；string = 正在輸入原因的 goalId
+  const [rejectingId, setRejectingId]       = useState<string | null>(null)
+  const [rejectReason, setRejectReason]     = useState('')
 
   async function fetchGoals() {
     setLoading(true)
@@ -52,10 +55,22 @@ export default function TeamGoalsPage() {
     }
   }
 
-  async function handleReject(id: string) {
+  function openReject(id: string) {
+    setRejectingId(id)
+    setRejectReason('')
+  }
+
+  function cancelReject() {
+    setRejectingId(null)
+    setRejectReason('')
+  }
+
+  async function confirmReject(id: string) {
     setActionLoading(id)
     try {
-      await api.patch(`/goals/${id}/reject`, {})
+      await api.patch(`/goals/${id}/reject`, { reason: rejectReason.trim() || undefined })
+      setRejectingId(null)
+      setRejectReason('')
       await fetchGoals()
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : '操作失敗')
@@ -93,7 +108,6 @@ export default function TeamGoalsPage() {
       <PageHeader
         title="團隊目標"
         description="查看下屬員工設定的目標，審核待確認的目標。"
-        breadcrumbs={[{ label: '我的目標', href: '/goals' }, { label: '團隊目標' }]}
       />
 
       {/* 待審核提示 */}
@@ -168,50 +182,53 @@ export default function TeamGoalsPage() {
                   return (
                     <div
                       key={goal.id}
-                      className={`rounded-xl border bg-white p-4 shadow-sm transition-all ${
+                      className={`rounded-xl border bg-white shadow-sm transition-all ${
                         isPendingApproval
                           ? 'border-amber-200'
-                          : 'border-gray-200'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">{goal.title}</p>
-                          {goal.description && (
-                            <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">{goal.description}</p>
-                          )}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                            {goal.cycle && <span>📋 {goal.cycle.name}</span>}
-                            {goal.dueDate && (
-                              <span>截止 {new Date(goal.dueDate).toLocaleDateString('zh-TW')}</span>
+                      {/* 可點擊的卡片主體 → 進入目標詳細頁（?from=team 讓 sidebar 高亮「團隊目標」） */}
+                      <Link href={`/goals/${goal.id}?from=team`} className="block p-4 hover:bg-gray-50 rounded-t-xl transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900">{goal.title}</p>
+                            {goal.description && (
+                              <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">{goal.description}</p>
                             )}
+                            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                              {goal.cycle && <span>📋 {goal.cycle.name}</span>}
+                              {goal.dueDate && (
+                                <span>截止 {new Date(goal.dueDate).toLocaleDateString('zh-TW')}</span>
+                              )}
+                              {milestoneTotal > 0 && (
+                                <span>里程碑 {milestoneDone}/{milestoneTotal}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            <StatusBadge status={goal.status} />
+                            {/* 進度條（只有里程碑時顯示） */}
                             {milestoneTotal > 0 && (
-                              <span>里程碑 {milestoneDone}/{milestoneTotal}</span>
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-1.5 w-20 rounded-full bg-gray-100 overflow-hidden">
+                                  <div
+                                    className="h-1.5 rounded-full bg-indigo-400"
+                                    style={{ width: `${(milestoneDone / milestoneTotal) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-gray-400">
+                                  {Math.round((milestoneDone / milestoneTotal) * 100)}%
+                                </span>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2 shrink-0">
-                          <StatusBadge status={goal.status} />
-                          {/* 進度條（只有里程碑時顯示） */}
-                          {milestoneTotal > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-1.5 w-20 rounded-full bg-gray-100 overflow-hidden">
-                                <div
-                                  className="h-1.5 rounded-full bg-indigo-400"
-                                  style={{ width: `${(milestoneDone / milestoneTotal) * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-[10px] text-gray-400">
-                                {Math.round((milestoneDone / milestoneTotal) * 100)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      </Link>
 
-                      {/* 審核按鈕 */}
-                      {isPendingApproval && (
-                        <div className="mt-3 flex items-center gap-2 border-t border-amber-100 pt-3">
+                      {/* 審核按鈕（獨立區域，不觸發卡片導航） */}
+                      {isPendingApproval && rejectingId !== goal.id && (
+                        <div className="flex items-center gap-2 border-t border-amber-100 px-4 py-3">
                           <button
                             onClick={() => handleApprove(goal.id)}
                             disabled={isActioning}
@@ -220,13 +237,43 @@ export default function TeamGoalsPage() {
                             {isActioning ? '處理中...' : '核准'}
                           </button>
                           <button
-                            onClick={() => handleReject(goal.id)}
+                            onClick={() => openReject(goal.id)}
                             disabled={isActioning}
                             className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                           >
-                            {isActioning ? '處理中...' : '退回'}
+                            退回
                           </button>
                           <span className="text-xs text-amber-600 font-medium">待你審核</span>
+                        </div>
+                      )}
+
+                      {/* 退回確認展開區 */}
+                      {isPendingApproval && rejectingId === goal.id && (
+                        <div className="border-t border-red-100 bg-red-50 px-4 py-3 rounded-b-xl space-y-2">
+                          <p className="text-xs font-medium text-red-700">確定要退回此目標嗎？</p>
+                          <textarea
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="請填寫退回原因（選填），員工將看到此訊息"
+                            rows={2}
+                            className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-red-300 resize-none"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => confirmReject(goal.id)}
+                              disabled={isActioning}
+                              className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {isActioning ? '處理中...' : '確定退回'}
+                            </button>
+                            <button
+                              onClick={cancelReject}
+                              disabled={isActioning}
+                              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                              取消
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

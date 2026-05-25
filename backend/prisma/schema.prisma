@@ -47,6 +47,7 @@ enum GoalStatus {
   PendingApproval
   Approved
   Completed
+  Rejected
 }
 
 enum ReviewStatus {
@@ -261,8 +262,9 @@ model Goal {
   targetValue String     // Achievable
   relevance   String     // Relevant
   dueDate     DateTime
-  type        GoalType   @default(Personal)
-  status      GoalStatus @default(Draft)
+  type             GoalType   @default(Personal)
+  status           GoalStatus @default(Draft)
+  rejectionReason  String?    // 主管退回時填寫的原因
 
   progressUpdates ProgressUpdate[]
   milestones      GoalMilestone[]
@@ -359,6 +361,14 @@ enum NotificationType {
   CycleAdvanceReminder  // 評核期 7 天前提醒 HR 確認
   CycleAutoAdvanced     // 系統自動推進了週期
   CyclePostponed        // HR 延期了週期
+  GoalSubmitted         // 員工提交目標，通知主管／經理
+  GoalRejected          // 主管退回目標，通知員工
+  GoalApproved          // 主管核准目標，通知員工
+  AppealFiled           // 員工提出申訴，通知 Manager
+  AppealResolved        // Manager 處理申訴完畢，通知員工
+  ReviewSubmitted       // 員工提交自評，通知 Supervisor
+  ReviewApproved        // Supervisor 提交評核，通知 Manager
+  ReviewPublished       // Manager 發布評核結果，通知員工
 }
 
 model Notification {

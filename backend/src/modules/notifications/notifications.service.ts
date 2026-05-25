@@ -51,7 +51,6 @@ export class NotificationsService {
         message: payload.message,
         cycleId: payload.cycleId ?? null,
       })),
-      skipDuplicates: true,
     })
   }
 

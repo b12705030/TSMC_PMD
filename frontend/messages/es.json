@@ -252,7 +252,10 @@
       "draft": "Borrador",
       "pendingApproval": "Pendiente de aprobación",
       "approved": "Aprobado",
-      "completed": "Completado"
+      "completed": "Completado",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "Mis Evaluaciones",
@@ -471,7 +474,8 @@
     "grade": "Calificación {grade}",
     "actionRequired": "→ Acción requerida",
     "teamActionPending": "→ Su revisión pendiente",
-    "teamActionManager": "Calibración pendiente",
+    "teamActionManager": "→ Su calibración pendiente",
+    "teamActionWaitingSup": "Esperando revisión del supervisor ({supervisor})",
     "teamPendingBanner": "{count} revisión(es) pendiente(s)",
     "teamPendingCalibration": "{count} calibración / publicación pendiente(s)",
     "calibrateBtn": "Entrar en calibración",

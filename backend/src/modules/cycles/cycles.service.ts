@@ -49,15 +49,25 @@ export class CyclesService {
   async createCycle(dto: CreateCycleDto, user: SessionUser) {
     // Admin/GlobalHR 可指定 regionId；其他角色只能在自己地區建立
     const regionId = isGlobalRole(user) && dto.regionId ? dto.regionId : user.regionId
+
+    // Validate date ordering: goalSettingStart < goalSettingEnd < reviewStart < reviewEnd
+    const goalStart   = new Date(dto.goalSettingStart)
+    const goalEnd     = new Date(dto.goalSettingEnd)
+    const reviewStart = new Date(dto.reviewStart)
+    const reviewEnd   = new Date(dto.reviewEnd)
+    if (goalStart >= goalEnd)     throw new BadRequestException('goalSettingStart must be before goalSettingEnd')
+    if (goalEnd >= reviewStart)   throw new BadRequestException('goalSettingEnd must be before reviewStart')
+    if (reviewStart >= reviewEnd) throw new BadRequestException('reviewStart must be before reviewEnd')
+
     return this.prisma.performanceCycle.create({
       data: {
         name:             dto.name,
         type:             dto.type,
         regionId,
-        goalSettingStart: new Date(dto.goalSettingStart),
-        goalSettingEnd:   new Date(dto.goalSettingEnd),
-        reviewStart:      new Date(dto.reviewStart),
-        reviewEnd:        new Date(dto.reviewEnd),
+        goalSettingStart: goalStart,
+        goalSettingEnd:   goalEnd,
+        reviewStart,
+        reviewEnd,
       },
       include: { region: { select: { id: true, name: true, code: true } } },
     })

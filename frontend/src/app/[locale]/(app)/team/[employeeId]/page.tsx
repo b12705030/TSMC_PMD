@@ -62,7 +62,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="mb-6 space-y-2">
           {goals.map((goal) => (
-            <Link key={goal.id} href={`/goals/${goal.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+            <Link key={goal.id} href={`/goals/${goal.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
               <div>
                 <p className="text-sm font-medium text-gray-900">{goal.title}</p>
                 <p className="text-xs text-gray-400">{t('employee.deadline', { date: new Date(goal.dueDate).toLocaleDateString() })}</p>

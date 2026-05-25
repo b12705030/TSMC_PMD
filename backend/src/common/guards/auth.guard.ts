@@ -54,6 +54,8 @@ export class AuthGuard implements CanActivate {
       department: user.department.name,
       jobLevel: user.jobLevel,
       jobTitle: user.jobTitle,
+      managerId: user.managerId ?? undefined,
+      supervisorId: user.supervisorId ?? undefined,
     }
 
     return true

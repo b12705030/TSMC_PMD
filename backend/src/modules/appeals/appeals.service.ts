@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateAppealDto, RespondAppealDto } from './dto/appeal.dto'
@@ -26,7 +27,10 @@ const APPEAL_INCLUDE = {
 
 @Injectable()
 export class AppealsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   // 員工提出申訴
   async createAppeal(user: SessionUser, dto: CreateAppealDto) {
@@ -58,6 +62,12 @@ export class AppealsService {
         data:  { status: 'Appealed' },
       }),
     ])
+    // 通知 Manager：有員工提出申訴
+    void this.notifications.createForUsers([managerId], {
+      type:    'AppealFiled',
+      title:   '收到新申訴',
+      message: `${user.name} 對「${appeal.review?.cycle?.name ?? ''}」週期的評核提出申訴，請前往審查。`,
+    })
     return appeal
   }
 
@@ -152,6 +162,14 @@ export class AppealsService {
         },
       }),
     ])
+    // 通知員工：申訴已處理
+    void this.notifications.createForUsers([appeal.employeeId], {
+      type:    'AppealResolved',
+      title:   '申訴結果已出爐',
+      message: dto.newGrade
+        ? `你的申訴已由主管處理，等第調整為 ${dto.newGrade.replace('_Plus', '+').replace('_Minus', '-')}，請前往查看回覆。`
+        : '你的申訴已由主管處理，請前往查看回覆。',
+    })
     return updatedAppeal
   }
 }

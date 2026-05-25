@@ -252,7 +252,10 @@
       "draft": "Entwurf",
       "pendingApproval": "Genehmigung ausstehend",
       "approved": "Genehmigt",
-      "completed": "Abgeschlossen"
+      "completed": "Abgeschlossen",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "Meine Bewertungen",
@@ -471,7 +474,8 @@
     "grade": "Beurteilung {grade}",
     "actionRequired": "→ Aktion erforderlich",
     "teamActionPending": "→ Ihre Bewertung ausstehend",
-    "teamActionManager": "Kalibrierung ausstehend",
+    "teamActionManager": "→ Ihre Kalibrierung ausstehend",
+    "teamActionWaitingSup": "Warte auf Bewertung durch Vorgesetzten ({supervisor})",
     "teamPendingBanner": "{count} Bewertung(en) ausstehend",
     "teamPendingCalibration": "{count} Kalibrierung / Veröffentlichung ausstehend",
     "calibrateBtn": "Kalibrierung starten",

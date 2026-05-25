@@ -269,6 +269,57 @@
 
 ---
 
+## 2026-05-26 全面審查修正（Code Review 前）
+
+| # | 問題類別 | 問題描述 | 修正方式 | 狀態 |
+|---|---------|---------|---------|------|
+| 1 | 🔴 Critical RBAC | `appeals.controller.ts` `@Get()` 和 `@Get(':id')` 缺少 `RegionalHR`、`GlobalHR`，導致 RegionalHR 呼叫 API 永遠 403，即使 service 層已正確處理 | 兩個 endpoint 都加上 `Role.RegionalHR, Role.GlobalHR` | ✅ 已修 |
+| 2 | 🔴 Critical RBAC | `reviews.controller.ts` `GET ':id'` 缺少 `RegionalHR`，RegionalHR 看不到個別評核 | 加上 `Role.RegionalHR` | ✅ 已修 |
+| 3 | 🔴 Critical Bug | `cycles.scheduler.ts` `handleDailyCheck()` 內有兩個相鄰 transaction：第一個只更新 status 沒建 reviews；第二個 `autoAdvanceCycle` 才完整更新 status + 建 reviews，導致雙重寫入 | 移除多餘的第一個 `$transaction` block，僅保留 `autoAdvanceCycle` | ✅ 已修 |
+| 4 | 🟠 Missing Notification | `goals.service.ts:approveGoal()` 核准目標後無通知員工 | 新增 `GoalApproved` 通知 type，核准時 `createForUsers([goal.userId])` | ✅ 已修 |
+| 5 | 🟠 Missing Notification | `appeals.service.ts:createAppeal()` 員工提出申訴後未通知 Manager | 新增 `AppealFiled` type，申訴建立後通知 managerId | ✅ 已修 |
+| 6 | 🟠 Missing Notification | `appeals.service.ts:respondToAppeal()` Manager 解決申訴後未發 bell 通知（只有 `seenByEmployee: false` flag） | 新增 `AppealResolved` type，解決後通知員工 | ✅ 已修 |
+| 7 | 🟠 Missing Notification | `reviews.service.ts:submitEmployee()` 員工提交自評後未通知 Supervisor | 新增 `ReviewSubmitted` type，提交後通知 supervisorId（或 managerId） | ✅ 已修 |
+| 8 | 🟠 Missing Notification | `reviews.service.ts:submitSupervisor()` Supervisor 提交評核後未通知 Manager | 新增 `ReviewApproved` type，提交後通知 employee.managerId | ✅ 已修 |
+| 9 | 🟠 Missing Notification | `reviews.service.ts:publishAll()` 發布評核結果後未通知員工 | 新增 `ReviewPublished` type，發布後通知所有受影響員工 | ✅ 已修 |
+| 10 | 🟡 DB Schema | `NotificationType` enum 只有 5 個值，缺少以上 6 個新 type | `schema.prisma` 補全 enum；新建 migration `20260526000002_notification_types_v2` | ✅ 已修 |
+| 11 | 🟡 Module DI | `appeals.module.ts`、`reviews.module.ts` 未 import `NotificationsModule`，注入 `NotificationsService` 會失敗 | 兩個 module 都 `imports: [NotificationsModule]` | ✅ 已修 |
+| 12 | 🟡 UI Bug | `goals/page.tsx:GoalCard` badge 顏色：`Rejected` 狀態掉到 else 分支顯示灰色，應為紅色 | 加上 `goal.status === 'Rejected' ? 'bg-red-100 text-red-700'` case | ✅ 已修 |
+| 13 | 🟡 UI Bug | `dashboard/page.tsx:EmployeeSection` 無 rejected goals 計數，員工不知道有目標被退回 | goalStats 加 `rejected`；有退回目標時顯示紅色 action banner；stats grid 顯示紅色數字 | ✅ 已修 |
+| 14 | 🟡 UI Bug | `goals/team/page.tsx` PageHeader breadcrumb 顯示「我的目標 / 團隊目標」，誤導上下級關係 | 移除 breadcrumbs，團隊目標為獨立頂層頁面 | ✅ 已修 |
+| 15 | 🟡 UX Bug | Sidebar `NAV_ITEMS`：`teamGoals` 和 `teamReviews` 設有 `isTeam: true`，渲染時加 `ml-3 text-xs` 使其視覺上縮排在「我的目標」/「我的評核」下方，形成錯誤的上下級關係 | 移除 `isTeam: true` 及對應 `ml-3 text-xs` CSS；改為各自頂層項目，以 `dividerBefore` 分組 | ✅ 已修 |
+| 16 | 🟡 UX Bug | Sidebar `appeals` entry 只列 `['Manager']`，Admin/GlobalHR/RegionalHR 無申訴入口（且對應 controller @Roles 也缺少） | sidebar roles 補上 Admin/GlobalHR/RegionalHR | ✅ 已修 |
+| 17 | 🟡 UX Bug | Sidebar 通知列表點擊只標已讀，不跳轉到相關頁面 | 加 `getNotificationHref(type, role)` function，點通知後 `router.push(href)` | ✅ 已修 |
+| 18 | 🔵 Data Gap | `auth.service.ts:login()` 和 `getMe()` response 不含 `managerId`/`supervisorId`，但前端 `User` type 有這兩欄 | 兩個 method 的回傳物件補上 `managerId`/`supervisorId` | ✅ 已修 |
+| 19 | 🔵 Type Sync | `frontend/src/types/index.ts` `NotificationType` 只有舊的 5 個值 | 補上 6 個新值 | ✅ 已修 |
+
+---
+
+## 2026-05-26 第二輪審查修正（Code Review 前補強）
+
+| # | 問題類別 | 問題描述 | 修正方式 | 狀態 |
+|---|---------|---------|---------|------|
+| 1 | 🔴 Type Sync | `SessionUser` 缺少 `managerId?`/`supervisorId?` 欄位；`auth.guard.ts` 也未填入，前端重新整理後 `user.managerId` 為 undefined | `request.types.ts` 補欄位；`auth.guard.ts` 填入 `user.managerId ?? undefined` / `user.supervisorId ?? undefined` | ✅ 已修 |
+| 2 | 🔴 RBAC Mismatch | `cycles.controller.ts PATCH /:id` 標 `@Roles(Admin, GlobalHR, RegionalHR)`，但 service 拋 403 給非 Admin — GlobalHR/RegionalHR 永遠 403 | controller 改為 `@Roles(Role.Admin)` 與 service 一致 | ✅ 已修 |
+| 3 | 🔴 Null Deref | `goals.service.ts` milestone 操作（toggleMilestone / updateMilestoneNote / updateMilestoneUrl / deleteMilestone）使用 `goal!.userId` 強制解引用，goal 不存在時崩潰 | 四個方法均加 `if (!goal) throw new NotFoundException('Goal not found')` | ✅ 已修 |
+| 4 | 🔴 RBAC Gap | `reviews.controller.ts GET /reviews` 缺 `RegionalHR`，RegionalHR 無法查看自己的評核 | 加上 `Role.RegionalHR` | ✅ 已修 |
+| 5 | 🟠 UI Logic | `appeals/[id]/page.tsx hasAnswers` 只檢查 `isManager`，Admin/GlobalHR/RegionalHR 看不到 Q&A 面板 | 加 `isHROrAdmin` 判斷，`hasAnswers = (isManager \|\| isHROrAdmin) && ...` | ✅ 已修 |
+| 6 | 🟠 UI Bug | `dashboard/page.tsx EmployeeSection` goalStats.rejected 和 pendingReviews 各自渲染獨立 `<h2>actionsRequired</h2>`，兩個條件同時成立時出現重複標題 | 合併為單一 `hasActionItems` 控制，一個 `<section>` 內依序渲染兩種 action 項目 | ✅ 已修 |
+| 7 | 🟡 UI Bug | `goals/[id]/page.tsx` status badge：`Rejected` 掉到 else 顯示灰色，應為紅色 | 加 `goal.status === 'Rejected' ? 'bg-red-100 text-red-700'` case | ✅ 已修 |
+| 8 | 🟡 i18n | `goals/[id]/page.tsx` 麵包屑中非 owner 顯示硬編碼 `'團隊目標'` | 加 `const tNav = useTranslations('nav')`，改為 `tNav('teamGoals')` | ✅ 已修 |
+| 9 | 🟡 i18n | `reviews/team/page.tsx TeamReviewCard` action labels 全部硬編碼中文 | 新增 `teamActionWaitingSup` i18n key 到全部 7 個 locale 檔；`TeamReviewCard` 加 `useTranslations`；`teamActionManager` 同步更新至更準確措辭 | ✅ 已修 |
+| 10 | 🟡 Logic Bug | `notifications.service.ts createForUsers` 使用 `skipDuplicates: true`，但 `Notification` table 無 unique constraint — 此選項無效，會讓開發者誤以為有去重保護 | 移除 `skipDuplicates: true` | ✅ 已修 |
+| 11 | 🟡 Polling 403 | `useAppealUnreadCount` 對所有角色每 60 秒輪詢，非 Employee 角色每分鐘觸發 403 | hook 加 `enabled` 參數（預設 false）；`Sidebar.tsx` 改為 `useAppealUnreadCount(user?.role === 'Employee')` | ✅ 已修 |
+| 12 | 🟡 Security | `audit-write.interceptor.ts sanitizeBody` 只過濾頂層敏感欄位，巢狀物件中的 `password`/`token` 等不會被移除 | 改為遞迴處理；敏感 key set 擴充加入 `accessToken`/`refreshToken`/`apiKey`/`authorization` | ✅ 已修 |
+| 13 | 🟡 Audit Gap | `route-action.map.ts` 缺少 `POST:/users`、`PATCH:/cycles/:id/confirm-advance`、`PATCH:/cycles/:id/postpone` | 補齊三個 mapping；Users section 整合去除重複 comment | ✅ 已修 |
+| 14 | 🟡 Validation | `cycles.service.ts createCycle` 無日期合理性驗證，可建立 goalSettingEnd > reviewStart 的無效週期 | 加入 `goalStart < goalEnd < reviewStart < reviewEnd` 順序驗證 | ✅ 已修 |
+| 15 | 🟡 Config | `main.ts` 生產環境 `origin: process.env.FRONTEND_URL` 只支援完整字串比對，多 origin 或子網域無法匹配 | 改為解析逗號分隔字串成陣列，單值保持字串 | ✅ 已修 |
+| 16 | 🔵 TypeScript | `goals.service.ts` `(employee as any).supervisor?.managerId` (×2) — include: { supervisor: true } 已有型別 | 移除兩處 `as any` 強制轉型 | ✅ 已修 |
+| 17 | 🔵 TypeScript | `reviews.service.ts` `(employee as any).supervisor?.managerId` (×2) + `where: where as any` | `where` 改型別為 `Prisma.PerformanceReviewWhereInput`；import `Prisma`；移除三處 `as any` | ✅ 已修 |
+| 18 | 🔵 Typo | `cycles/page.tsx` `showTemplatTrack`（漏字母 e）→ 4 處全部替換 | `replace_all: true` 修正為 `showTemplateTrack` | ✅ 已修 |
+
+---
+
 ## 實作順序（建議）
 
 ```

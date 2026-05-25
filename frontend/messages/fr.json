@@ -252,7 +252,10 @@
       "draft": "Brouillon",
       "pendingApproval": "En attente d'approbation",
       "approved": "Approuvé",
-      "completed": "Terminé"
+      "completed": "Terminé",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "Mes Évaluations",
@@ -471,7 +474,8 @@
     "grade": "Note {grade}",
     "actionRequired": "→ Action requise",
     "teamActionPending": "→ Votre évaluation en attente",
-    "teamActionManager": "Calibration en attente",
+    "teamActionManager": "→ Votre calibration en attente",
+    "teamActionWaitingSup": "En attente de l'évaluation du superviseur ({supervisor})",
     "teamPendingBanner": "{count} évaluation(s) en attente",
     "teamPendingCalibration": "{count} calibration / publication en attente",
     "calibrateBtn": "Entrer en calibration",

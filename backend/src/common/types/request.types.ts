@@ -13,6 +13,8 @@ export interface SessionUser {
   department: string   // department.name — for display
   jobLevel: string
   jobTitle: string
+  managerId?: string   // direct manager's user id (null for top-level)
+  supervisorId?: string // supervisor's user id (null if none)
 }
 
 export interface RequestWithUser extends Request {
