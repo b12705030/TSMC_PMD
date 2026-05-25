@@ -10,7 +10,8 @@
     "cycles": "Cycles",
     "templates": "Templates",
     "appeals": "Appeals",
-    "auditLog": "Audit Log"
+    "auditLog": "Audit Log",
+    "users": "User Management"
   },
   "sidebar": {
     "logout": "Logout",
@@ -70,21 +71,21 @@
     "invalidCredentials": "Invalid credentials. Please try again."
   },
   "cycleStepper": {
-    "companyGoal":        "Company/Dept. Goals Published",
-    "companyGoalDesc":    "Provides direction for employees to set their goals",
-    "goalSetting":        "Goal Setting",
-    "goalSettingDesc":    "Employees set their SMART goals",
-    "inProgress":         "In Progress",
-    "inProgressDesc":     "Goal tracking underway",
-    "reviewStart":        "Review Period Begins",
-    "employeeReview":     "Employee Review",
+    "companyGoal": "Company/Dept. Goals Published",
+    "companyGoalDesc": "Provides direction for employees to set their goals",
+    "goalSetting": "Goal Setting",
+    "goalSettingDesc": "Employees set their SMART goals",
+    "inProgress": "In Progress",
+    "inProgressDesc": "Goal tracking underway",
+    "reviewStart": "Review Period Begins",
+    "employeeReview": "Employee Review",
     "employeeReviewDesc": "Complete performance form",
-    "supervisorReview":     "Supervisor Review",
+    "supervisorReview": "Supervisor Review",
     "supervisorReviewDesc": "Supervisor conducts evaluation",
-    "calibration":        "Calibration",
-    "calibrationDesc":    "Manager adjusts and publishes results",
-    "completed":          "Completed",
-    "completedDesc":      "Results published"
+    "calibration": "Calibration",
+    "calibrationDesc": "Manager adjusts and publishes results",
+    "completed": "Completed",
+    "completedDesc": "Results published"
   },
   "auditLog": {
     "pageTitle": "Audit Log",
@@ -241,7 +242,9 @@
       "reviewRange": "Review Period: {start} – {end}",
       "publishRange": "Published: {date}"
     },
-    "activeCycles": { "title": "Active Cycles" },
+    "activeCycles": {
+      "title": "Active Cycles"
+    },
     "goals": {
       "title": "My Goals",
       "empty": "No goals set yet",
@@ -535,12 +538,30 @@
       }
     },
     "grades": {
-      "O":       { "label": "Outstanding",              "desc": "Top few — significantly exceeds expectations in all areas" },
-      "S_Plus":  { "label": "Excellent",                "desc": "Exceeds expectations across the board with significant contributions" },
-      "S":       { "label": "Satisfactory",             "desc": "Fully meets all goals and expectations" },
-      "S_Minus": { "label": "Partially Satisfactory",   "desc": "Mostly meets expectations; some areas need improvement" },
-      "I":       { "label": "Needs Improvement",        "desc": "Did not fully meet expectations; requires coaching" },
-      "U":       { "label": "Unsatisfactory",           "desc": "Significantly below standard; will enter PMD tracking" },
+      "O": {
+        "label": "Outstanding",
+        "desc": "Top few — significantly exceeds expectations in all areas"
+      },
+      "S_Plus": {
+        "label": "Excellent",
+        "desc": "Exceeds expectations across the board with significant contributions"
+      },
+      "S": {
+        "label": "Satisfactory",
+        "desc": "Fully meets all goals and expectations"
+      },
+      "S_Minus": {
+        "label": "Partially Satisfactory",
+        "desc": "Mostly meets expectations; some areas need improvement"
+      },
+      "I": {
+        "label": "Needs Improvement",
+        "desc": "Did not fully meet expectations; requires coaching"
+      },
+      "U": {
+        "label": "Unsatisfactory",
+        "desc": "Significantly below standard; will enter PMD tracking"
+      },
       "tooltip": "ⓘ Grade Guide",
       "noAnswer": "(No answer)"
     },
@@ -662,5 +683,47 @@
       "reviews": "Review History",
       "noReviews": "No review records."
     }
+  },
+  "users": {
+    "pageTitle": "User Management",
+    "pageDesc": "Manage roles, regions, departments for all accounts",
+    "newUser": "New User",
+    "searchPlaceholder": "Search by employee ID / name / email",
+    "allRoles": "All Roles",
+    "allRegions": "All Regions",
+    "empty": "No users found",
+    "total": "{count} user(s)",
+    "prev": "Previous",
+    "next": "Next",
+    "edit": "Edit",
+    "colEmployeeId": "Employee ID",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colRole": "Role",
+    "colRegion": "Region",
+    "colDepartment": "Department",
+    "colJobLevel": "Job Level",
+    "colJobTitle": "Job Title",
+    "editTitle": "Edit User",
+    "createTitle": "Create Account",
+    "defaultPasswordNote": "Initial password is TSMC@1234.",
+    "fieldEmployeeId": "Employee ID",
+    "fieldName": "Name",
+    "fieldEmail": "Email",
+    "fieldRole": "Role",
+    "fieldRegion": "Region",
+    "fieldDepartment": "Department",
+    "fieldJobLevel": "Job Level",
+    "fieldJobTitle": "Job Title",
+    "selectRegion": "Select Region",
+    "selectDepartment": "Select Department",
+    "requiredFields": "Please fill in all required fields (*)",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create Account",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "saveError": "Save failed",
+    "createError": "Create failed"
   }
 }

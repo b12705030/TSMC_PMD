@@ -53,7 +53,7 @@ export default function TemplatesPage() {
     title.toLowerCase().includes(titleSearch.toLowerCase())
   )
 
-  const isHR = user?.role === 'RegionalHR' || user?.role === 'Admin'
+  const isHR = user?.role === 'RegionalHR' || user?.role === 'Admin' || user?.role === 'GlobalHR'
 
   function toggleGrade(level: string) {
     setForm((prev) => ({

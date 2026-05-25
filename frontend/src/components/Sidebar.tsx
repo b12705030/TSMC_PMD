@@ -28,13 +28,14 @@ const ICONS: Record<string, React.ReactNode> = {
   '/team':        <Icon path="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />,
   '/cycles':      <Icon path="M3 4h18a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" path2="M16 2v4M8 2v4M2 9h20" />,
   '/templates':   <Icon path="M12 2L2 7l10 5 10-5-10-5" path2="M2 17l10 5 10-5M2 12l10 5 10-5" />,
+  '/users':       <Icon path="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" path2="M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm10 0v6m3-3h-6" />,
   '/appeals':     <Icon path="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" path2="M4 22v-7" />,
   '/audit-log':   <Icon path="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0" />,
 }
 
 // ─── Nav items (using translation keys) ──────────────────────────────────────
 
-type NavKey = 'dashboard' | 'myGoals' | 'myReviews' | 'myReviewsSub' | 'teamReviews' | 'teamReviewsSub' | 'myTeam' | 'cycles' | 'templates' | 'appeals' | 'auditLog'
+type NavKey = 'dashboard' | 'myGoals' | 'myReviews' | 'myReviewsSub' | 'teamReviews' | 'teamReviewsSub' | 'myTeam' | 'cycles' | 'templates' | 'users' | 'appeals' | 'auditLog'
 
 interface NavItem {
   labelKey: NavKey
@@ -50,7 +51,8 @@ const NAV_ITEMS: NavItem[] = [
   { labelKey: 'teamReviews', subKey: 'teamReviewsSub', href: '/reviews/team', roles: ['Supervisor', 'Manager'] },
   { labelKey: 'myTeam',      href: '/team',          roles: ['Supervisor', 'Manager'] },
   { labelKey: 'cycles',      href: '/cycles',        roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager', 'Supervisor', 'Employee'] },
-  { labelKey: 'templates',   href: '/templates',     roles: ['GlobalHR', 'RegionalHR', 'Manager'] },
+  { labelKey: 'templates',   href: '/templates',     roles: ['Admin', 'GlobalHR', 'RegionalHR', 'Manager'] },
+  { labelKey: 'users',       href: '/users',         roles: ['Admin'] },
   { labelKey: 'appeals',     href: '/appeals',       roles: ['Manager'] },
   { labelKey: 'auditLog',    href: '/audit-log',     roles: ['Admin', 'GlobalHR', 'RegionalHR'] },
 ]

@@ -1,7 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import bcrypt from 'bcryptjs'
 import { PrismaService } from '../../prisma/prisma.service'
 import type { SessionUser } from '../../common/types/request.types'
 import { Role } from '../../common/enums/role.enum'
+import type { CreateUserDto } from './dto/create-user.dto'
 
 @Injectable()
 export class UsersService {
@@ -104,6 +106,73 @@ export class UsersService {
 
     const { supervisor: _sv, ...rest } = target
     return flattenUser(rest as UserWithRelations)
+  }
+
+  async listUsers(opts: {
+    search?: string
+    role?: string
+    regionId?: string
+    from?: number
+    size?: number
+  }) {
+    const { search, role, regionId, from = 0, size = 50 } = opts
+    const where: Record<string, unknown> = {}
+    if (search) {
+      where.OR = [
+        { name:       { contains: search, mode: 'insensitive' } },
+        { email:      { contains: search, mode: 'insensitive' } },
+        { employeeId: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+    if (role)     where.role     = role
+    if (regionId) where.regionId = regionId
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        include: { region: true, department: true },
+        orderBy: { name: 'asc' },
+        skip: from,
+        take: size,
+      }),
+      this.prisma.user.count({ where }),
+    ])
+
+    return { users: users.map(flattenUser), total }
+  }
+
+  async createUser(dto: CreateUserDto) {
+    const [byEid, byEmail] = await Promise.all([
+      this.prisma.user.findUnique({ where: { employeeId: dto.employeeId } }),
+      this.prisma.user.findUnique({ where: { email: dto.email } }),
+    ])
+    if (byEid)   throw new ConflictException(`Employee ID "${dto.employeeId}" already exists`)
+    if (byEmail) throw new ConflictException(`Email "${dto.email}" already exists`)
+
+    const passwordHash = await bcrypt.hash('TSMC@1234', 10)
+    const created = await this.prisma.user.create({
+      data: {
+        employeeId:   dto.employeeId,
+        name:         dto.name,
+        email:        dto.email,
+        role:         dto.role as unknown as Role,
+        regionId:     dto.regionId,
+        departmentId: dto.departmentId,
+        jobLevel:     dto.jobLevel,
+        jobTitle:     dto.jobTitle,
+        passwordHash,
+      },
+      include: { region: true, department: true },
+    })
+    return flattenUser(created)
+  }
+
+  async getDepartments(regionId?: string) {
+    return this.prisma.department.findMany({
+      where: regionId ? { regionId } : {},
+      select: { id: true, name: true, regionId: true },
+      orderBy: { name: 'asc' },
+    })
   }
 
   async updateUser(id: string, dto: UpdateUserFields) {

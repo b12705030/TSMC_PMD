@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { CreateUserDto } from './dto/create-user.dto'
 import { GoalsService } from '../goals/goals.service'
 import { ReviewsService } from '../reviews/reviews.service'
 import { AuthGuard } from '../../common/guards/auth.guard'
@@ -18,6 +19,36 @@ export class UsersController {
     private readonly goalsService: GoalsService,
     private readonly reviewsService: ReviewsService,
   ) {}
+
+  @Get()
+  @Roles(Role.Admin, Role.GlobalHR)
+  listUsers(
+    @Query('search')   search?: string,
+    @Query('role')     role?: string,
+    @Query('regionId') regionId?: string,
+    @Query('from')     from?: string,
+    @Query('size')     size?: string,
+  ) {
+    return this.usersService.listUsers({
+      search,
+      role,
+      regionId,
+      from: from ? Number(from) : 0,
+      size: size ? Number(size) : 50,
+    })
+  }
+
+  @Post()
+  @Roles(Role.Admin)
+  createUser(@Body() dto: CreateUserDto) {
+    return this.usersService.createUser(dto)
+  }
+
+  @Get('departments')
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  getDepartments(@Query('regionId') regionId?: string) {
+    return this.usersService.getDepartments(regionId)
+  }
 
   @Get('team')
   @Roles(Role.Manager, Role.Supervisor)
