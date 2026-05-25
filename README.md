@@ -145,15 +145,18 @@ docker-compose down
 ### 執行測試
 
 ```bash
-# Backend 單元測試
+# Backend 單元測試（CI 同款，不需資料庫）
 cd backend
-npm test
+npm run test:unit
 
-# 只跑 audit 模組測試
-npm test -- --testPathPattern=audit
+# 只跑 audit 模組
+npm run test:unit -- --testPathPattern=audit
 
 # 含覆蓋率報告
 npm run test:cov
+
+# 整合測試（需 TEST_DATABASE_URL，Tier 2）
+npm run test:integration
 ```
 
 ## Branch Strategy

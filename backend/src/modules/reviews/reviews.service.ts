@@ -1,10 +1,10 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
-import { QuestionType, Role, ReviewStatus } from '@prisma/client'
+import { Role, ReviewStatus } from '@prisma/client'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { SaveAnswersDto, SaveSupervisorReviewDto, CalibrateDto } from './dto/review.dto'
-import type { TemplateQuestion } from '@prisma/client'
+import { validateReviewAnswers } from './review-answers.util'
 
 const REVIEW_INCLUDE = {
   cycle:      true,
@@ -136,7 +136,7 @@ export class ReviewsService {
     const scopedQuestions = review.template.questions.filter(
       (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
     )
-    this.validateAnswers(
+    validateReviewAnswers(
       review.employeeAnswers as { questionId: string; answer: string }[],
       scopedQuestions,
     )
@@ -186,7 +186,7 @@ export class ReviewsService {
     const scopedQuestions = review.template.questions.filter(
       (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
     )
-    this.validateAnswers(
+    validateReviewAnswers(
       review.supervisorAnswers as { questionId: string; answer: string }[],
       scopedQuestions,
     )
@@ -314,49 +314,6 @@ export class ReviewsService {
           (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
         ),
       },
-    }
-  }
-
-  private validateAnswers(
-    answers: { questionId: string; answer: string }[] | null,
-    questions: TemplateQuestion[],
-  ) {
-    const answersMap = new Map((answers ?? []).map((a) => [a.questionId, a.answer]))
-    const validIds   = new Set(questions.map((q) => q.id))
-
-    for (const qid of answersMap.keys()) {
-      if (!validIds.has(qid)) {
-        throw new BadRequestException(`Invalid questionId: ${qid}`)
-      }
-    }
-
-    const missing = questions.filter((q) => q.required && !answersMap.get(q.id)?.trim())
-    if (missing.length > 0) {
-      throw new BadRequestException(
-        `以下必填題尚未回答：${missing.map((q) => q.questionText).join('、')}`,
-      )
-    }
-
-    for (const q of questions) {
-      const raw = answersMap.get(q.id)
-      if (!raw?.trim()) continue
-
-      if (q.questionType === QuestionType.Rating) {
-        const n = Number(raw)
-        if (!Number.isInteger(n) || n < 1 || n > 5) {
-          throw new BadRequestException(`「${q.questionText}」評分必須為 1–5 的整數`)
-        }
-      }
-
-      if (q.questionType === QuestionType.MultipleChoice) {
-        if (!q.options.includes(raw)) {
-          throw new BadRequestException(`「${q.questionText}」的答案不在可選範圍內`)
-        }
-      }
-
-      if (q.questionType === QuestionType.Text && raw.length > 5000) {
-        throw new BadRequestException(`「${q.questionText}」回答不可超過 5000 字`)
-      }
     }
   }
 
