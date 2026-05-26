@@ -114,8 +114,10 @@ cp backend/.env.example backend/.env
 # 3. 第一次啟動（Build image + 啟動所有服務）
 docker-compose up --build -d
 
-# 4. 套用 DB migrations 並 seed 測試資料（第一次）
+# 4. 套用 DB migrations（有新 migration 時都需執行，冪等安全）
 docker exec tsmc-backend npx prisma migrate deploy
+
+# 5. 若要匯入 Seed 測試資料（第一次，或清空 DB 後才需執行 整個專案只需執行一次）
 docker exec tsmc-backend npx prisma db seed
 ```
 

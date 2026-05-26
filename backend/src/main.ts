@@ -2,10 +2,13 @@ import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import * as cookieParser from 'cookie-parser'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { collectDefaultMetrics, register } from 'prom-client'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  collectDefaultMetrics({ prefix: 'tsmc_' })
 
   app.setGlobalPrefix('api')
 
@@ -44,6 +47,13 @@ async function bootstrap() {
   app.enableCors({
     origin: isDev ? /^http:\/\/localhost:\d+$/ : prodOrigin,
     credentials: true,
+  })
+
+  // /metrics is outside the /api prefix — Grafana Alloy scrapes this directly
+  const httpAdapter = app.getHttpAdapter()
+  httpAdapter.get('/metrics', async (_req: any, res: any) => {
+    res.set('Content-Type', register.contentType)
+    res.end(await register.metrics())
   })
 
   const port = process.env.PORT ?? 4000
