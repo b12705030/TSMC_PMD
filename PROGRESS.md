@@ -237,6 +237,7 @@
 
 - [x] **[中高] 登入無 rate limit / lockout** → `@nestjs/throttler` IP 層（10 次/分鐘）+ `AuthService` 帳號鎖定（失敗 5 次鎖 10 分鐘）。
 - [ ] **[中] CSRF 防護不完整** → 目前依賴 `SameSite=Lax`；正式部署若涉及跨子網域需明確 CSRF token 或 double-submit cookie。
+- [ ] **[中] 通知內容硬編碼中文，非英語系使用者收到中文通知** → 後端 13 個通知建立點（goals/reviews/appeals/cycles service）的 `title`/`message` 全為硬編碼中文字串，寫入 DB 後前端直接顯示，無法依使用者語言切換。修法：`Notification` schema 加 `params Json?` 欄位 → 後端改傳 params（保留中文字串作 fallback）→ 前端 `Sidebar.tsx` 通知面板改用 `t('notifications.{type}.title/message', params)` 渲染 → 7 個 locale 檔各加 13 種通知的 title + message template。
 
 ### 架構層優化（長期）
 
