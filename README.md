@@ -14,6 +14,7 @@ A modern, centralized performance management system for a global enterprise with
 | Metrics | prom-client → Grafana Cloud |
 | CI/CD | GitHub Actions |
 | Container | Docker Compose |
+| Cloud Deploy | GCP |
 
 ## 測試帳號（密碼統一 `test1234`）
 
@@ -156,6 +157,67 @@ npm run test:cov
 # 整合測試（需 TEST_DATABASE_URL，Tier 2）
 npm run test:integration
 ```
+
+
+
+### Architecture
+
+```
+GCP Cloud Run
+├── Frontend  (Next.js)   — min-instances: 2, HTTPS
+└── Backend   (NestJS)    — min-instances: 2, HTTPS
+        └── GET /metrics  ← Grafana Alloy (Compute Engine VM) scrapes every 15s
+                                  └── remote_write → Grafana Cloud Dashboard
+
+Neon PostgreSQL (managed)
+├── Primary Compute    — 讀寫
+└── Read Replica       — 唯讀分流 / HA 備援
+```
+
+### CI/CD
+
+GitHub Actions（`.github/workflows/ci.yml`）在每次 push / PR 時自動執行：
+- Frontend：Lint → Type check → Build
+- Backend：Lint → Type check → Build → Unit tests
+
+> **目前 CD 為手動**：CI 通過後由團隊成員透過 GCP Console 或 `gcloud` 手動觸發 Cloud Run 重新部署。
+
+### 部署步驟（手動）
+
+```bash
+# Backend
+gcloud run deploy tsmc-backend \
+  --source ./backend \
+  --region asia-east1 \
+  --min-instances 2
+
+# Frontend
+gcloud run deploy tsmc-frontend \
+  --source ./frontend \
+  --region asia-east1 \
+  --min-instances 2
+```
+
+### 環境變數（Cloud Run）
+
+在 GCP Console → Cloud Run → 服務 → Edit & Deploy → Variables 設定：
+
+| 變數 | 說明 |
+|------|------|
+| `DATABASE_URL` | Neon pooled connection string |
+| `DIRECT_URL` | Neon direct connection string |
+| `JWT_SECRET` | Session 加密金鑰 |
+
+### 監控
+
+| 工具 | 用途 |
+|------|------|
+| GCP Cloud Monitoring | Cloud Run 請求速率、P95 延遲、容器實例數、Email 告警 |
+| Grafana Cloud | 自訂 prom-client 指標（`http_requests_total`、`http_request_duration_seconds`） |
+
+詳細設定步驟見 [GCP_GUIDE.md](GCP_GUIDE.md)。
+
+---
 
 ## Branch Strategy
 
