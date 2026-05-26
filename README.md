@@ -8,9 +8,10 @@ A modern, centralized performance management system for a global enterprise with
 |-------|-----------|
 | Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS |
 | Backend | Node.js + NestJS + TypeScript |
-| Database | Neon (PostgreSQL) |
-| Audit Log | Elasticsearch |
+| Database | Neon (PostgreSQL) — Primary + Read Replica |
+| Audit Log | Neon (PostgreSQL)（Prisma `AuditLog` model） |
 | ORM | Prisma |
+| Metrics | prom-client → Grafana Cloud |
 | CI/CD | GitHub Actions |
 | Container | Docker Compose |
 
@@ -94,9 +95,6 @@ docker compose version
 # PostgreSQL（從 Neon dashboard 取得）
 DATABASE_URL="postgresql://..."       # Pooled connection
 DIRECT_URL="postgresql://..."         # Direct / unpooled connection
-
-# Elasticsearch（Docker Compose 內部網路，固定此值）
-ELASTICSEARCH_NODE=http://elasticsearch:9200
 ```
 
 > `frontend/.env.local` 不需要手動建立，`NEXT_PUBLIC_API_URL` 已在 `docker-compose.yml` 的 build arg 中設定好。
@@ -131,9 +129,7 @@ docker-compose up -d
 docker-compose down
 ```
 
-> **注意**：
-> - 每次 pull 新程式碼若有 migration 變動，需再執行 `docker exec tsmc-backend npx prisma migrate deploy`
-> - `docker-compose down -v` 會**清除** Elasticsearch 資料，一般停止請用 `docker-compose down`
+> **注意**：每次 pull 新程式碼若有 migration 變動，需再執行 `docker exec tsmc-backend npx prisma migrate deploy`
 
 ### 啟動端點
 
@@ -142,7 +138,7 @@ docker-compose down
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:4000 |
 | Swagger Docs | http://localhost:4000/api/docs |
-| Elasticsearch | http://localhost:9200 |
+| Prometheus Metrics | http://localhost:4000/metrics |
 
 ### 執行測試
 
