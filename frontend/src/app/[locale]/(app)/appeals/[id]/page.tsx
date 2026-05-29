@@ -3,6 +3,7 @@
 import { use, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { useAppeal } from '@/modules/appeals/hooks/useAppeals'
@@ -58,7 +59,7 @@ function AnswerBlock({ questions, answers, borderColor, bgColor, textColor, labe
 export default function AppealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const t = useTranslations('appeals')
-  const tCommon = useTranslations('common')
+
   const { appeal, isLoading, refetch } = useAppeal(id)
   const { user } = useAuth()
 
@@ -66,7 +67,7 @@ export default function AppealDetailPage({ params }: { params: Promise<{ id: str
   const [newGrade, setNewGrade]     = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (!appeal || !user) return <p className="text-error">{t('detail.notFound')}</p>
 
   const isManager  = user.id === appeal.managerId

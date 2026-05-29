@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { EmptyState } from '@/components/EmptyState'
 import { api } from '@/lib/api'
@@ -145,7 +146,7 @@ export default function TeamGoalsPage() {
       {error && <ErrorBanner message={error} onRetry={fetchGoals} />}
 
       {isLoading ? (
-        <p className="text-muted">載入中...</p>
+        <Loading />
       ) : byEmployee.size === 0 ? (
         <EmptyState title="目前沒有目標" description="你的下屬尚未設定任何目標。" />
       ) : (

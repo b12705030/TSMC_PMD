@@ -176,7 +176,7 @@ export interface PerformanceReview {
 }
 
 export interface PerformanceReviewDetail extends PerformanceReview {
-  cycle: { id: string; name: string; type: CycleType; status: CycleStatus }
+  cycle: { id: string; name: string; type: CycleType; status: CycleStatus; goalSettingStart: string; reviewEnd: string }
   employee: { id: string; name: string; employeeId: string; jobLevel: string; jobTitle: string; managerId: string | null }
   supervisor: { id: string; name: string; employeeId: string } | null
   template: { id: string; name: string; questions: TemplateQuestion[] }

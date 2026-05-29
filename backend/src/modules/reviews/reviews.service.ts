@@ -204,6 +204,7 @@ export class ReviewsService {
     validateReviewAnswers(
       review.supervisorAnswers as { questionId: string; answer: string }[],
       scopedQuestions,
+      true,  // supervisor per-question comments are optional
     )
 
     if (!review.grade) {

@@ -3,6 +3,7 @@
 import { use } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { useCycleReviews } from '@/modules/reviews/hooks/useReviews'
 import type { PerformanceReviewDetail, ReviewGrade, ReviewStatus } from '@/types'
@@ -23,7 +24,7 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
 export default function CompareReviewsPage({ params }: { params: Promise<{ cycleId: string }> }) {
   const { cycleId } = use(params)
   const t = useTranslations('reviews')
-  const tCommon = useTranslations('common')
+
   const { reviews, isLoading } = useCycleReviews(cycleId)
 
   const STATUS_LABEL: Record<ReviewStatus, string> = {
@@ -58,7 +59,7 @@ export default function CompareReviewsPage({ params }: { params: Promise<{ cycle
       />
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : reviews.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
           {t('compare.empty')}
@@ -132,7 +133,7 @@ function ReviewCard({
 
       <div className="px-4 pb-4">
         <Link
-          href={`/reviews/${review.id}`}
+          href={`/reviews/${review.id}?from=team`}
           className="block text-center rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
         >
           {t('compare.viewBtn')}

@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { Loading } from '@/components/Loading'
 import { useGoal } from '@/modules/goals/hooks/useGoals'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
@@ -58,7 +59,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     if (goal) setLocalMilestones(goal.milestones ?? [])
   }, [goal])
 
-  if (isLoading) return <p className="text-sm text-gray-400 p-8">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (error)    return <ErrorBanner message={error} />
   if (!goal)    return <p className="text-sm text-red-500 p-8">{t('detail.notFound')}</p>
 

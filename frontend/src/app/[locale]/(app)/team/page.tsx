@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { DataTable } from '@/components/DataTable'
 import { RoleBadge } from '@/components/RoleBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeam, useTeamHierarchy } from '@/modules/users/hooks/useTeam'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -66,10 +67,10 @@ function EmployeeRow({ emp }: { emp: User }) {
 
 function ManagerTeamView() {
   const t = useTranslations('team')
-  const tCommon = useTranslations('common')
+
   const { groups, directReports, isLoading, error } = useTeamHierarchy()
 
-  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (error) return <ErrorBanner message={error} />
 
   if (groups.length === 0 && directReports.length === 0) {

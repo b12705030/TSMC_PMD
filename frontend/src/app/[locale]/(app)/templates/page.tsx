@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -157,7 +158,7 @@ export default function TemplatesPage() {
       />
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : loadError ? (
         <ErrorBanner message={loadError} />
       ) : templates.length === 0 ? (
@@ -221,7 +222,7 @@ export default function TemplatesPage() {
                     <span className="ml-1 text-xs font-normal text-gray-400">{t('modal.gradesMulti')}</span>
                   </label>
                   {jobLevels.length === 0 ? (
-                    <p className="text-sm text-gray-400">{tCommon('loading')}</p>
+                    <Loading className="py-4" />
                   ) : (
                     <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
                       {jobLevels.map((level) => (
@@ -271,7 +272,7 @@ export default function TemplatesPage() {
                     )}
                   </div>
                   {totalCount === 0 ? (
-                    <p className="text-sm text-gray-400">{tCommon('loading')}</p>
+                    <Loading className="py-4" />
                   ) : (
                     <>
                       <input

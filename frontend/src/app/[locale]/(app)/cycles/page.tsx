@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CycleStepper } from '@/components/CycleStepper'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useCycles, type CreateCyclePayload, type UpdateCyclePayload } from '@/modules/cycles/hooks/useCycles'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -243,7 +244,7 @@ export default function CyclesPage() {
       />
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : loadError ? (
         <ErrorBanner message={loadError} />
       ) : cycles.length === 0 ? (

@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -84,7 +85,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  if (isLoading) return <p className="text-muted p-6">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (error)     return <ErrorBanner message={error} />
   if (!template) return <p className="text-error p-6">{t('detail.notFound')}</p>
 

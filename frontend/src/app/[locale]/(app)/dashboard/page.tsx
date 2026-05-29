@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { PageHeader } from '@/components/PageHeader'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
 import { CycleStepper } from '@/components/CycleStepper'
@@ -386,7 +387,7 @@ function EmployeeSection() {
             <Link href="/goals" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
           {gl ? (
-            <p className="text-muted">{t('loading')}</p>
+            <Loading />
           ) : glErr ? (
             <ErrorBanner message={glErr} />
           ) : goalStats.total === 0 ? (
@@ -395,17 +396,17 @@ function EmployeeSection() {
               <Link href="/goals" className="btn-primary mt-3 inline-block text-sm">{t('goals.setGoal')}</Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {[
-                { label: t('goals.draft'),           count: goalStats.draft,            color: 'bg-gray-100 text-gray-700' },
+                { label: t('goals.draft'),           count: goalStats.draft,            color: 'bg-gray-100 text-gray-600' },
                 { label: t('goals.pendingApproval'), count: goalStats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
                 { label: t('goals.approved'),        count: goalStats.approved,         color: 'bg-green-100 text-green-700' },
                 { label: t('goals.completed'),       count: goalStats.completed,        color: 'bg-indigo-100 text-indigo-700' },
                 ...(goalStats.rejected > 0 ? [{ label: t('goals.rejected'), count: goalStats.rejected, color: 'bg-red-100 text-red-700' }] : []),
               ].map(({ label, count, color }) => (
-                <Link key={label} href="/goals" className={`rounded-lg p-3 text-center ${color} block hover:opacity-80`}>
-                  <p className="text-2xl font-bold">{count}</p>
-                  <p className="mt-0.5 text-xs font-medium">{label}</p>
+                <Link key={label} href="/goals" className={`rounded-lg px-2 py-2 text-center ${color} block hover:opacity-80`}>
+                  <p className="text-lg font-bold leading-tight">{count}</p>
+                  <p className="mt-0.5 text-[10px] font-medium leading-tight">{label}</p>
                 </Link>
               ))}
             </div>
@@ -419,7 +420,7 @@ function EmployeeSection() {
             <Link href="/reviews" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
           {rl ? (
-            <p className="text-muted">{t('loading')}</p>
+            <Loading />
           ) : rlErr ? (
             <ErrorBanner message={rlErr} />
           ) : reviews.length === 0 ? (
@@ -478,7 +479,7 @@ function TeamReviewSection({ role }: { role: Role }) {
           <Link href="/reviews/team" className="btn-link text-sm">{t('viewAll')}</Link>
         </div>
         {isLoading ? (
-          <p className="text-muted">{t('loading')}</p>
+          <Loading />
         ) : error ? (
           <ErrorBanner message={error} />
         ) : reviews.length === 0 ? (
@@ -527,7 +528,7 @@ function GradeDistributionChart() {
   const t = useTranslations('dashboard')
   const { stats, isLoading, error } = useReviewStats()
 
-  if (isLoading) return <p className="text-muted text-sm">{t('loading')}</p>
+  if (isLoading) return <Loading className="py-6" />
   if (error) return <p className="text-sm text-red-600">載入失敗：{error}</p>
   if (!stats || stats.total === 0) return <p className="text-muted text-sm">{t('gradeChart.empty')}</p>
 
@@ -629,7 +630,7 @@ function HRSection({ cycles }: { cycles: PerformanceCycle[] }) {
           <Link href="/templates" className="btn-link text-sm">{t('manageTemplates')}</Link>
         </div>
         {isLoading ? (
-          <p className="text-muted">{t('loading')}</p>
+          <Loading />
         ) : tmplErr ? (
           <ErrorBanner message={tmplErr} />
         ) : (
@@ -716,7 +717,7 @@ export default function DashboardPage() {
       {isHROrAdmin       && <HRSection cycles={cycles} />}
 
       {cyclesLoading ? (
-        <p className="text-muted">{t('loadingCycles')}</p>
+        <Loading />
       ) : cyclesError ? (
         <ErrorBanner message={cyclesError} />
       ) : (

@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeamReviews } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -25,7 +26,7 @@ const GRADE_TEXT_COLOR: Record<ReviewGrade, string> = {
 
 export default function TeamReviewsPage() {
   const t = useTranslations('reviews')
-  const tCommon = useTranslations('common')
+
   const { reviews, isLoading, error, refetch } = useTeamReviews()
   const { user } = useAuth()
   const isManager    = user?.role === 'Manager'
@@ -82,7 +83,7 @@ export default function TeamReviewsPage() {
       )}
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (
@@ -134,7 +135,7 @@ function TeamReviewCard({
 
   return (
     <Link
-      href={`/reviews/${review.id}`}
+      href={`/reviews/${review.id}?from=team`}
       className={`block rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${
         needsAction ? 'border-amber-200 hover:border-amber-300' : 'border-gray-200 hover:border-gray-300'
       }`}

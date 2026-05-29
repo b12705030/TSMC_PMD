@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useReviews } from '@/modules/reviews/hooks/useReviews'
 import type { PerformanceReviewDetail, ReviewGrade, ReviewStatus } from '@/types'
@@ -15,7 +16,7 @@ const GRADE_DISPLAY: Record<ReviewGrade, string> = {
 
 export default function ReviewsPage() {
   const t = useTranslations('reviews')
-  const tCommon = useTranslations('common')
+
   const { reviews, isLoading, error, refetch } = useReviews()
 
   const STATUS_LABEL: Record<ReviewStatus, string> = {
@@ -34,7 +35,7 @@ export default function ReviewsPage() {
       />
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (

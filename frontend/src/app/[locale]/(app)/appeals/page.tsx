@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useAppeals } from '@/modules/appeals/hooks/useAppeals'
 import type { Appeal } from '@/types'
@@ -15,7 +16,7 @@ function fmt(date: string) {
 
 export default function AppealsPage() {
   const t = useTranslations('appeals')
-  const tCommon = useTranslations('common')
+
   const { appeals, isLoading, error, refetch } = useAppeals()
 
   return (
@@ -23,7 +24,7 @@ export default function AppealsPage() {
       <PageHeader title={t('pageTitle')} description={t('pageDesc')} />
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : appeals.length === 0 ? (

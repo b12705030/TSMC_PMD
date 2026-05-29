@@ -3,6 +3,7 @@
 import { use } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -17,12 +18,12 @@ const GRADE_DISPLAY: Record<ReviewGrade, string> = {
 export default function EmployeeDetailPage({ params }: { params: Promise<{ employeeId: string }> }) {
   const { employeeId } = use(params)
   const t = useTranslations('team')
-  const tCommon = useTranslations('common')
+
   const { employee, goals, reviews, isLoading } = useEmployee(employeeId)
   const { user } = useAuth()
   const isSupervisor = user?.role === 'Supervisor'
 
-  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (!employee) return <p className="text-error">{t('employee.notFound')}</p>
 
   return (
@@ -79,7 +80,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="space-y-2">
           {reviews.map((review) => (
-            <Link key={review.id} href={`/reviews/${review.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+            <Link key={review.id} href={`/reviews/${review.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
               <p className="text-sm text-gray-700">{(review as { cycle?: { name: string } }).cycle?.name ?? review.cycleId}</p>
               <div className="flex items-center gap-3">
                 {review.grade && (
