@@ -157,6 +157,7 @@ model User {
   goals               Goal[]
   progressUpdates     ProgressUpdate[]
   notifications       Notification[]
+  auditLogs           AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -385,6 +386,33 @@ model Notification {
 
   @@index([userId])
   @@index([cycleId])
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String
+  userName     String
+  userRegionId String?
+  action       String
+  outcome      String
+  resource     String
+  resourceId   String?
+  httpMethod   String?
+  httpPath     String?
+  httpStatus   Int?
+  ipAddress    String?
+  userAgent    String?
+  detail       Json?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([outcome])
+  @@index([resource])
 }
 
 // ─── Session ──────────────────────────────────────────────────────────────────

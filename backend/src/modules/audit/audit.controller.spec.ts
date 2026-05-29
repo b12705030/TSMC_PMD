@@ -31,27 +31,27 @@ describe('AuditController', () => {
     await controller.getLogs(mockUser, '', undefined, undefined, undefined, undefined, '0', '50')
     expect(mockSearch).toHaveBeenCalledWith({
       q: '', outcome: undefined, resource: undefined,
-      fromDate: undefined, toDate: undefined, from: 0, size: 50,
-    }, mockUser)
+      regionId: undefined, fromDate: undefined, toDate: undefined, from: 0, size: 50,
+    })
   })
 
   it('passes outcome and resource filters to service', async () => {
     await controller.getLogs(mockUser, 'LOGIN', 'SUCCESS', 'auth', undefined, undefined, '0', '20')
     expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({
       q: 'LOGIN', outcome: 'SUCCESS', resource: 'auth', size: 20,
-    }), mockUser)
+    }))
   })
 
   it('passes date range filters to service', async () => {
     await controller.getLogs(mockUser, '', undefined, undefined, '2026-01-01', '2026-12-31', '0', '50')
     expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({
       fromDate: '2026-01-01', toDate: '2026-12-31',
-    }), mockUser)
+    }))
   })
 
   it('parses from/size as numbers', async () => {
     await controller.getLogs(mockUser, '', undefined, undefined, undefined, undefined, '100', '25')
-    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ from: 100, size: 25 }), mockUser)
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ from: 100, size: 25 }))
   })
 
   it('returns the result from AuditService.search', async () => {
