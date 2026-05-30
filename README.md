@@ -155,8 +155,13 @@ npm run test:unit -- --testPathPattern=audit
 # 含覆蓋率報告
 npm run test:cov
 
-# 整合測試（需 TEST_DATABASE_URL，Tier 2）
+# 整合測試（需 Postgres，見 backend/.env.test.example）
+export TEST_DATABASE_URL="postgresql://test:test@localhost:5432/pms_test?schema=public"
+npx prisma migrate deploy
 npm run test:integration
+
+# 單元 + 整合
+npm run test:all
 ```
 
 ## Branch Strategy

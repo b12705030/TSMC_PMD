@@ -17,7 +17,11 @@ export async function truncateAll(): Promise<void> {
       "Session", "Appeal", "PerformanceReview",
       "ProgressUpdate", "GoalMilestone", "Goal",
       "TemplateQuestion", "FormTemplate", "PerformanceCycle",
-      "User", "Department", "Region"
+      "RegionConfig", "User", "Department", "Region"
     RESTART IDENTITY CASCADE
   `)
+}
+
+export async function connectTestDb(): Promise<void> {
+  await prisma.$connect()
 }

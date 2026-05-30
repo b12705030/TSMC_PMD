@@ -3,11 +3,13 @@ import {
   CycleType,
   GoalStatus,
   GoalType,
+  QuestionType,
   ReviewGrade,
   ReviewStatus,
   Role,
   TemplateStatus,
   type Department,
+  type FormTemplate,
   type PerformanceCycle,
   type Region,
   type User,
@@ -27,10 +29,11 @@ const next = () => ++seq
 
 export async function createRegion(overrides?: { name?: string; code?: string }) {
   const n = next()
+  const suffix = `${n}-${Date.now()}`
   return prisma.region.create({
     data: {
-      name: overrides?.name ?? `Region-${n}`,
-      code: overrides?.code ?? `R${n}`,
+      name: overrides?.name ?? `Region-${suffix}`,
+      code: overrides?.code ?? `R${suffix}`,
     },
   })
 }
@@ -207,5 +210,44 @@ export async function createReview(
       status:       overrides?.status       ?? ReviewStatus.PendingEmployeeSubmit,
       ...(overrides?.grade !== undefined && { grade: overrides.grade }),
     },
+  })
+}
+
+// ─── Template question (for review submit tests) ─────────────────────────────
+
+export async function addTemplateQuestion(
+  template: FormTemplate,
+  overrides?: {
+    questionType?: QuestionType
+    required?:      boolean
+    options?:       string[]
+  },
+) {
+  const existing = await prisma.templateQuestion.count({ where: { templateId: template.id } })
+  return prisma.templateQuestion.create({
+    data: {
+      templateId:   template.id,
+      questionText: 'Integration test question',
+      questionType: overrides?.questionType ?? QuestionType.Rating,
+      required:     overrides?.required ?? true,
+      options:      overrides?.options ?? [],
+      orderIndex:   existing,
+      isCustom:     false,
+      isGlobal:     false,
+    },
+  })
+}
+
+/** Template with one required Rating question (reloads questions). */
+export async function createPublishedTemplateWithQuestion(
+  cycle:     PerformanceCycle,
+  region:    Region,
+  createdBy: User,
+) {
+  const template = await createTemplate(cycle, region, createdBy, { status: TemplateStatus.Published })
+  await addTemplateQuestion(template)
+  return prisma.formTemplate.findUniqueOrThrow({
+    where:   { id: template.id },
+    include: { questions: true },
   })
 }

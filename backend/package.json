@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "test": "npm run test:unit",
     "test:unit": "jest --testPathPattern=src/ --passWithNoTests",
-    "test:integration": "jest --testPathPattern=test/integration --passWithNoTests",
+    "test:integration": "jest --testPathPattern=test/integration --runInBand --testTimeout=30000 --passWithNoTests",
+    "test:all": "npm run test:unit && npm run test:integration",
     "test:watch": "jest --watch --testPathPattern=src/",
     "test:cov": "jest --coverage --testPathPattern=src/",
     "format": "prettier --write \"src/**/*.ts\""
@@ -79,6 +80,7 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 30000
   }
 }
