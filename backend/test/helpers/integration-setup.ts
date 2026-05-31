@@ -5,10 +5,13 @@ import { TemplatesService } from '../../src/modules/templates/templates.service'
 import { ReviewsService } from '../../src/modules/reviews/reviews.service'
 import { CyclesService } from '../../src/modules/cycles/cycles.service'
 import { AuditService } from '../../src/modules/audit/audit.service'
+import { NotificationsService } from '../../src/modules/notifications/notifications.service'
 import { prisma } from './db'
 
 /** Prisma client pointed at TEST_DATABASE_URL, typed as Nest PrismaService */
 export const testPrisma = prisma as unknown as PrismaService
+
+const notifications = new NotificationsService(testPrisma)
 
 const mockAudit: Pick<AuditService, 'log'> = {
   log: jest.fn().mockResolvedValue(undefined),
@@ -19,7 +22,7 @@ export function createAuthService(): AuthService {
 }
 
 export function createGoalsService(): GoalsService {
-  return new GoalsService(testPrisma)
+  return new GoalsService(testPrisma, notifications)
 }
 
 export function createTemplatesService(): TemplatesService {
@@ -27,11 +30,11 @@ export function createTemplatesService(): TemplatesService {
 }
 
 export function createReviewsService(): ReviewsService {
-  return new ReviewsService(testPrisma)
+  return new ReviewsService(testPrisma, notifications)
 }
 
 export function createCyclesService(): CyclesService {
-  return new CyclesService(testPrisma)
+  return new CyclesService(testPrisma, notifications)
 }
 
 export async function disconnectTestDb(): Promise<void> {
