@@ -4,13 +4,14 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useGoals } from '@/modules/goals/hooks/useGoals'
 import type { Goal, GoalStatus } from '@/types'
 
 export default function GoalsPage() {
   const t = useTranslations('goals')
-  const tCommon = useTranslations('common')
+
   const { goals, isLoading, error, refetch } = useGoals()
 
   const STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> = {
@@ -18,6 +19,7 @@ export default function GoalsPage() {
     PendingApproval:   { label: t('statusLabel.PendingApproval'), color: 'bg-yellow-400', pct: 30  },
     Approved:          { label: t('statusLabel.Approved'),        color: 'bg-indigo-500', pct: 65  },
     Completed:         { label: t('statusLabel.Completed'),       color: 'bg-green-500',  pct: 100 },
+    Rejected:          { label: t('statusLabel.Rejected'),        color: 'bg-red-400',    pct: 0   },
   }
 
   const completedCount = goals.filter((g) => g.status === 'Completed').length
@@ -46,7 +48,7 @@ export default function GoalsPage() {
       )}
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : error ? null : goals.length === 0 ? (
         <EmptyState
           title={t('empty.title')}
@@ -84,6 +86,7 @@ function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<G
           ${goal.status === 'Completed'       ? 'bg-green-100 text-green-700'
           : goal.status === 'Approved'        ? 'bg-indigo-100 text-indigo-700'
           : goal.status === 'PendingApproval' ? 'bg-yellow-100 text-yellow-700'
+          : goal.status === 'Rejected'        ? 'bg-red-100 text-red-700'
           : 'bg-gray-100 text-gray-500'}`}
         >
           {config.label}

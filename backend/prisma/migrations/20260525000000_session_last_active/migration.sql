@@ -1,0 +1,2 @@
+-- AddColumn: Session.lastActiveAt
+ALTER TABLE "Session" ADD COLUMN "lastActiveAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

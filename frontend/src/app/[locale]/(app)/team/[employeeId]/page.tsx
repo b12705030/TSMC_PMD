@@ -3,10 +3,12 @@
 import { use } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import { useEmployee } from '@/modules/users/hooks/useTeam'
+import { useAuth } from '@/modules/auth/hooks/useAuth'
 import type { ReviewGrade } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
@@ -16,10 +18,12 @@ const GRADE_DISPLAY: Record<ReviewGrade, string> = {
 export default function EmployeeDetailPage({ params }: { params: Promise<{ employeeId: string }> }) {
   const { employeeId } = use(params)
   const t = useTranslations('team')
-  const tCommon = useTranslations('common')
-  const { employee, goals, reviews, isLoading } = useEmployee(employeeId)
 
-  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  const { employee, goals, reviews, isLoading } = useEmployee(employeeId)
+  const { user } = useAuth()
+  const isSupervisor = user?.role === 'Supervisor'
+
+  if (isLoading) return <Loading />
   if (!employee) return <p className="text-error">{t('employee.notFound')}</p>
 
   return (
@@ -59,7 +63,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="mb-6 space-y-2">
           {goals.map((goal) => (
-            <Link key={goal.id} href={`/goals/${goal.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+            <Link key={goal.id} href={`/goals/${goal.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
               <div>
                 <p className="text-sm font-medium text-gray-900">{goal.title}</p>
                 <p className="text-xs text-gray-400">{t('employee.deadline', { date: new Date(goal.dueDate).toLocaleDateString() })}</p>
@@ -76,13 +80,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
       ) : (
         <div className="space-y-2">
           {reviews.map((review) => (
-            <Link key={review.id} href={`/reviews/${review.id}`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+            <Link key={review.id} href={`/reviews/${review.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
               <p className="text-sm text-gray-700">{(review as { cycle?: { name: string } }).cycle?.name ?? review.cycleId}</p>
               <div className="flex items-center gap-3">
                 {review.grade && (
                   <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>
                 )}
-                <StatusBadge status={review.status} />
+                <StatusBadge status={isSupervisor && review.status === 'Appealed' ? 'Published' : review.status} />
               </div>
             </Link>
           ))}

@@ -10,7 +10,8 @@
     "cycles": "周期管理",
     "templates": "评核模板",
     "appeals": "申诉管理",
-    "auditLog": "稽核日志"
+    "auditLog": "稽核日志",
+    "users": "User Management"
   },
   "sidebar": {
     "logout": "退出",
@@ -70,21 +71,21 @@
     "invalidCredentials": "账号或密码错误，请再试一次。"
   },
   "cycleStepper": {
-    "companyGoal":        "公司/部门目标公布",
-    "companyGoalDesc":    "提供员工设定目标的方向",
-    "goalSetting":        "目标设定",
-    "goalSettingDesc":    "员工设定 SMART 目标",
-    "inProgress":         "执行中",
-    "inProgressDesc":     "目标追踪进行中",
-    "reviewStart":        "绩效评核期开始",
-    "employeeReview":     "员工自评",
+    "companyGoal": "公司/部门目标公布",
+    "companyGoalDesc": "提供员工设定目标的方向",
+    "goalSetting": "目标设定",
+    "goalSettingDesc": "员工设定 SMART 目标",
+    "inProgress": "执行中",
+    "inProgressDesc": "目标追踪进行中",
+    "reviewStart": "绩效评核期开始",
+    "employeeReview": "员工自评",
     "employeeReviewDesc": "填写绩效表单",
-    "supervisorReview":     "主管初评",
+    "supervisorReview": "主管初评",
     "supervisorReviewDesc": "主管进行评核",
-    "calibration":        "校准发布",
-    "calibrationDesc":    "经理调整并发布结果",
-    "completed":          "已完成",
-    "completedDesc":      "结果已发布"
+    "calibration": "校准发布",
+    "calibrationDesc": "经理调整并发布结果",
+    "completed": "已完成",
+    "completedDesc": "结果已发布"
   },
   "auditLog": {
     "pageTitle": "稽核日志",
@@ -241,7 +242,9 @@
       "reviewRange": "评核期：{start} – {end}",
       "publishRange": "结果发布：{date}"
     },
-    "activeCycles": { "title": "进行中的周期" },
+    "activeCycles": {
+      "title": "进行中的周期"
+    },
     "goals": {
       "title": "我的目标",
       "empty": "尚未设定任何目标",
@@ -249,7 +252,10 @@
       "draft": "草稿",
       "pendingApproval": "待审核",
       "approved": "已核准",
-      "completed": "已完成"
+      "completed": "已完成",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "我的评核",
@@ -468,7 +474,8 @@
     "grade": "等级 {grade}",
     "actionRequired": "→ 需要您的操作",
     "teamActionPending": "→ 待你初评",
-    "teamActionManager": "待校准发布",
+    "teamActionManager": "→ 待你校准确认",
+    "teamActionWaitingSup": "待主管初评（{supervisor}）",
     "teamPendingBanner": "你有 {count} 份评核待处理",
     "teamPendingCalibration": "{count} 份待校准发布",
     "calibrateBtn": "进入校准",
@@ -535,12 +542,30 @@
       }
     },
     "grades": {
-      "O":       { "label": "Outstanding（杰出）",      "desc": "少数顶尖 — 全面大幅超越期望" },
-      "S_Plus":  { "label": "Excellent（优秀）",         "desc": "全面超越期望，具有显著贡献" },
-      "S":       { "label": "Satisfactory（达标）",      "desc": "完全达成所有目标与期望" },
-      "S_Minus": { "label": "Partially Sat.（部分达标）", "desc": "大致达成期望，部分领域需改善" },
-      "I":       { "label": "Needs Improvement（待改善）","desc": "未完全达成期望，需要指导" },
-      "U":       { "label": "Unsatisfactory（不符标准）", "desc": "明显低于标准，将进入 PMD 追踪" },
+      "O": {
+        "label": "Outstanding（杰出）",
+        "desc": "少数顶尖 — 全面大幅超越期望"
+      },
+      "S_Plus": {
+        "label": "Excellent（优秀）",
+        "desc": "全面超越期望，具有显著贡献"
+      },
+      "S": {
+        "label": "Satisfactory（达标）",
+        "desc": "完全达成所有目标与期望"
+      },
+      "S_Minus": {
+        "label": "Partially Sat.（部分达标）",
+        "desc": "大致达成期望，部分领域需改善"
+      },
+      "I": {
+        "label": "Needs Improvement（待改善）",
+        "desc": "未完全达成期望，需要指导"
+      },
+      "U": {
+        "label": "Unsatisfactory（不符标准）",
+        "desc": "明显低于标准，将进入 PMD 追踪"
+      },
       "tooltip": "ⓘ 等级说明",
       "noAnswer": "（未填写）"
     },
@@ -662,5 +687,47 @@
       "reviews": "评核记录",
       "noReviews": "暂无评核记录。"
     }
+  },
+  "users": {
+    "pageTitle": "User Management",
+    "pageDesc": "Manage roles, regions, departments for all accounts",
+    "newUser": "New User",
+    "searchPlaceholder": "Search by employee ID / name / email",
+    "allRoles": "All Roles",
+    "allRegions": "All Regions",
+    "empty": "No users found",
+    "total": "{count} user(s)",
+    "prev": "Previous",
+    "next": "Next",
+    "edit": "Edit",
+    "colEmployeeId": "Employee ID",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colRole": "Role",
+    "colRegion": "Region",
+    "colDepartment": "Department",
+    "colJobLevel": "Job Level",
+    "colJobTitle": "Job Title",
+    "editTitle": "Edit User",
+    "createTitle": "Create Account",
+    "defaultPasswordNote": "Initial password is TSMC@1234.",
+    "fieldEmployeeId": "Employee ID",
+    "fieldName": "Name",
+    "fieldEmail": "Email",
+    "fieldRole": "Role",
+    "fieldRegion": "Region",
+    "fieldDepartment": "Department",
+    "fieldJobLevel": "Job Level",
+    "fieldJobTitle": "Job Title",
+    "selectRegion": "Select Region",
+    "selectDepartment": "Select Department",
+    "requiredFields": "Please fill in all required fields (*)",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create Account",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "saveError": "Save failed",
+    "createError": "Create failed"
   }
 }

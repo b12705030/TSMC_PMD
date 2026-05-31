@@ -14,12 +14,18 @@ function makeContext(cookies?: Record<string, string>): ExecutionContext {
 
 describe('AuthGuard', () => {
   let findUnique: jest.Mock
+  let sessionUpdate: jest.Mock
+  let sessionDelete: jest.Mock
   let guard: AuthGuard
   let ctx: ExecutionContext
 
   beforeEach(() => {
-    findUnique = jest.fn()
-    const prisma = { session: { findUnique } } as unknown as PrismaService
+    findUnique    = jest.fn()
+    sessionUpdate = jest.fn().mockResolvedValue({})
+    sessionDelete = jest.fn().mockResolvedValue({})
+    const prisma = {
+      session: { findUnique, update: sessionUpdate, delete: sessionDelete },
+    } as unknown as PrismaService
     guard = new AuthGuard(prisma)
     ctx = makeContext()
   })
@@ -58,7 +64,8 @@ describe('AuthGuard', () => {
   it('attaches user to request when session is valid', async () => {
     ctx = makeContext({ sessionId: 'valid' })
     findUnique.mockResolvedValue({
-      expiresAt: new Date(Date.now() + 60_000),
+      expiresAt:    new Date(Date.now() + 60_000),
+      lastActiveAt: new Date(),                    // active just now — not idle
       user: {
         id: 'u1',
         employeeId: 'tw-emp001',
@@ -79,5 +86,29 @@ describe('AuthGuard', () => {
     const request = ctx.switchToHttp().getRequest<{ user: { employeeId: string; region: string } }>()
     expect(request.user.employeeId).toBe('tw-emp001')
     expect(request.user.region).toBe('Taiwan')
+  })
+
+  it('throws when session is idle for more than 30 minutes', async () => {
+    ctx = makeContext({ sessionId: 'idle' })
+    findUnique.mockResolvedValue({
+      id:           'idle',
+      expiresAt:    new Date(Date.now() + 60_000),
+      lastActiveAt: new Date(Date.now() - 31 * 60 * 1000), // 31 min ago
+      user: {
+        id: 'u1',
+        employeeId: 'tw-emp001',
+        name: 'Eric',
+        email: 'e@test.local',
+        role: Role.Employee,
+        regionId: 'r1',
+        departmentId: 'd1',
+        jobLevel: 'L2',
+        jobTitle: 'Process Engineer',
+        region: { name: 'Taiwan' },
+        department: { name: 'Process Engineering' },
+      },
+    })
+    await expect(guard.canActivate(ctx)).rejects.toThrow('Session idle timeout')
+    expect(sessionDelete).toHaveBeenCalledWith({ where: { id: 'idle' } })
   })
 })

@@ -4,6 +4,7 @@ import { QuestionType, type TemplateQuestion } from '@prisma/client'
 export function validateReviewAnswers(
   answers: { questionId: string; answer: string }[] | null,
   questions: TemplateQuestion[],
+  skipRequired = false,  // true for supervisor comments — they are always optional
 ): void {
   const answersMap = new Map((answers ?? []).map((a) => [a.questionId, a.answer]))
   const validIds = new Set(questions.map((q) => q.id))
@@ -14,7 +15,7 @@ export function validateReviewAnswers(
     }
   }
 
-  const missing = questions.filter((q) => q.required && !answersMap.get(q.id)?.trim())
+  const missing = questions.filter((q) => !skipRequired && q.required && !answersMap.get(q.id)?.trim())
   if (missing.length > 0) {
     throw new BadRequestException(
       `以下必填題尚未回答：${missing.map((q) => q.questionText).join('、')}`,

@@ -5,6 +5,7 @@ import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
 import { Role } from '../../common/enums/role.enum'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 
 @Controller('audit')
@@ -28,10 +29,11 @@ export class AuditController {
       q,
       outcome,
       resource,
+      regionId: isGlobalRole(user) ? undefined : user.regionId,
       fromDate,
       toDate,
       from: Number(from),
       size: Number(size),
-    }, user)
+    })
   }
 }

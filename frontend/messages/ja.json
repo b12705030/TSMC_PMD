@@ -10,7 +10,8 @@
     "cycles": "サイクル管理",
     "templates": "テンプレート",
     "appeals": "異議申請",
-    "auditLog": "監査ログ"
+    "auditLog": "監査ログ",
+    "users": "User Management"
   },
   "sidebar": {
     "logout": "ログアウト",
@@ -70,21 +71,21 @@
     "invalidCredentials": "認証情報が無効です。もう一度お試しください。"
   },
   "cycleStepper": {
-    "companyGoal":        "会社/部門目標の公表",
-    "companyGoalDesc":    "従業員が目標を設定するための方向性を提供",
-    "goalSetting":        "目標設定",
-    "goalSettingDesc":    "従業員がSMART目標を設定",
-    "inProgress":         "進行中",
-    "inProgressDesc":     "目標追跡中",
-    "reviewStart":        "レビュー期間開始",
-    "employeeReview":     "従業員レビュー",
+    "companyGoal": "会社/部門目標の公表",
+    "companyGoalDesc": "従業員が目標を設定するための方向性を提供",
+    "goalSetting": "目標設定",
+    "goalSettingDesc": "従業員がSMART目標を設定",
+    "inProgress": "進行中",
+    "inProgressDesc": "目標追跡中",
+    "reviewStart": "レビュー期間開始",
+    "employeeReview": "従業員レビュー",
     "employeeReviewDesc": "パフォーマンスフォームを記入",
-    "supervisorReview":     "上司レビュー",
+    "supervisorReview": "上司レビュー",
     "supervisorReviewDesc": "上司が評価を実施",
-    "calibration":        "調整・発布",
-    "calibrationDesc":    "マネージャーが結果を調整・発布",
-    "completed":          "完了",
-    "completedDesc":      "結果が発布されました"
+    "calibration": "調整・発布",
+    "calibrationDesc": "マネージャーが結果を調整・発布",
+    "completed": "完了",
+    "completedDesc": "結果が発布されました"
   },
   "auditLog": {
     "pageTitle": "監査ログ",
@@ -241,7 +242,9 @@
       "reviewRange": "レビュー期間：{start} – {end}",
       "publishRange": "結果公開：{date}"
     },
-    "activeCycles": { "title": "進行中のサイクル" },
+    "activeCycles": {
+      "title": "進行中のサイクル"
+    },
     "goals": {
       "title": "マイゴール",
       "empty": "目標がまだ設定されていません",
@@ -249,7 +252,10 @@
       "draft": "下書き",
       "pendingApproval": "承認待ち",
       "approved": "承認済み",
-      "completed": "完了"
+      "completed": "完了",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "マイレビュー",
@@ -468,7 +474,8 @@
     "grade": "評価 {grade}",
     "actionRequired": "→ 対応が必要",
     "teamActionPending": "→ レビュー待ち",
-    "teamActionManager": "調整・発布待ち",
+    "teamActionManager": "→ 調整確認待ち",
+    "teamActionWaitingSup": "上司（{supervisor}）の初評待ち",
     "teamPendingBanner": "{count}件のレビューが保留中",
     "teamPendingCalibration": "{count}件の調整・発布待ち",
     "calibrateBtn": "調整へ",
@@ -535,12 +542,30 @@
       }
     },
     "grades": {
-      "O":       { "label": "Outstanding（卓越）",        "desc": "上位少数 — すべての領域で大幅に期待を超える" },
-      "S_Plus":  { "label": "Excellent（優秀）",          "desc": "全体的に期待を超え、顕著な貢献がある" },
-      "S":       { "label": "Satisfactory（達成）",       "desc": "すべての目標と期待を完全に満たす" },
-      "S_Minus": { "label": "Partially Sat.（部分達成）", "desc": "概ね期待を満たすが、改善が必要な領域がある" },
-      "I":       { "label": "Needs Improvement（要改善）","desc": "期待を完全には満たせていない；指導が必要" },
-      "U":       { "label": "Unsatisfactory（不十分）",   "desc": "標準を大幅に下回る；PMD追跡が開始される" },
+      "O": {
+        "label": "Outstanding（卓越）",
+        "desc": "上位少数 — すべての領域で大幅に期待を超える"
+      },
+      "S_Plus": {
+        "label": "Excellent（優秀）",
+        "desc": "全体的に期待を超え、顕著な貢献がある"
+      },
+      "S": {
+        "label": "Satisfactory（達成）",
+        "desc": "すべての目標と期待を完全に満たす"
+      },
+      "S_Minus": {
+        "label": "Partially Sat.（部分達成）",
+        "desc": "概ね期待を満たすが、改善が必要な領域がある"
+      },
+      "I": {
+        "label": "Needs Improvement（要改善）",
+        "desc": "期待を完全には満たせていない；指導が必要"
+      },
+      "U": {
+        "label": "Unsatisfactory（不十分）",
+        "desc": "標準を大幅に下回る；PMD追跡が開始される"
+      },
       "tooltip": "ⓘ 評価ガイド",
       "noAnswer": "（未回答）"
     },
@@ -662,5 +687,47 @@
       "reviews": "レビュー履歴",
       "noReviews": "レビュー記録がありません。"
     }
+  },
+  "users": {
+    "pageTitle": "User Management",
+    "pageDesc": "Manage roles, regions, departments for all accounts",
+    "newUser": "New User",
+    "searchPlaceholder": "Search by employee ID / name / email",
+    "allRoles": "All Roles",
+    "allRegions": "All Regions",
+    "empty": "No users found",
+    "total": "{count} user(s)",
+    "prev": "Previous",
+    "next": "Next",
+    "edit": "Edit",
+    "colEmployeeId": "Employee ID",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colRole": "Role",
+    "colRegion": "Region",
+    "colDepartment": "Department",
+    "colJobLevel": "Job Level",
+    "colJobTitle": "Job Title",
+    "editTitle": "Edit User",
+    "createTitle": "Create Account",
+    "defaultPasswordNote": "Initial password is TSMC@1234.",
+    "fieldEmployeeId": "Employee ID",
+    "fieldName": "Name",
+    "fieldEmail": "Email",
+    "fieldRole": "Role",
+    "fieldRegion": "Region",
+    "fieldDepartment": "Department",
+    "fieldJobLevel": "Job Level",
+    "fieldJobTitle": "Job Title",
+    "selectRegion": "Select Region",
+    "selectDepartment": "Select Department",
+    "requiredFields": "Please fill in all required fields (*)",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create Account",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "saveError": "Save failed",
+    "createError": "Create failed"
   }
 }

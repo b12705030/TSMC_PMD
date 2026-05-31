@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# ── Secrets (contains API tokens, do not commit) ───────
+prometheus/config.alloy
+
 # ── Dependencies ───────────────────────────────────────
 node_modules/
 

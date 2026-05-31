@@ -45,8 +45,18 @@ export class AuditWriteInterceptor implements NestInterceptor {
   }
 }
 
+const SENSITIVE_KEYS = new Set(['password', 'token', 'secret', 'accessToken', 'refreshToken', 'apiKey', 'authorization'])
+
 function sanitizeBody(body: unknown): Record<string, unknown> {
-  if (!body || typeof body !== 'object') return {}
-  const { password, token, secret, ...safe } = body as Record<string, unknown>
-  return safe
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return {}
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    if (SENSITIVE_KEYS.has(key)) continue
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      result[key] = sanitizeBody(value)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
 }

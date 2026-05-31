@@ -29,14 +29,17 @@ export const ROUTE_ACTION_MAP: Record<string, { action: string; resource: string
   'POST:/cycles':                                    { action: 'CYCLE_CREATE',             resource: 'cycle' },
   'PATCH:/cycles/:id':                               { action: 'CYCLE_UPDATE',             resource: 'cycle' },
   'PATCH:/cycles/:id/advance':                       { action: 'CYCLE_ADVANCE',            resource: 'cycle' },
+  'PATCH:/cycles/:id/confirm-advance':               { action: 'CYCLE_CONFIRM_ADVANCE',    resource: 'cycle' },
+  'PATCH:/cycles/:id/postpone':                      { action: 'CYCLE_POSTPONE',           resource: 'cycle' },
+  // Users
+  'POST:/users':                                     { action: 'USER_CREATE',              resource: 'user' },
+  'PATCH:/users/:id':                                { action: 'USER_UPDATE',              resource: 'user' },
   // Templates
   'POST:/templates':                                 { action: 'TEMPLATE_CREATE',          resource: 'template' },
   'POST:/templates/:id/questions':                   { action: 'TEMPLATE_QUESTION_CREATE', resource: 'template' },
   'DELETE:/templates/:id/questions/:questionId':     { action: 'TEMPLATE_QUESTION_DELETE', resource: 'template' },
   'PATCH:/templates/:id/publish':                    { action: 'TEMPLATE_PUBLISH',         resource: 'template' },
   'PATCH:/templates/:id/questions/:questionId/lock': { action: 'TEMPLATE_QUESTION_LOCK',   resource: 'template' },
-  // Users
-  'PATCH:/users/:id':                                { action: 'USER_UPDATE',              resource: 'user' },
 }
 
 export function extractResourceId(routePattern: string, actualPath: string): string | undefined {

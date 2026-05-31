@@ -3,13 +3,14 @@
 import { use, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { PageHeader } from '@/components/PageHeader'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { StatusBadge } from '@/components/StatusBadge'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useReview } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
-import type { TemplateQuestion, ReviewGrade } from '@/types'
+import type { TemplateQuestion, ReviewGrade, Goal, GoalStatus } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
   O:       'O',
@@ -141,6 +142,122 @@ function QuestionField({ q, value, onChange, readonly = false }: QuestionFieldPr
   )
 }
 
+// ─── Goals summary (collapsible reference panel) ─────────────────────────────
+
+const STATUS_COLOR: Record<GoalStatus, string> = {
+  Draft:           'bg-gray-100 text-gray-500',
+  PendingApproval: 'bg-yellow-100 text-yellow-700',
+  Approved:        'bg-indigo-100 text-indigo-700',
+  Completed:       'bg-green-100 text-green-700',
+  Rejected:        'bg-red-100 text-red-700',
+}
+const STATUS_LABEL: Record<GoalStatus, string> = {
+  Draft:           '草稿',
+  PendingApproval: '待審核',
+  Approved:        '進行中',
+  Completed:       '已完成',
+  Rejected:        '已退回',
+}
+
+function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwner }: {
+  employeeId: string
+  cycleId: string
+  goalSettingStart: string
+  reviewEnd: string
+  isOwner: boolean
+}) {
+  const [goals, setGoals]     = useState<Goal[]>([])
+  const [open, setOpen]       = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [fetched, setFetched] = useState(false)
+
+  async function load() {
+    if (fetched) return
+    setLoading(true)
+    try {
+      const data = isOwner
+        ? await api.get<Goal[]>('/goals')
+        : await api.get<Goal[]>(`/goals/employee/${employeeId}`)
+      const start = new Date(goalSettingStart).getTime()
+      const end   = new Date(reviewEnd).getTime()
+      setGoals(data.filter((g) => {
+        if (g.status === 'Draft') return false
+        if (g.cycleId === cycleId) return true
+        const created = new Date(g.createdAt).getTime()
+        return created >= start && created <= end
+      }))
+      setFetched(true)
+    } catch { /* silent */ } finally {
+      setLoading(false)
+    }
+  }
+
+  function toggle() {
+    if (!open && !fetched) load()
+    setOpen((v) => !v)
+  }
+
+  return (
+    <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
+      <button
+        onClick={toggle}
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-indigo-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2zm-1 8h8m-8 4h5" />
+          </svg>
+          本週期目標參考
+          {fetched && goals.length > 0 && (
+            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+              {goals.length}
+            </span>
+          )}
+        </span>
+        <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-200 px-4 pb-4 pt-3">
+          {loading ? (
+            <Loading className="py-2" />
+          ) : goals.length === 0 ? (
+            <p className="text-xs text-gray-400">本週期沒有設定目標</p>
+          ) : (
+            <div className="space-y-2">
+              {goals.map((g) => {
+                const done  = g.milestones.filter((m) => m.completedAt).length
+                const total = g.milestones.length
+                const pct   = total > 0 ? Math.round((done / total) * 100) : null
+                return (
+                  <div key={g.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-800">{g.title}</p>
+                      {total > 0 && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-1.5 rounded-full bg-indigo-400" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-gray-400">里程碑 {done}/{total} · {pct}%</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[g.status as GoalStatus]}`}>
+                      {STATUS_LABEL[g.status as GoalStatus] ?? g.status}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -184,7 +301,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
     setGrade(review.grade ?? '')
   }, [review?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (isLoading) return <p className="text-muted">{tCommon('loading')}</p>
+  if (isLoading) return <Loading />
   if (error)     return <ErrorBanner message={error} />
   if (!review || !user) return <p className="text-error">{t('detail.notFound')}</p>
 
@@ -194,6 +311,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   const isManager     = user.role === 'Manager' || user.role === 'Admin'
   // Direct-report: supervisorId is null, manager handles the review directly
   const isDirectReportManager = isManager && review.supervisorId === null && user.id === review.employee.managerId
+  // Supervisors should not see that an appeal was filed — show Appealed reviews as Published to them
+  const displayAsAppealed = review.status === 'Appealed' && !isSupervisor
 
   const canEmployeeEdit   = isEmployee && review.status === 'PendingEmployeeSubmit'
   const canSupervisorEdit = (isSupervisor || isDirectReportManager) && review.status === 'PendingSupervisorReview'
@@ -303,7 +422,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           },
           { label: review.cycle.name },
         ]}
-        actions={<StatusBadge status={review.status} />}
+        actions={<StatusBadge status={isSupervisor && review.status === 'Appealed' ? 'Published' : review.status} />}
       />
 
       {/* Status banner: supervisor/manager viewing before employee submits */}
@@ -350,17 +469,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       {/* ── Published result ── */}
       {(review.status === 'Published' || review.status === 'Appealed') && review.grade && (
         <div className={`mb-6 rounded-xl border p-5 ${
-          review.status === 'Appealed' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+          displayAsAppealed ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
         }`}>
           <div className="flex items-start justify-between">
             <div>
-              <p className={`text-sm font-semibold mb-1 ${review.status === 'Appealed' ? 'text-red-700' : 'text-green-700'}`}>
-                {review.status === 'Appealed' ? t('detail.published.appealed') : t('detail.published.result')}
+              <p className={`text-sm font-semibold mb-1 ${displayAsAppealed ? 'text-red-700' : 'text-green-700'}`}>
+                {displayAsAppealed ? t('detail.published.appealed') : t('detail.published.result')}
               </p>
-              <p className={`text-4xl font-bold mb-1 ${review.status === 'Appealed' ? 'text-red-800' : 'text-green-800'}`}>
+              <p className={`text-4xl font-bold mb-1 ${displayAsAppealed ? 'text-red-800' : 'text-green-800'}`}>
                 {GRADE_DISPLAY[review.grade]}
               </p>
-              <p className={`text-sm font-medium ${review.status === 'Appealed' ? 'text-red-600' : 'text-green-600'}`}>
+              <p className={`text-sm font-medium ${displayAsAppealed ? 'text-red-600' : 'text-green-600'}`}>
                 {GRADE_SCALE.find(g => g.grade === review.grade)?.label}
                 <span className="mx-1.5 opacity-50">·</span>
                 <span className="font-normal">{GRADE_SCALE.find(g => g.grade === review.grade)?.desc}</span>
@@ -370,7 +489,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {review.supervisorComment && (
-            <p className={`text-sm border-t pt-3 mt-3 ${review.status === 'Appealed' ? 'text-red-700 border-red-200' : 'text-green-700 border-green-200'}`}>
+            <p className={`text-sm border-t pt-3 mt-3 ${displayAsAppealed ? 'text-red-700 border-red-200' : 'text-green-700 border-green-200'}`}>
               <span className="font-medium">{t('detail.published.supervisorComment')}</span>{review.supervisorComment}
             </p>
           )}
@@ -416,7 +535,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             </div>
           )}
 
-          {isEmployee && review.status === 'Appealed' && (
+          {isEmployee && displayAsAppealed && (
             <p className="mt-4 text-xs text-red-600 border-t border-red-200 pt-3">
               {t('detail.published.appealSubmitted')}
             </p>
@@ -433,6 +552,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               <span className="ml-2 text-xs font-normal text-gray-400">{t('detail.sections.submitted')}</span>
             )}
           </h2>
+          <GoalsSummary employeeId={review.employeeId} cycleId={review.cycleId} goalSettingStart={review.cycle.goalSettingStart} reviewEnd={review.cycle.reviewEnd} isOwner={isEmployee} />
           <div className="space-y-4">
             {questions.map((q) => {
               const empAns = review.employeeAnswers.find((a) => a.questionId === q.id)?.answer ?? ''
@@ -507,6 +627,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               <span className="ml-2 text-xs font-normal text-gray-400">{t('detail.sections.submitted')}</span>
             )}
           </h2>
+          <GoalsSummary employeeId={review.employeeId} cycleId={review.cycleId} goalSettingStart={review.cycle.goalSettingStart} reviewEnd={review.cycle.reviewEnd} isOwner={false} />
 
           {/* 2-column layout when supervisor is editing */}
           {canSupervisorEdit && questions.length > 0 && (

@@ -38,14 +38,41 @@ export interface PerformanceCycle {
   goalSettingEnd: string
   reviewStart: string
   reviewEnd: string
+  advanceConfirmed: boolean
+  advanceConfirmedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | 'CycleAdvanceReminder'
+  | 'CycleAutoAdvanced'
+  | 'CyclePostponed'
+  | 'GoalSubmitted'
+  | 'GoalRejected'
+  | 'GoalApproved'
+  | 'AppealFiled'
+  | 'AppealResolved'
+  | 'ReviewSubmitted'
+  | 'ReviewApproved'
+  | 'ReviewPublished'
+
+export interface AppNotification {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  read: boolean
+  cycleId: string | null
+  createdAt: string
 }
 
 // ─── Goal ─────────────────────────────────────────────────────────────────────
 
 export type GoalType = 'Personal' | 'Team'
-export type GoalStatus = 'Draft' | 'PendingApproval' | 'Approved' | 'Completed'
+export type GoalStatus = 'Draft' | 'PendingApproval' | 'Approved' | 'Completed' | 'Rejected'
 
 export interface Goal {
   id: string
@@ -59,6 +86,7 @@ export interface Goal {
   dueDate: string        // Time-bound
   type: GoalType
   status: GoalStatus
+  rejectionReason?: string | null
   progressUpdates: ProgressUpdate[]
   milestones: GoalMilestone[]
   createdAt: string
@@ -148,7 +176,7 @@ export interface PerformanceReview {
 }
 
 export interface PerformanceReviewDetail extends PerformanceReview {
-  cycle: { id: string; name: string; type: CycleType; status: CycleStatus }
+  cycle: { id: string; name: string; type: CycleType; status: CycleStatus; goalSettingStart: string; reviewEnd: string }
   employee: { id: string; name: string; employeeId: string; jobLevel: string; jobTitle: string; managerId: string | null }
   supervisor: { id: string; name: string; employeeId: string } | null
   template: { id: string; name: string; questions: TemplateQuestion[] }
@@ -173,6 +201,8 @@ export interface Appeal {
     id: string
     grade?: ReviewGrade
     supervisorComment?: string
+    employeeAnswers?:   ReviewAnswer[]
+    supervisorAnswers?: ReviewAnswer[]
     cycle:    { id: string; name: string }
     template?: { id: string; name: string; questions: TemplateQuestion[] }
   }

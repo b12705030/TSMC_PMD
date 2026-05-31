@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeamReviews } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
@@ -25,15 +26,11 @@ const GRADE_TEXT_COLOR: Record<ReviewGrade, string> = {
 
 export default function TeamReviewsPage() {
   const t = useTranslations('reviews')
-  const tCommon = useTranslations('common')
+
   const { reviews, isLoading, error, refetch } = useTeamReviews()
   const { user } = useAuth()
-  const isManager = user?.role === 'Manager'
-
-  const STATUS_ACTION: Partial<Record<ReviewStatus, string>> = {
-    PendingSupervisorReview: t('teamActionPending'),
-    PendingManagerApproval:  t('teamActionManager'),
-  }
+  const isManager    = user?.role === 'Manager'
+  const isSupervisor = user?.role === 'Supervisor'
 
   const pendingCount = reviews.filter((r) => r.status === 'PendingSupervisorReview').length
 
@@ -86,7 +83,7 @@ export default function TeamReviewsPage() {
       )}
 
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : error ? (
         <ErrorBanner message={error} onRetry={refetch} />
       ) : reviews.length === 0 ? (
@@ -94,7 +91,7 @@ export default function TeamReviewsPage() {
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <TeamReviewCard key={review.id} review={review} statusAction={STATUS_ACTION} />
+            <TeamReviewCard key={review.id} review={review} isManager={isManager} isSupervisor={isSupervisor} />
           ))}
         </div>
       )}
@@ -104,17 +101,41 @@ export default function TeamReviewsPage() {
 
 function TeamReviewCard({
   review,
-  statusAction,
+  isManager,
+  isSupervisor,
 }: {
   review: PerformanceReviewDetail
-  statusAction: Partial<Record<ReviewStatus, string>>
+  isManager: boolean
+  isSupervisor: boolean
 }) {
-  const actionLabel = statusAction[review.status]
-  const needsAction = review.status === 'PendingSupervisorReview'
+  const t = useTranslations('reviews')
+  // Supervisors should not know an appeal was filed — show Appealed as Published
+  const displayStatus = isSupervisor && review.status === 'Appealed' ? 'Published' : review.status
+
+  // 依角色決定「是否需要我動作」與顯示文字
+  let actionLabel: string | null = null
+  let needsAction = false
+
+  if (isManager) {
+    if (displayStatus === 'PendingSupervisorReview') {
+      // 這是主管的工作，對 Manager 只是資訊提示
+      actionLabel = t('teamActionWaitingSup', { supervisor: review.supervisor?.name ?? '-' })
+      needsAction = false
+    } else if (displayStatus === 'PendingManagerApproval') {
+      actionLabel = t('teamActionManager')
+      needsAction = true
+    }
+  } else {
+    // Supervisor
+    if (displayStatus === 'PendingSupervisorReview') {
+      actionLabel = t('teamActionPending')
+      needsAction = true
+    }
+  }
 
   return (
     <Link
-      href={`/reviews/${review.id}`}
+      href={`/reviews/${review.id}?from=team`}
       className={`block rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${
         needsAction ? 'border-amber-200 hover:border-amber-300' : 'border-gray-200 hover:border-gray-300'
       }`}
@@ -137,7 +158,7 @@ function TeamReviewCard({
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge status={review.status} />
+          <StatusBadge status={displayStatus as ReviewStatus} />
           {review.grade && (
             <span className={`text-xl font-bold ${GRADE_TEXT_COLOR[review.grade]}`}>
               {GRADE_DISPLAY[review.grade]}

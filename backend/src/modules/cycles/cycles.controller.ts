@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Patch, UseGuards } from '@nestjs/co
 import { CyclesService } from './cycles.service'
 import { CreateCycleDto } from './dto/create-cycle.dto'
 import { UpdateCycleDto } from './dto/update-cycle.dto'
+import { PostponeCycleDto } from './dto/postpone-cycle.dto'
 import { AuthGuard } from '../../common/guards/auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
@@ -39,7 +40,7 @@ export class CyclesController {
   }
 
   @Patch(':id')
-  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  @Roles(Role.Admin)
   updateCycle(@Param('id') id: string, @Body() dto: UpdateCycleDto, @CurrentUser() user: SessionUser) {
     return this.cyclesService.updateCycle(id, dto, user)
   }
@@ -48,5 +49,21 @@ export class CyclesController {
   @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
   advanceStatus(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.cyclesService.advanceStatus(id, user)
+  }
+
+  @Patch(':id/confirm-advance')
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  confirmAdvance(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.cyclesService.confirmAdvance(id, user)
+  }
+
+  @Patch(':id/postpone')
+  @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
+  postpone(
+    @Param('id') id: string,
+    @Body() dto: PostponeCycleDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return this.cyclesService.postpone(id, dto, user)
   }
 }

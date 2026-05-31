@@ -15,14 +15,14 @@ export class ReviewsController {
 
   // Employee: my own reviews
   @Get()
-  @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.Admin)
+  @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
   getMyReviews(@CurrentUser() user: SessionUser) {
     return this.reviewsService.getMyReviews(user.id)
   }
 
-  // Supervisor / Manager / Admin: team reviews
+  // Supervisor / Manager / RegionalHR / Admin: team reviews
   @Get('team')
-  @Roles(Role.Supervisor, Role.Manager, Role.Admin)
+  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
   getTeamReviews(@CurrentUser() user: SessionUser) {
     return this.reviewsService.getTeamReviews(user)
   }
@@ -51,7 +51,7 @@ export class ReviewsController {
 
   // Any role with access: single review
   @Get(':id')
-  @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.Admin)
+  @Roles(Role.Employee, Role.Supervisor, Role.Manager, Role.Admin, Role.RegionalHR)
   getReview(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.reviewsService.getReview(id, user)
   }

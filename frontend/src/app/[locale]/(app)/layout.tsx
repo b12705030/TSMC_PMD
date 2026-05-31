@@ -1,26 +1,89 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useCallback, useEffect } from 'react'
 import { useRouter } from '@/i18n/navigation'
-import { useTranslations } from 'next-intl'
 import { Sidebar } from '@/components/Sidebar'
+import { IdleWatcher } from '@/components/IdleWatcher'
+import { DeadlineToast } from '@/components/DeadlineToast'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
+import { api } from '@/lib/api'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
-  const t = useTranslations('common')
-
+  const { user, isLoading, setUser } = useAuth()
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login')
     }
   }, [user, isLoading, router])
 
+  const handleIdle = useCallback(async () => {
+    await api.post('/auth/logout', {}).catch(() => {})
+    setUser(null)
+    router.push('/login')
+  }, [router, setUser])
+
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <span className="text-muted">{t('loading')}</span>
+      <div className="flex h-screen overflow-hidden">
+        {/* Skeleton Sidebar */}
+        <div className="flex h-screen w-60 flex-col border-r border-gray-200 bg-white">
+          <div className="flex h-16 items-center border-b border-gray-200 px-4 gap-2">
+            <div className="h-5 w-10 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-24 rounded bg-gray-100 animate-pulse" />
+          </div>
+          <div className="flex-1 px-3 py-4 space-y-1">
+            {[80, 64, 72, 64, 72, 56, 68, 60, 72].map((w, i) => (
+              <div key={i} className="flex items-center gap-3 px-2 py-2">
+                <div className="h-4 w-4 rounded bg-gray-200 animate-pulse shrink-0" />
+                <div className={`h-3 w-${w === 80 ? '[80px]' : w === 64 ? '[64px]' : w === 72 ? '[72px]' : w === 56 ? '[56px]' : w === 60 ? '[60px]' : '[68px]'} rounded bg-gray-100 animate-pulse`} style={{ width: w }} />
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-gray-200 p-4 space-y-2">
+            <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-16 rounded bg-gray-100 animate-pulse" />
+            <div className="mt-2 h-7 w-full rounded-md bg-gray-100 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Skeleton Main */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+          {/* Page title */}
+          <div className="h-7 w-48 rounded-lg bg-gray-200 animate-pulse" />
+
+          {/* Cards row */}
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+                <div className="h-3 w-20 rounded bg-gray-200 animate-pulse" />
+                <div className="h-8 w-12 rounded bg-gray-100 animate-pulse" />
+                <div className="h-3 w-32 rounded bg-gray-100 animate-pulse" />
+              </div>
+            ))}
+          </div>
+
+          {/* Wide card */}
+          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+            <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+            <div className="h-3 w-full rounded bg-gray-100 animate-pulse" />
+            <div className="h-3 w-5/6 rounded bg-gray-100 animate-pulse" />
+            <div className="h-3 w-4/6 rounded bg-gray-100 animate-pulse" />
+          </div>
+
+          {/* List items */}
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+                <div className="space-y-1.5">
+                  <div className="h-3.5 w-48 rounded bg-gray-200 animate-pulse" />
+                  <div className="h-3 w-32 rounded bg-gray-100 animate-pulse" />
+                </div>
+                <div className="h-6 w-16 rounded-full bg-gray-100 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -29,8 +92,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <Suspense fallback={null}>
+        <Sidebar />
+      </Suspense>
       <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <DeadlineToast />
+      <IdleWatcher onIdle={handleIdle} />
     </div>
   )
 }

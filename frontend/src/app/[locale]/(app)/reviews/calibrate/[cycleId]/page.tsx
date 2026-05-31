@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { PageHeader } from '@/components/PageHeader'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -29,7 +30,7 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
 export default function CalibratePage({ params }: { params: Promise<{ cycleId: string }> }) {
   const { cycleId } = use(params)
   const t = useTranslations('reviews')
-  const tCommon = useTranslations('common')
+
   const { reviews: serverReviews, isLoading, error, refetch } = useCycleReviews(cycleId)
   const [reviews, setReviews] = useState<PerformanceReviewDetail[]>([])
   const [publishing, setPublishing] = useState(false)
@@ -106,7 +107,7 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
 
       {error && <ErrorBanner message={error} />}
       {isLoading ? (
-        <p className="text-muted">{tCommon('loading')}</p>
+        <Loading />
       ) : reviews.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
           {t('calibrate.empty')}
@@ -224,7 +225,7 @@ function CalibrateRow({
         )}
       </td>
       <td className="px-3 py-3">
-        <Link href={`/reviews/${review.id}`} className="btn-link text-xs">
+        <Link href={`/reviews/${review.id}?from=team`} className="btn-link text-xs">
           {t('calibrate.table.viewBtn')}
         </Link>
       </td>

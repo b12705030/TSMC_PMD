@@ -47,6 +47,7 @@ enum GoalStatus {
   PendingApproval
   Approved
   Completed
+  Rejected
 }
 
 enum ReviewStatus {
@@ -155,6 +156,8 @@ model User {
   appealsAsManager    Appeal[]            @relation("AppealManager")
   goals               Goal[]
   progressUpdates     ProgressUpdate[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -178,12 +181,17 @@ model PerformanceCycle {
   reviewStart      DateTime
   reviewEnd        DateTime
 
+  // 自動推進確認
+  advanceConfirmed   Boolean   @default(false)  // HR 已確認如期自動推進
+  advanceConfirmedAt DateTime?                  // HR 確認時間
+
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
   templates        FormTemplate[]
   reviews          PerformanceReview[]
   goals            Goal[]
+  notifications    Notification[]
 
   @@index([regionId])
 }
@@ -255,8 +263,9 @@ model Goal {
   targetValue String     // Achievable
   relevance   String     // Relevant
   dueDate     DateTime
-  type        GoalType   @default(Personal)
-  status      GoalStatus @default(Draft)
+  type             GoalType   @default(Personal)
+  status           GoalStatus @default(Draft)
+  rejectionReason  String?    // 主管退回時填寫的原因
 
   progressUpdates ProgressUpdate[]
   milestones      GoalMilestone[]
@@ -339,6 +348,7 @@ model Appeal {
   status          AppealStatus @default(Pending)
   managerResponse String?
   resolvedAt      DateTime?
+  seenByEmployee  Boolean      @default(true)   // 員工是否已看過申訴結果（Resolved 時設 false）
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -346,14 +356,74 @@ model Appeal {
   @@index([managerId])
 }
 
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+enum NotificationType {
+  CycleAdvanceReminder  // 評核期 7 天前提醒 HR 確認
+  CycleAutoAdvanced     // 系統自動推進了週期
+  CyclePostponed        // HR 延期了週期
+  GoalSubmitted         // 員工提交目標，通知主管／經理
+  GoalRejected          // 主管退回目標，通知員工
+  GoalApproved          // 主管核准目標，通知員工
+  AppealFiled           // 員工提出申訴，通知 Manager
+  AppealResolved        // Manager 處理申訴完畢，通知員工
+  ReviewSubmitted       // 員工提交自評，通知 Supervisor
+  ReviewApproved        // Supervisor 提交評核，通知 Manager
+  ReviewPublished       // Manager 發布評核結果，通知員工
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  cycleId   String?
+  cycle     PerformanceCycle? @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([cycleId])
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String
+  userName     String
+  userRegionId String?
+  action       String
+  outcome      String
+  resource     String
+  resourceId   String?
+  httpMethod   String?
+  httpPath     String?
+  httpStatus   Int?
+  ipAddress    String?
+  userAgent    String?
+  detail       Json?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([outcome])
+  @@index([resource])
+}
+
 // ─── Session ──────────────────────────────────────────────────────────────────
 
 model Session {
-  id        String   @id  // UUID used as cookie value
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id           String   @id  // UUID used as cookie value
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([userId])
 }

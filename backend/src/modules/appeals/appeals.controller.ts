@@ -13,9 +13,9 @@ import type { SessionUser } from '../../common/types/request.types'
 export class AppealsController {
   constructor(private readonly appealsService: AppealsService) {}
 
-  // Manager / Admin 查看收到的申訴清單
+  // Manager / Admin / RegionalHR / GlobalHR 查看申訴清單
   @Get()
-  @Roles(Role.Manager, Role.Admin)
+  @Roles(Role.Manager, Role.Admin, Role.RegionalHR, Role.GlobalHR)
   getAppeals(@CurrentUser() user: SessionUser) {
     return this.appealsService.getAppealsForManager(user)
   }
@@ -27,9 +27,16 @@ export class AppealsController {
     return this.appealsService.createAppeal(user, dto)
   }
 
-  // 取得單筆申訴（員工看自己的、Manager 看收到的）
+  // 員工查詢未讀的申訴結果通知數
+  @Get('my-unread-count')
+  @Roles(Role.Employee)
+  getUnreadCount(@CurrentUser() user: SessionUser) {
+    return this.appealsService.getUnreadCount(user)
+  }
+
+  // 取得單筆申訴（員工看自己的、Manager/RegionalHR/GlobalHR 看收到的）
   @Get(':id')
-  @Roles(Role.Employee, Role.Manager, Role.Admin)
+  @Roles(Role.Employee, Role.Manager, Role.Admin, Role.RegionalHR, Role.GlobalHR)
   getAppeal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
     return this.appealsService.getAppealById(id, user)
   }

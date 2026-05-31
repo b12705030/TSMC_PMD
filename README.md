@@ -8,11 +8,13 @@ A modern, centralized performance management system for a global enterprise with
 |-------|-----------|
 | Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS |
 | Backend | Node.js + NestJS + TypeScript |
-| Database | Neon (PostgreSQL) |
-| Audit Log | Elasticsearch |
+| Database | Neon (PostgreSQL) — Primary + Read Replica |
+| Audit Log | Neon (PostgreSQL)（Prisma `AuditLog` model） |
 | ORM | Prisma |
+| Metrics | prom-client → Grafana Cloud |
 | CI/CD | GitHub Actions |
 | Container | Docker Compose |
+| Cloud Deploy | GCP |
 
 ## 測試帳號（密碼統一 `test1234`）
 
@@ -94,9 +96,6 @@ docker compose version
 # PostgreSQL（從 Neon dashboard 取得）
 DATABASE_URL="postgresql://..."       # Pooled connection
 DIRECT_URL="postgresql://..."         # Direct / unpooled connection
-
-# Elasticsearch（Docker Compose 內部網路，固定此值）
-ELASTICSEARCH_NODE=http://elasticsearch:9200
 ```
 
 > `frontend/.env.local` 不需要手動建立，`NEXT_PUBLIC_API_URL` 已在 `docker-compose.yml` 的 build arg 中設定好。
@@ -114,8 +113,10 @@ cp backend/.env.example backend/.env
 # 3. 第一次啟動（Build image + 啟動所有服務）
 docker-compose up --build -d
 
-# 4. 套用 DB migrations 並 seed 測試資料（第一次）
+# 4. 套用 DB migrations（有新 migration 時都需執行，冪等安全）
 docker exec tsmc-backend npx prisma migrate deploy
+
+# 5. 若要匯入 Seed 測試資料（第一次，或清空 DB 後才需執行 整個專案只需執行一次）
 docker exec tsmc-backend npx prisma db seed
 ```
 
@@ -129,9 +130,7 @@ docker-compose up -d
 docker-compose down
 ```
 
-> **注意**：
-> - 每次 pull 新程式碼若有 migration 變動，需再執行 `docker exec tsmc-backend npx prisma migrate deploy`
-> - `docker-compose down -v` 會**清除** Elasticsearch 資料，一般停止請用 `docker-compose down`
+> **注意**：每次 pull 新程式碼若有 migration 變動，需再執行 `docker exec tsmc-backend npx prisma migrate deploy`
 
 ### 啟動端點
 
@@ -140,7 +139,7 @@ docker-compose down
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:4000 |
 | Swagger Docs | http://localhost:4000/api/docs |
-| Elasticsearch | http://localhost:9200 |
+| Prometheus Metrics | http://localhost:4000/metrics |
 
 ### 執行測試
 
@@ -163,6 +162,67 @@ npm run test:integration
 # 單元 + 整合
 npm run test:all
 ```
+
+
+
+### Architecture
+
+```
+GCP Cloud Run
+├── Frontend  (Next.js)   — min-instances: 2, HTTPS
+└── Backend   (NestJS)    — min-instances: 2, HTTPS
+        └── GET /metrics  ← Grafana Alloy (Compute Engine VM) scrapes every 15s
+                                  └── remote_write → Grafana Cloud Dashboard
+
+Neon PostgreSQL (managed)
+├── Primary Compute    — 讀寫
+└── Read Replica       — 唯讀分流 / HA 備援
+```
+
+### CI/CD
+
+GitHub Actions（`.github/workflows/ci.yml`）在每次 push / PR 時自動執行：
+- Frontend：Lint → Type check → Build
+- Backend：Lint → Type check → Build → Unit tests
+
+> **目前 CD 為手動**：CI 通過後由團隊成員透過 GCP Console 或 `gcloud` 手動觸發 Cloud Run 重新部署。
+
+### 部署步驟（手動）
+
+```bash
+# Backend
+gcloud run deploy tsmc-backend \
+  --source ./backend \
+  --region asia-east1 \
+  --min-instances 2
+
+# Frontend
+gcloud run deploy tsmc-frontend \
+  --source ./frontend \
+  --region asia-east1 \
+  --min-instances 2
+```
+
+### 環境變數（Cloud Run）
+
+在 GCP Console → Cloud Run → 服務 → Edit & Deploy → Variables 設定：
+
+| 變數 | 說明 |
+|------|------|
+| `DATABASE_URL` | Neon pooled connection string |
+| `DIRECT_URL` | Neon direct connection string |
+| `JWT_SECRET` | Session 加密金鑰 |
+
+### 監控
+
+| 工具 | 用途 |
+|------|------|
+| GCP Cloud Monitoring | Cloud Run 請求速率、P95 延遲、容器實例數、Email 告警 |
+| Grafana Cloud | 自訂 prom-client 指標（`http_requests_total`、`http_request_duration_seconds`） |
+
+詳細設定步驟見 [GCP_GUIDE.md](GCP_GUIDE.md)。
+
+---
 
 ## Branch Strategy
 

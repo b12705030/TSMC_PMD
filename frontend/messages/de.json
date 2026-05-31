@@ -10,7 +10,8 @@
     "cycles": "Zyklen",
     "templates": "Vorlagen",
     "appeals": "Einsprüche",
-    "auditLog": "Prüfprotokoll"
+    "auditLog": "Prüfprotokoll",
+    "users": "User Management"
   },
   "sidebar": {
     "logout": "Abmelden",
@@ -70,21 +71,21 @@
     "invalidCredentials": "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
   },
   "cycleStepper": {
-    "companyGoal":        "Unternehmensziele veröffentlicht",
-    "companyGoalDesc":    "Gibt Mitarbeitern Richtung für die Zielsetzung",
-    "goalSetting":        "Zielsetzung",
-    "goalSettingDesc":    "Mitarbeiter setzen ihre SMART-Ziele",
-    "inProgress":         "Laufend",
-    "inProgressDesc":     "Zielverfolgung aktiv",
-    "reviewStart":        "Bewertungszeitraum beginnt",
-    "employeeReview":     "Mitarbeiterbewertung",
+    "companyGoal": "Unternehmensziele veröffentlicht",
+    "companyGoalDesc": "Gibt Mitarbeitern Richtung für die Zielsetzung",
+    "goalSetting": "Zielsetzung",
+    "goalSettingDesc": "Mitarbeiter setzen ihre SMART-Ziele",
+    "inProgress": "Laufend",
+    "inProgressDesc": "Zielverfolgung aktiv",
+    "reviewStart": "Bewertungszeitraum beginnt",
+    "employeeReview": "Mitarbeiterbewertung",
     "employeeReviewDesc": "Leistungsformular ausfüllen",
-    "supervisorReview":     "Vorgesetztenbewertung",
+    "supervisorReview": "Vorgesetztenbewertung",
     "supervisorReviewDesc": "Vorgesetzter führt Bewertung durch",
-    "calibration":        "Kalibrierung",
-    "calibrationDesc":    "Manager passt an und veröffentlicht Ergebnisse",
-    "completed":          "Abgeschlossen",
-    "completedDesc":      "Ergebnisse veröffentlicht"
+    "calibration": "Kalibrierung",
+    "calibrationDesc": "Manager passt an und veröffentlicht Ergebnisse",
+    "completed": "Abgeschlossen",
+    "completedDesc": "Ergebnisse veröffentlicht"
   },
   "auditLog": {
     "pageTitle": "Prüfprotokoll",
@@ -241,7 +242,9 @@
       "reviewRange": "Bewertungszeitraum: {start} – {end}",
       "publishRange": "Veröffentlicht: {date}"
     },
-    "activeCycles": { "title": "Aktive Zyklen" },
+    "activeCycles": {
+      "title": "Aktive Zyklen"
+    },
     "goals": {
       "title": "Meine Ziele",
       "empty": "Noch keine Ziele gesetzt",
@@ -249,7 +252,10 @@
       "draft": "Entwurf",
       "pendingApproval": "Genehmigung ausstehend",
       "approved": "Genehmigt",
-      "completed": "Abgeschlossen"
+      "completed": "Abgeschlossen",
+      "rejected": "Rejected",
+      "rejectedWarning": "{count} goal(s) rejected, please revise and resubmit",
+      "rejectedWarningDesc": "Your goals have been rejected. Please review the feedback and update them."
     },
     "myReviews": {
       "title": "Meine Bewertungen",
@@ -468,7 +474,8 @@
     "grade": "Beurteilung {grade}",
     "actionRequired": "→ Aktion erforderlich",
     "teamActionPending": "→ Ihre Bewertung ausstehend",
-    "teamActionManager": "Kalibrierung ausstehend",
+    "teamActionManager": "→ Ihre Kalibrierung ausstehend",
+    "teamActionWaitingSup": "Warte auf Bewertung durch Vorgesetzten ({supervisor})",
     "teamPendingBanner": "{count} Bewertung(en) ausstehend",
     "teamPendingCalibration": "{count} Kalibrierung / Veröffentlichung ausstehend",
     "calibrateBtn": "Kalibrierung starten",
@@ -535,12 +542,30 @@
       }
     },
     "grades": {
-      "O":       { "label": "Outstanding (Hervorragend)",        "desc": "Spitzengruppe — übertrifft in allen Bereichen deutlich die Erwartungen" },
-      "S_Plus":  { "label": "Excellent (Ausgezeichnet)",         "desc": "Übertrifft durchweg die Erwartungen mit bedeutenden Beiträgen" },
-      "S":       { "label": "Satisfactory (Befriedigend)",       "desc": "Erfüllt alle Ziele und Erwartungen vollständig" },
-      "S_Minus": { "label": "Partially Sat. (Teilweise erfüllt)","desc": "Erfüllt größtenteils die Erwartungen; einige Bereiche benötigen Verbesserung" },
-      "I":       { "label": "Needs Improvement (Verbesserungsbedarf)", "desc": "Hat Erwartungen nicht vollständig erfüllt; Coaching erforderlich" },
-      "U":       { "label": "Unsatisfactory (Unzureichend)",    "desc": "Deutlich unter Standard; PMD-Tracking wird ausgelöst" },
+      "O": {
+        "label": "Outstanding (Hervorragend)",
+        "desc": "Spitzengruppe — übertrifft in allen Bereichen deutlich die Erwartungen"
+      },
+      "S_Plus": {
+        "label": "Excellent (Ausgezeichnet)",
+        "desc": "Übertrifft durchweg die Erwartungen mit bedeutenden Beiträgen"
+      },
+      "S": {
+        "label": "Satisfactory (Befriedigend)",
+        "desc": "Erfüllt alle Ziele und Erwartungen vollständig"
+      },
+      "S_Minus": {
+        "label": "Partially Sat. (Teilweise erfüllt)",
+        "desc": "Erfüllt größtenteils die Erwartungen; einige Bereiche benötigen Verbesserung"
+      },
+      "I": {
+        "label": "Needs Improvement (Verbesserungsbedarf)",
+        "desc": "Hat Erwartungen nicht vollständig erfüllt; Coaching erforderlich"
+      },
+      "U": {
+        "label": "Unsatisfactory (Unzureichend)",
+        "desc": "Deutlich unter Standard; PMD-Tracking wird ausgelöst"
+      },
       "tooltip": "ⓘ Beurteilungsübersicht",
       "noAnswer": "(Keine Antwort)"
     },
@@ -662,5 +687,47 @@
       "reviews": "Bewertungsverlauf",
       "noReviews": "Keine Bewertungseinträge."
     }
+  },
+  "users": {
+    "pageTitle": "User Management",
+    "pageDesc": "Manage roles, regions, departments for all accounts",
+    "newUser": "New User",
+    "searchPlaceholder": "Search by employee ID / name / email",
+    "allRoles": "All Roles",
+    "allRegions": "All Regions",
+    "empty": "No users found",
+    "total": "{count} user(s)",
+    "prev": "Previous",
+    "next": "Next",
+    "edit": "Edit",
+    "colEmployeeId": "Employee ID",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colRole": "Role",
+    "colRegion": "Region",
+    "colDepartment": "Department",
+    "colJobLevel": "Job Level",
+    "colJobTitle": "Job Title",
+    "editTitle": "Edit User",
+    "createTitle": "Create Account",
+    "defaultPasswordNote": "Initial password is TSMC@1234.",
+    "fieldEmployeeId": "Employee ID",
+    "fieldName": "Name",
+    "fieldEmail": "Email",
+    "fieldRole": "Role",
+    "fieldRegion": "Region",
+    "fieldDepartment": "Department",
+    "fieldJobLevel": "Job Level",
+    "fieldJobTitle": "Job Title",
+    "selectRegion": "Select Region",
+    "selectDepartment": "Select Department",
+    "requiredFields": "Please fill in all required fields (*)",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create Account",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "saveError": "Save failed",
+    "createError": "Create failed"
   }
 }

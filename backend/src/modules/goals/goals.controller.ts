@@ -19,6 +19,12 @@ export class GoalsController {
     return this.goalsService.getMyGoals(user.id)
   }
 
+  @Get('team')
+  @Roles(Role.Supervisor, Role.Manager, Role.RegionalHR, Role.Admin)
+  getTeamGoals(@CurrentUser() user: SessionUser) {
+    return this.goalsService.getTeamGoals(user)
+  }
+
   @Get('employee/:employeeId')
   @Roles(Role.Supervisor, Role.Manager, Role.Admin)
   getEmployeeGoalsInline(
@@ -133,8 +139,12 @@ export class GoalsController {
 
   @Patch(':id/reject')
   @Roles(Role.Supervisor, Role.Manager, Role.Admin)
-  rejectGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
-    return this.goalsService.rejectGoal(id, user)
+  rejectGoal(
+    @Param('id') id: string,
+    @CurrentUser() user: SessionUser,
+    @Body() body: { reason?: string },
+  ) {
+    return this.goalsService.rejectGoal(id, user, body.reason)
   }
 
   @Patch(':id/submit')
