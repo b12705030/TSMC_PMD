@@ -101,6 +101,7 @@ export default function NewGoalPage() {
           <div className="px-8 pt-5 pb-5 border-b border-gray-100">
             <input
               type="text"
+              data-testid="goal-new-title"
               value={form.title}
               onChange={(e) => handleChange('title', e.target.value)}
               placeholder="給這個目標取個名字..."
@@ -112,6 +113,7 @@ export default function NewGoalPage() {
                 <IconCalendar />
                 <input
                   type="date"
+                  data-testid="goal-new-due-date"
                   value={form.dueDate}
                   onChange={(e) => handleChange('dueDate', e.target.value)}
                   required
@@ -178,6 +180,7 @@ export default function NewGoalPage() {
               </button>
               <button
                 type="submit"
+                data-testid="goal-new-submit"
                 disabled={loading || filledCount < totalCount}
                 className="btn-primary disabled:opacity-40"
               >

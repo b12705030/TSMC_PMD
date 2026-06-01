@@ -284,6 +284,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
           <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
             <p className="text-xs text-gray-400">{t('detail.submit.draftNote')}</p>
             <button
+              data-testid="goal-submit-approval"
               onClick={handleSubmitForApproval}
               disabled={submitting}
               className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"

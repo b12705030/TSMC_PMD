@@ -237,7 +237,7 @@ export default function CyclesPage() {
         title={t('pageTitle')}
         description={t('pageDesc')}
         actions={canEdit ? (
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
+          <button type="button" data-testid="cycles-add" className="btn-primary" onClick={() => setShowModal(true)}>
             {t('addCycle')}
           </button>
         ) : undefined}
@@ -251,7 +251,7 @@ export default function CyclesPage() {
         <EmptyState
           title={t('emptyTitle')}
           description={canEdit ? t('emptyDescAdmin') : t('emptyDescUser')}
-          action={canEdit ? <button className="btn-primary" onClick={() => setShowModal(true)}>{t('addCycle')}</button> : undefined}
+          action={canEdit ? <button type="button" data-testid="cycles-add" className="btn-primary" onClick={() => setShowModal(true)}>{t('addCycle')}</button> : undefined}
         />
       ) : (
         <div className="space-y-4">
