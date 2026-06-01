@@ -65,7 +65,7 @@ The pyramid below shows how responsibility is split across test types. Higher la
 | **Unit (Tier 1)** | `npm run test:unit` | 8 | **40** | No | Yes — backend job |
 | **Integration (Tier 2)** | `npm run test:integration` | 5 | **20** | Yes (Postgres 16) | Yes — integration job |
 | **Both** | `npm run test:all` | 13 | **60** | Tier 2 only | Both jobs in parallel |
-| **E2E (Tier 3)** | — | — | — | App + browser | **No** |
+| **E2E (Tier 3)** | `cd e2e && npm test` | 3 | **8** | App + browser (local) | **No** (see [E2E section](#end-to-end-tests-tier-3)) |
 | **Frontend automated** | — | — | — | — | **No** (lint, type-check, build only) |
 
 **Backend tools:** Jest, `@nestjs/testing`, Prisma test client under `backend/test/helpers/`.
@@ -278,33 +278,43 @@ Integration tests do **not** currently exercise `UsersService`, `AppealsService`
 
 ## End-to-end tests (Tier 3)
 
-### Status: not implemented
+### Status: implemented locally (not in CI)
 
-E2E tests are **planned but not in the repository or CI**. They would run a browser against the running stack (typically Docker Compose: frontend on port 3000, backend on 4000) and assert on visible UI and navigation, complementing—not replacing—service-level integration tests.
+E2E tests live in the [`e2e/`](../e2e/) directory and use **Playwright** against a **running** frontend and backend (typically `docker compose up` with seeded data). They complement Tier 1 and Tier 2 by verifying cookies, routing, and role-based UI—not service logic in isolation.
 
-### Why we still want E2E (later)
+| Setting | Value |
+|---------|--------|
+| Command | `cd e2e && npm install && npx playwright install chromium && npm test` |
+| Base URL | `http://localhost:3000` (`PLAYWRIGHT_BASE_URL` to override) |
+| Locale | `zh-TW` (default app locale) |
+| Count | **8 tests**, **3 files** |
+| CI | **Not wired** — see [e2e/README.md](../e2e/README.md) |
 
-Integration tests prove **backend business rules**. They do not prove that the Next.js app wires forms correctly, that cookies are sent on fetch, or that role-based UI hides destructive actions. A thin E2E smoke suite catches “API works but button does nothing” regressions with low maintenance if scenarios are kept few and stable.
+**Prerequisites:** Stack up, migrations applied, `prisma db seed` (password `test1234` for seed accounts). See [e2e/README.md](../e2e/README.md) for step-by-step commands.
 
-### Recommended future smoke suite (Playwright)
+### Implemented smoke suite
 
-When E2E is added, the intended tool is **Playwright** (either under `frontend/` or a top-level `e2e/` folder). Base URL: `http://localhost:3000`. Suggested first scenarios:
+| File | Scenario | Account(s) |
+|------|----------|--------------|
+| `e2e/tests/auth.spec.ts` | Login → dashboard → logout; invalid password; unauthenticated redirect; `sessionId` cookie | `tw-emp001` |
+| `e2e/tests/rbac.spec.ts` | Employee does not see「+ 新增週期」; RegionalHR does | `tw-emp001`, `tw-hr001` |
+| `e2e/tests/goals.spec.ts` | Create goal + submit for approval; supervisor approves on goal detail | `tw-emp001`, `tw-sup001` |
+
+Stable selectors use `data-testid` on login, logout, goal forms, and cycle admin actions (`login-employee-id`, `sidebar-logout`, `goal-new-title`, `cycles-add`, etc.).
+
+### Still planned for E2E (not written yet)
 
 | ID | Flow | Roles |
 |----|------|-------|
-| E2E-01 | Login → dashboard → logout | Employee (`tw-emp001`) |
-| E2E-02 | Employee creates goal → submits for approval | Employee |
-| E2E-03 | Supervisor approves subordinate goal | Supervisor |
 | E2E-04 | RegionalHR creates cycle + template → publishes | RegionalHR |
-| E2E-05 | Employee cannot access cycle admin | Employee (UI or API 403) |
 | E2E-06 | Self-review → supervisor review (seeded cycle) | Employee + Supervisor |
 | E2E-07 | Manager publishes calibration → employee sees grade | Manager + Employee |
 
-**Prerequisites:** Docker stack up, `prisma db seed`, and stable `data-testid` attributes on login and primary actions. **CI placement:** optional job on `dev` or pre-release (slower, needs service health waits)—not on every feature-branch PR at first.
+**CI placement (future):** optional fourth GitHub Actions job after the suite is stable in Docker CI (longer runtime, health waits). Not required for merge gates today.
 
 ### What E2E should not try to do
 
-Do not replicate the full manual QA matrix or every row in the planned service test tables. Do not test every locale, every dashboard chart, or Elasticsearch cluster failure modes in the browser. MFA/SSO are out of scope.
+Do not replicate every integration test row, full i18n, dashboard charts, or Elasticsearch failure modes. MFA/SSO are out of scope.
 
 ---
 
@@ -535,6 +545,8 @@ docker exec tsmc-backend npx prisma db seed   # first time or after seed changes
 | [`backend/.env.test.example`](../backend/.env.test.example) | Test database environment template |
 | [`backend/test/helpers/`](../backend/test/helpers/) | DB, seed, and service setup for integration tests |
 | [`backend/package.json`](../backend/package.json) | `test:unit`, `test:integration`, `test:all` scripts |
+| [`e2e/`](../e2e/) | Playwright E2E smoke tests (local / optional CI later) |
+| [`e2e/README.md`](../e2e/README.md) | How to run E2E against Docker |
 
 ---
 
