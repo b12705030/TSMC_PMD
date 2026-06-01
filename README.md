@@ -163,6 +163,9 @@ npm run test:integration
 
 # 單元 + 整合
 npm run test:all
+
+# E2E（需 Docker 全站 + seed，見 e2e/README.md）
+cd e2e && npm install && npx playwright install chromium && npm test
 ```
 
 

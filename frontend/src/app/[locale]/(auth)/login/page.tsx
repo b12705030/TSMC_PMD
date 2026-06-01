@@ -68,6 +68,7 @@ export default function LoginPage() {
               <label className="label">{t('employeeId')}</label>
               <input
                 type="text"
+                data-testid="login-employee-id"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 placeholder={t('employeeIdPlaceholder')}
@@ -80,6 +81,7 @@ export default function LoginPage() {
               <label className="label">{t('password')}</label>
               <input
                 type="password"
+                data-testid="login-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -89,7 +91,7 @@ export default function LoginPage() {
 
             {error && <p className="text-error">{error}</p>}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full">
+            <button type="submit" data-testid="login-submit" disabled={loading} className="btn-primary w-full">
               {loading ? t('signingIn') : t('signIn')}
             </button>
           </form>

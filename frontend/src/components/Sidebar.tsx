@@ -357,6 +357,7 @@ export function Sidebar() {
               {initials}
             </div>
             <button
+              data-testid="sidebar-logout"
               onClick={handleLogout}
               title={tSidebar('logout')}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-500 transition-colors"
@@ -380,6 +381,7 @@ export function Sidebar() {
               )}
             </div>
             <button
+              data-testid="sidebar-logout"
               onClick={handleLogout}
               className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
             >

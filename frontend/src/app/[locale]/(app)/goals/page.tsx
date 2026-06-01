@@ -31,7 +31,7 @@ export default function GoalsPage() {
         title={t('pageTitle')}
         description={t('pageDesc')}
         actions={
-          <Link href="/goals/new" className="btn-primary">
+          <Link href="/goals/new" className="btn-primary" data-testid="goals-add">
             {t('addBtn')}
           </Link>
         }
