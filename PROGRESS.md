@@ -108,10 +108,10 @@
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| 登入 / 登出事件寫入 | ✅ 完成 | 非同步寫入 Elasticsearch（無 PostgreSQL 持久化備份） |
+| 登入 / 登出事件寫入 | ✅ 完成 | 寫入 Neon PostgreSQL `AuditLog` 表 |
 | 所有 CRUD 操作記錄 | ✅ 完成 | `AuditWriteInterceptor` 全域掛載（`APP_INTERCEPTOR`），涵蓋 Goals / Reviews / Appeals / Cycles / Templates / Users 共 28 個 CRUD 端點；Auth 端點保留手動記錄 |
-| Elasticsearch Append-only 儲存 | ✅ 已串接 | `audit.service.ts` 直接寫 ES；失敗只 log error，無重試或 outbox |
-| 前端 Audit Log 查閱頁 | ✅ 完成 | 頁面已完成並接 ES 資料 |
+| PostgreSQL Append-only 儲存 | ✅ 完成 | `audit.service.ts` 透過 PrismaService 寫入；失敗只 log error，無重試或 outbox（設計決策：接受） |
+| 前端 Audit Log 查閱頁 | ✅ 完成 | 頁面已完成，資料從 Neon PostgreSQL 查詢 |
 
 ---
 
@@ -170,7 +170,7 @@
 - [x] 員工可直接透過 `PUT /goals/:id` body `{ status }` 把目標改為 `PendingApproval`，已改為獨立 endpoint `PATCH /goals/:id/submit`；目標詳情頁草稿狀態下顯示「提交審核」按鈕
 - [x] `AuditService` CRUD 操作已透過 `AuditWriteInterceptor` 全域覆蓋；ES 寫入失敗只 log error，無重試或 outbox（設計決策：接受）
 - [x] Session 閒置 30 分鐘自動登出已實作（後端 `lastActiveAt` + 前端 `IdleWatcher`）
-- [ ] Audit Log 直接打 ES（`audit.service.ts`），失敗僅 log error，不影響主流程但審計不可靠
+- [x] Audit Log 已遷移至 Neon PostgreSQL（`AuditLog` Prisma model），移除 Elasticsearch 依賴
 
 ### 安全漏洞修補（第二輪 Codex Review，已全數修復）
 
@@ -324,5 +324,5 @@
 ## 實作順序（建議）
 
 ```
-績效週期 → 表單模板 → 目標管理 → 績效評核 → 申訴 → Dashboard → Audit Log（ES）
+績效週期 → 表單模板 → 目標管理 → 績效評核 → 申訴 → Dashboard → Audit Log（PostgreSQL）
 ```

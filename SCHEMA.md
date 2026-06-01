@@ -1,5 +1,9 @@
 # PMS — Schema Design Decisions
 
+## ER Diagram
+
+![ER Diagram](<ER diagram.svg>)
+
 ## 概覽
 
 本文件記錄 `schema.prisma` 的設計決策，以及與原始 Spec 的差異與取捨。
@@ -256,33 +260,37 @@ RegionalHR(tw-hr001)
 
 ---
 
-## Audit Log（Elasticsearch，非 Prisma）
+## AuditLog（Neon PostgreSQL，Prisma model）
 
-Audit Log 不存於 PostgreSQL，而是寫入 **Elasticsearch** index `audit-logs`。
+Audit Log 存於 PostgreSQL `AuditLog` 表，透過 Prisma ORM 寫入。
 
 ### 欄位結構
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
-| `userId` | keyword | 操作者 UUID |
-| `userName` | keyword | 操作者姓名 |
-| `userRegionId` | keyword | 操作者地區 UUID（RegionalHR 篩選用） |
-| `action` | keyword | 操作代碼（e.g. `GOAL_SUBMIT`、`LOGIN`） |
-| `outcome` | keyword | `SUCCESS` 或 `FORBIDDEN` |
-| `resource` | keyword | 資源類型（e.g. `goal`、`review`） |
-| `resourceId` | keyword | 資源 UUID |
-| `httpMethod` | keyword | `GET`、`POST`、`PUT` 等 |
-| `httpPath` | keyword | 請求路徑（e.g. `/auth/login`） |
-| `httpStatus` | integer | HTTP 狀態碼 |
-| `ipAddress` | ip | 客戶端 IP |
-| `userAgent` | text | 瀏覽器 UA |
-| `detail` | object | 請求 body 快照（passwords/tokens 已清除） |
-| `createdAt` | date | ISO 8601 時間戳 |
+| `id` | String (UUID) | 主鍵 |
+| `userId` | String | 操作者 UUID |
+| `userName` | String | 操作者姓名 |
+| `userRegionId` | String? | 操作者地區 UUID（RegionalHR 篩選用） |
+| `action` | String | 操作代碼（e.g. `GOAL_SUBMIT`、`LOGIN`） |
+| `outcome` | String | `SUCCESS` 或 `FORBIDDEN` |
+| `resource` | String | 資源類型（e.g. `goal`、`review`） |
+| `resourceId` | String? | 資源 UUID |
+| `httpMethod` | String? | `GET`、`POST`、`PUT` 等 |
+| `httpPath` | String? | 請求路徑（e.g. `/auth/login`） |
+| `httpStatus` | Int? | HTTP 狀態碼 |
+| `ipAddress` | String? | 客戶端 IP |
+| `userAgent` | String? | 瀏覽器 UA |
+| `detail` | Json? | 請求 body 快照（passwords/tokens 已清除） |
+| `createdAt` | DateTime | 建立時間（indexed） |
+
+### Index
+`@@index([createdAt])`、`@@index([userId])`、`@@index([outcome])`、`@@index([resource])`
 
 ### 寫入來源
-1. **AuditWriteInterceptor**：攔截所有 POST/PUT/PATCH/DELETE，成功後非同步寫入
+1. **AuditWriteInterceptor**：攔截所有 POST/PUT/PATCH/DELETE，成功後寫入
 2. **ForbiddenExceptionFilter**：攔截 403，寫入 `outcome: FORBIDDEN`
-3. **AuthService.login() / logout()**：手動呼叫 `audit.log()`，補上 `httpMethod`/`httpPath`
+3. **AuthService.login() / logout()**：手動呼叫 `audit.log()`
 
 ### 讀取權限
 - `GET /audit`：限 Admin、GlobalHR、RegionalHR
@@ -297,5 +305,5 @@ Audit Log 不存於 PostgreSQL，而是寫入 **Elasticsearch** index `audit-log
 | Department 三層遞迴 | Schema 支援任意深度，查詢與 UI 尚未實作 |
 | PerformanceCycle 跨地區共用 | 目前每個 Cycle 對應單一 Region |
 | Goal cycleId 關聯 UI | 欄位已預留，待週期選擇介面補上 |
-| Session 閒置登出 | TTL 8 小時固定，30 分鐘閒置登出未實作 |
+| Session 閒置登出 | ✅ 已實作：後端 `lastActiveAt` + 前端 `IdleWatcher` 30 分鐘自動登出 |
 | ProgressUpdate UI | 欄位保留，UI 以里程碑取代，自由文字進度頁未顯示 |

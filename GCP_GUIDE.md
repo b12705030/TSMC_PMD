@@ -1,14 +1,23 @@
-# GCP 基礎設施設定指南（隊友交接文件）
+# GCP 基礎設施設定指南
 
-本文件說明你需要在 GCP 上完成的三項設定，對應課程要求的高可用性與監控告警。
+本文件記錄 GCP 上的基礎設施設定，對應課程要求的高可用性與監控告警。
+
+## 完成狀態
+
+| 項目 | 狀態 |
+|------|------|
+| Cloud Run min-instances=2（前後端） | ✅ 完成 |
+| GCP Cloud Monitoring Dashboard | ✅ 完成 |
+| 5xx Email 告警（TSMC PMD - 5xx Error Alert） | ✅ 完成 |
+| Compute Engine VM + Grafana Alloy | ⏭️ 跳過（費用考量，/metrics 端點已就緒） |
 
 ---
 
 ## 前置條件
 
-- GCP 專案已建立，有 Owner 或 Editor 權限
-- Frontend / Backend 已部署到 Cloud Run（CI/CD 會自動更新）
-- 等待隊友提供 Grafana Cloud 憑證（Remote Write URL、Username、API Token）再做 Step 3
+- GCP 專案：`tsmc-pmd`，區域：`asia-east1`
+- Frontend / Backend 已部署到 Cloud Run（push 到 dev/main 自動部署）
+- Grafana Cloud Stack：`tsmcpmd`（已建立，Remote Write URL 已備妥）
 
 ---
 
@@ -62,9 +71,11 @@ GCP Console → **Monitoring** → **Alerting** → **Create Policy**
 
 ---
 
-## Step 3：Compute Engine VM + Grafana Alloy（自訂 Metrics 監控）
+## Step 3：Compute Engine VM + Grafana Alloy（選用，目前未啟用）
 
-> Grafana Cloud 憑證已由隊友提供如下，直接使用：
+> 因 e2-micro VM 費用約 US$29/月，本次未建立。後端 `/metrics` 端點已就緒，未來有需要時可依以下步驟串接。
+
+> Grafana Cloud 憑證：
 
 | 欄位 | 值 |
 |------|-----|

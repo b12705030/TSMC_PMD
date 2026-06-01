@@ -4,6 +4,8 @@ A modern, centralized performance management system for a global enterprise with
 
 ## Tech Stack
 
+![Tech Stack](<Tech Stack.png>)
+
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS |
@@ -172,42 +174,32 @@ cd e2e && npm install && npx playwright install chromium && npm test
 
 ### Architecture
 
+![System Architecture](<System Architecture Diagram.png>)
+
 ```
 GCP Cloud Run
 ├── Frontend  (Next.js)   — min-instances: 2, HTTPS
 └── Backend   (NestJS)    — min-instances: 2, HTTPS
-        └── GET /metrics  ← Grafana Alloy (Compute Engine VM) scrapes every 15s
-                                  └── remote_write → Grafana Cloud Dashboard
+        └── GET /metrics  (Prometheus 格式，供未來 Grafana Alloy 串接)
 
 Neon PostgreSQL (managed)
 ├── Primary Compute    — 讀寫
-└── Read Replica       — 唯讀分流 / HA 備援
+└── Read Replica (RO)  — 唯讀分流 / HA 備援
 ```
+
+### Sequence Diagram
+
+![Sequence Diagram](<Sequence Diagram.svg>)
 
 ### CI/CD
 
 GitHub Actions（`.github/workflows/ci.yml`）在每次 push / PR 時自動執行（詳見 [docs/Testing.md](docs/Testing.md)）：
 - Frontend：Lint → Type check → Build
-- Backend：Lint → Type check → Build → Unit tests
-- Backend integration：Postgres 服務容器 → migrate deploy → Integration tests
+- Backend：Lint → Type check → Build → Unit tests → Integration tests
+- E2E：Docker Compose → Playwright tests
+- SonarCloud：Code quality analysis
 
-> **目前 CD 為手動**：CI 通過後由團隊成員透過 GCP Console 或 `gcloud` 手動觸發 Cloud Run 重新部署。
-
-### 部署步驟（手動）
-
-```bash
-# Backend
-gcloud run deploy tsmc-backend \
-  --source ./backend \
-  --region asia-east1 \
-  --min-instances 2
-
-# Frontend
-gcloud run deploy tsmc-frontend \
-  --source ./frontend \
-  --region asia-east1 \
-  --min-instances 2
-```
+GCP Cloud Build（`cloudbuild-frontend.yaml`）在 push 到 dev/main 時自動部署 Frontend 到 Cloud Run。Backend 透過 Cloud Build 自動部署。
 
 ### 環境變數（Cloud Run）
 
@@ -223,10 +215,10 @@ gcloud run deploy tsmc-frontend \
 
 | 工具 | 用途 |
 |------|------|
-| GCP Cloud Monitoring | Cloud Run 請求速率、P95 延遲、容器實例數、Email 告警 |
-| Grafana Cloud | 自訂 prom-client 指標（`http_requests_total`、`http_request_duration_seconds`） |
+| GCP Cloud Monitoring | Cloud Run 請求速率、P95 延遲、容器實例數、CPU 使用率、5xx Email 告警 |
+| `/metrics` 端點 | 後端暴露 Prometheus 格式指標（`http_requests_total`、`http_request_duration_seconds`） |
 
-詳細設定步驟見 [GCP_GUIDE.md](GCP_GUIDE.md)。
+詳細 GCP 設定步驟見 [GCP_GUIDE.md](GCP_GUIDE.md)。
 
 ---
 
