@@ -143,6 +143,8 @@ docker-compose down
 
 ### 執行測試
 
+完整說明（單元 / 整合 / E2E 規劃、CI 流程、測試目錄）見 **[docs/Testing.md](docs/Testing.md)**。
+
 ```bash
 # Backend 單元測試（CI 同款，不需資料庫）
 cd backend
@@ -181,9 +183,10 @@ Neon PostgreSQL (managed)
 
 ### CI/CD
 
-GitHub Actions（`.github/workflows/ci.yml`）在每次 push / PR 時自動執行：
+GitHub Actions（`.github/workflows/ci.yml`）在每次 push / PR 時自動執行（詳見 [docs/Testing.md](docs/Testing.md)）：
 - Frontend：Lint → Type check → Build
 - Backend：Lint → Type check → Build → Unit tests
+- Backend integration：Postgres 服務容器 → migrate deploy → Integration tests
 
 > **目前 CD 為手動**：CI 通過後由團隊成員透過 GCP Console 或 `gcloud` 手動觸發 Cloud Run 重新部署。
 
