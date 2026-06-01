@@ -2,6 +2,13 @@
 
 import { useState } from 'react'
 
+function cellValue(row: unknown, key: string): string {
+  const v = (row as Record<string, unknown>)[key]
+  if (typeof v === 'string')  return v
+  if (typeof v === 'number' || typeof v === 'boolean') return v.toString()
+  return '—'
+}
+
 export interface Column<T> {
   key: keyof T | string
   label: string
@@ -71,34 +78,19 @@ export function DataTable<T extends { id: string }>({
         </thead>
 
         <tbody className="divide-y divide-gray-100">
-          {isLoading ? (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-8 text-center text-muted">
-                Loading...
-              </td>
-            </tr>
-          ) : sorted.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-8 text-center text-muted">
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : (
-            sorted.map((row) => (
+          {(() => {
+            if (isLoading) return <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-muted">Loading...</td></tr>
+            if (sorted.length === 0) return <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-muted">{emptyMessage}</td></tr>
+            return sorted.map((row) => (
               <tr key={row.id} className="hover:bg-gray-50">
                 {columns.map((col) => (
                   <td key={String(col.key)} className="px-4 py-3 text-sm text-gray-700">
-                    {col.render ? col.render(row) : (() => {
-                      const v = (row as Record<string, unknown>)[String(col.key)]
-                      if (typeof v === 'string')  return v
-                      if (typeof v === 'number' || typeof v === 'boolean') return v.toString()
-                      return '—'
-                    })()}
+                    {col.render ? col.render(row) : cellValue(row, String(col.key))}
                   </td>
                 ))}
               </tr>
             ))
-          )}
+          })()}
         </tbody>
       </table>
     </div>

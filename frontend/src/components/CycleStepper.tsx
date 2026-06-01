@@ -17,14 +17,14 @@ export function CycleStepper({ status }: { status: CycleStatus }) {
   const t = useTranslations('cycleStepper')
 
   const STEPS = [
-    { kind: 'regular'     as const, label: t('companyGoal'),        description: t('companyGoalDesc') },
-    { kind: 'regular'     as const, label: t('goalSetting'),        description: t('goalSettingDesc') },
-    { kind: 'regular'     as const, label: t('inProgress'),         description: t('inProgressDesc') },
-    { kind: 'convergence' as const, label: t('reviewStart'),        description: '' },
-    { kind: 'regular'     as const, label: t('employeeReview'),     description: t('employeeReviewDesc') },
-    { kind: 'regular'     as const, label: t('supervisorReview'),   description: t('supervisorReviewDesc') },
-    { kind: 'regular'     as const, label: t('calibration'),        description: t('calibrationDesc') },
-    { kind: 'regular'     as const, label: t('completed'),          description: t('completedDesc') },
+    { id: 'company-goal',      kind: 'regular'     as const, label: t('companyGoal'),        description: t('companyGoalDesc') },
+    { id: 'goal-setting',      kind: 'regular'     as const, label: t('goalSetting'),        description: t('goalSettingDesc') },
+    { id: 'in-progress',       kind: 'regular'     as const, label: t('inProgress'),         description: t('inProgressDesc') },
+    { id: 'convergence',       kind: 'convergence' as const, label: t('reviewStart'),        description: '' },
+    { id: 'employee-review',   kind: 'regular'     as const, label: t('employeeReview'),     description: t('employeeReviewDesc') },
+    { id: 'supervisor-review', kind: 'regular'     as const, label: t('supervisorReview'),   description: t('supervisorReviewDesc') },
+    { id: 'calibration',       kind: 'regular'     as const, label: t('calibration'),        description: t('calibrationDesc') },
+    { id: 'completed',         kind: 'regular'     as const, label: t('completed'),          description: t('completedDesc') },
   ]
 
   const currentVIndex = STATUS_VISUAL_INDEX[status]
@@ -40,39 +40,36 @@ export function CycleStepper({ status }: { status: CycleStatus }) {
         if (!isConv) stepNum++
         const displayNum = stepNum
 
+        let convClass: string
+        if (isDone)          convClass = 'bg-primary-600 text-white'
+        else if (isCurrent)  convClass = 'border-2 border-primary-600 text-primary-600 bg-white'
+        else                 convClass = 'border-2 border-gray-300 text-gray-400 bg-white'
+
+        let labelClass: string
+        if (isCurrent)       labelClass = 'text-primary-600'
+        else if (isDone)     labelClass = 'text-gray-700'
+        else                 labelClass = 'text-gray-400'
+
         return (
-          <div key={index} className="flex flex-1 items-start">
+          <div key={step.id} className="flex flex-1 items-start">
             <div className="flex flex-1 flex-col items-center">
               <div className="flex w-full items-center">
                 {isConv ? (
-                  <div className={[
-                    'flex h-7 w-7 shrink-0 rotate-45 items-center justify-center text-xs font-semibold',
-                    isDone      ? 'bg-primary-600 text-white'
-                    : isCurrent ? 'border-2 border-primary-600 text-primary-600 bg-white'
-                    :             'border-2 border-gray-300 text-gray-400 bg-white',
-                  ].join(' ')}>
+                  <div className={`flex h-7 w-7 shrink-0 rotate-45 items-center justify-center text-xs font-semibold ${convClass}`}>
                     <span className="-rotate-45">{isDone ? '✓' : ''}</span>
                   </div>
                 ) : (
-                  <div className={[
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                    isDone      ? 'bg-primary-600 text-white' : '',
-                    isCurrent   ? 'border-2 border-primary-600 text-primary-600 bg-white' : '',
-                    !isDone && !isCurrent ? 'border-2 border-gray-300 text-gray-400 bg-white' : '',
-                  ].join(' ')}>
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${convClass}`}>
                     {isDone ? '✓' : displayNum}
                   </div>
                 )}
                 {!isLast && (
-                  <div className={['h-0.5 flex-1', isDone ? 'bg-primary-600' : 'bg-gray-200'].join(' ')} />
+                  <div className={`h-0.5 flex-1 ${isDone ? 'bg-primary-600' : 'bg-gray-200'}`} />
                 )}
               </div>
 
               <div className="mt-2 pr-2 text-left w-full">
-                <p className={[
-                  'text-xs font-medium',
-                  isCurrent ? 'text-primary-600' : isDone ? 'text-gray-700' : 'text-gray-400',
-                ].join(' ')}>
+                <p className={`text-xs font-medium ${labelClass}`}>
                   {step.label}
                 </p>
                 {step.description && (

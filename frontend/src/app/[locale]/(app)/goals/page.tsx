@@ -61,9 +61,9 @@ export default function GoalsPage() {
         </div>
       )}
 
-      {isLoading ? (
-        <Loading />
-      ) : error ? null : goals.length === 0 ? (
+      {isLoading ? <Loading /> : (() => {
+        if (error) return null
+        if (goals.length === 0) return (
         <EmptyState
           title={t('empty.title')}
           description={t('empty.desc')}
@@ -73,7 +73,8 @@ export default function GoalsPage() {
             </Link>
           }
         />
-      ) : (
+        )
+        return (
         <div className="space-y-3">
           {goals.map((goal) => {
             const onDelete = goal.status === 'Draft' ? () => { setDeleteError(''); setDeletingId(goal.id) } : undefined
@@ -87,7 +88,8 @@ export default function GoalsPage() {
             )
           })}
         </div>
-      )}
+        )
+      })()}
 
       <ConfirmDialog
         open={!!deletingId}
@@ -110,9 +112,8 @@ function GoalCard({ goal, STATUS_CONFIG, onDelete }: Readonly<{ goal: Goal; STAT
   const mTotal      = goal.milestones.length
   const mDone       = goal.milestones.filter((m) => m.completedAt).length
   const progressPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : config.pct
-  const progressColor = mTotal > 0
-    ? (progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500')
-    : config.color
+  const activeColor   = progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500'
+  const progressColor = mTotal > 0 ? activeColor : config.color
   const allMilestonesDone = mTotal > 0 && mDone === mTotal
   const lastCompletedAt   = allMilestonesDone
     ? goal.milestones.reduce((latest, m) => m.completedAt && m.completedAt > (latest ?? '') ? m.completedAt : latest, null as string | null)

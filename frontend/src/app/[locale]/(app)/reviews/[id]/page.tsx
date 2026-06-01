@@ -225,11 +225,10 @@ function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwne
 
       {open && (
         <div className="border-t border-gray-200 px-4 pb-4 pt-3">
-          {loading ? (
-            <Loading className="py-2" />
-          ) : goals.length === 0 ? (
-            <p className="text-xs text-gray-400">本週期沒有設定目標</p>
-          ) : (
+          {(() => {
+            if (loading) return <Loading className="py-2" />
+            if (goals.length === 0) return <p className="text-xs text-gray-400">本週期沒有設定目標</p>
+            return (
             <div className="space-y-2">
               {goals.map((g) => {
                 const done  = g.milestones.filter((m) => m.completedAt).length
@@ -257,7 +256,8 @@ function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwne
                 )
               })}
             </div>
-          )}
+            )
+          })()}
         </div>
       )}
     </div>
@@ -503,14 +503,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           {/* Employee appeal entry */}
           {isEmployee && review.status === 'Published' && (
             <div className="mt-4 border-t border-green-200 pt-4">
-              {!showAppealForm ? (
-                <button
-                  onClick={() => setShowAppealForm(true)}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium"
-                >
-                  {t('detail.published.appealBtn')}
-                </button>
-              ) : (
+              {showAppealForm ? (
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-gray-700">{t('detail.published.appealLabel')}</p>
                   <textarea
@@ -537,6 +530,13 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                     </button>
                   </div>
                 </div>
+              ) : (
+                <button
+                  onClick={() => setShowAppealForm(true)}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  {t('detail.published.appealBtn')}
+                </button>
               )}
             </div>
           )}
