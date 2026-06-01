@@ -318,10 +318,19 @@ export function Sidebar() {
                 notifications.map((n: AppNotification) => (
                   <li
                     key={n.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       if (!n.read) markRead(n.id)
                       const href = getNotificationHref(n.type, user.role)
                       if (href) { setNotifOpen(false); router.push(href) }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        if (!n.read) markRead(n.id)
+                        const href = getNotificationHref(n.type, user.role)
+                        if (href) { setNotifOpen(false); router.push(href) }
+                      }
                     }}
                     className={`cursor-pointer px-4 py-3 hover:bg-gray-50 transition-colors ${n.read ? '' : 'bg-blue-50/50'}`}
                   >

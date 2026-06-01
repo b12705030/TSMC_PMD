@@ -213,8 +213,8 @@ function CalibrateRow({
             disabled={!review.grade}
             onChange={(e) => setRankInput(e.target.value)}
             onBlur={() => {
-              const n = parseInt(rankInput)
-              if (!isNaN(n) && n > 0) onRankChange(n)
+              const n = Number.parseInt(rankInput)
+              if (!Number.isNaN(n) && n > 0) onRankChange(n)
             }}
             placeholder={review.grade ? '—' : t('calibrate.table.rankPlaceholder')}
             title={review.grade ? '' : t('calibrate.table.rankTitle')}

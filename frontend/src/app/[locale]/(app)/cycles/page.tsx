@@ -326,8 +326,7 @@ export default function CyclesPage() {
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-gray-900">確認如期自動推進</h2>
             <p className="mb-4 text-sm text-gray-600">
-              確認後，系統將於 <strong>{new Date(confirmingCycle.reviewStart).toLocaleDateString('zh-TW')}</strong> 自動將
-              <strong>【{confirmingCycle.name}】</strong>推進至員工自評期，並通知所有參與者。
+              確認後，系統將於 <strong>{new Date(confirmingCycle.reviewStart).toLocaleDateString('zh-TW')}</strong> 自動將<strong>【{confirmingCycle.name}】</strong>推進至員工自評期，並通知所有參與者。
             </p>
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 mb-4">
               若需延後，請點「取消」後改用「延期」功能設定新日期。
@@ -355,8 +354,9 @@ export default function CyclesPage() {
             </p>
             <form onSubmit={handlePostpone} className="space-y-4">
               <div>
-                <label className="label">新的評核開始日期</label>
+                <label htmlFor="postpone-date" className="label">新的評核開始日期</label>
                 <input
+                  id="postpone-date"
                   type="date"
                   className="input"
                   required

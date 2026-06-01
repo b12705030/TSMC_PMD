@@ -262,8 +262,7 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                 <span className="inline-block h-3 w-3 rounded bg-blue-200" />已完成
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded bg-amber-100" style={STRIPE_STYLE} />
-                未推進（日期已到）
+                <span className="inline-block h-3 w-3 rounded bg-amber-100" style={STRIPE_STYLE} />未推進（日期已到）
               </span>
               {showToday && (
                 <span className="flex items-center gap-1.5">

@@ -110,8 +110,8 @@ export class UsersService {
     for (const t of managementTitles) staffTitles.delete(t)
 
     return {
-      management: [...managementTitles].sort(),
-      staff:      [...staffTitles].sort(),
+      management: [...managementTitles].sort((a, b) => a.localeCompare(b)),
+      staff:      [...staffTitles].sort((a, b) => a.localeCompare(b)),
     }
   }
 

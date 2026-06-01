@@ -536,12 +536,17 @@ function MilestoneItem({
           )}
           {done && !showNoteInput && !editingNote && milestone.note && (
             <div className="mt-1 flex items-center gap-1 group/note">
-              <p
-                onClick={isOwner ? startEditNote : undefined}
-                className={`text-xs text-gray-400 flex-1 ${isOwner ? 'cursor-text hover:text-gray-600' : ''}`}
-              >
-                {milestone.note}
-              </p>
+              {isOwner ? (
+                <button
+                  type="button"
+                  onClick={startEditNote}
+                  className="text-xs text-gray-400 flex-1 cursor-text hover:text-gray-600 text-left bg-transparent border-none p-0"
+                >
+                  {milestone.note}
+                </button>
+              ) : (
+                <p className="text-xs text-gray-400 flex-1">{milestone.note}</p>
+              )}
               {isOwner && (
                 <button onClick={() => onUpdateNote(null)} className="opacity-0 group-hover/note:opacity-100 text-gray-300 hover:text-red-400 text-xs leading-none transition-opacity">×</button>
               )}
