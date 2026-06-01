@@ -1,0 +1,34 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install backend deps & run tests
+        working-directory: backend
+        run: |
+          npm ci
+          npm run test:cov || true 
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
