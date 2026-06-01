@@ -122,20 +122,30 @@ export class UsersService {
     })
     if (!target) return null
 
-    if (currentUser.role !== Role.Admin && currentUser.role !== Role.GlobalHR) {
-      if (currentUser.role === Role.RegionalHR) {
-        if (target.regionId !== currentUser.regionId) throw new ForbiddenException()
-      } else if (currentUser.role === Role.Supervisor) {
-        if (target.supervisorId !== currentUser.id) throw new ForbiddenException()
-      } else if (currentUser.role === Role.Manager) {
-        const isDirectReport = target.managerId === currentUser.id && !target.supervisorId
-        const isViaSuper     = target.supervisor?.managerId === currentUser.id
-        if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
-      }
-    }
+    this.assertEmployeeAccess(target, currentUser)
 
     const { supervisor: _sv, ...rest } = target
-    return flattenUser(rest as UserWithRelations)
+    return flattenUser(rest)
+  }
+
+  private assertEmployeeAccess(
+    target: { regionId: string; supervisorId: string | null; managerId: string | null; supervisor?: { managerId: string | null } | null },
+    currentUser: SessionUser,
+  ) {
+    if (currentUser.role === Role.Admin || currentUser.role === Role.GlobalHR) return
+    if (currentUser.role === Role.RegionalHR) {
+      if (target.regionId !== currentUser.regionId) throw new ForbiddenException()
+      return
+    }
+    if (currentUser.role === Role.Supervisor) {
+      if (target.supervisorId !== currentUser.id) throw new ForbiddenException()
+      return
+    }
+    if (currentUser.role === Role.Manager) {
+      const isDirectReport = target.managerId === currentUser.id && !target.supervisorId
+      const isViaSuper     = target.supervisor?.managerId === currentUser.id
+      if (!isDirectReport && !isViaSuper) throw new ForbiddenException()
+    }
   }
 
   async listUsers(opts: {
@@ -185,7 +195,7 @@ export class UsersService {
         employeeId:   dto.employeeId,
         name:         dto.name,
         email:        dto.email,
-        role:         dto.role as unknown as Role,
+        role:         dto.role,
         regionId:     dto.regionId,
         departmentId: dto.departmentId,
         jobLevel:     dto.jobLevel,

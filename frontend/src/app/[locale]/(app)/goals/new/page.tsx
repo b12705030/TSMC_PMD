@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from '@/i18n/navigation'
-import { Link } from '@/i18n/navigation'
+import { useRouter, Link } from '@/i18n/navigation'
 import { api } from '@/lib/api'
 import type { GoalType, PerformanceCycle } from '@/types'
 
@@ -161,7 +160,7 @@ export default function NewGoalPage() {
                 </label>
                 <textarea
                   value={form[key as FormField]}
-                  onChange={(e) => handleChange(key as keyof typeof form, e.target.value)}
+                  onChange={(e) => handleChange(key, e.target.value)}
                   placeholder={hint}
                   required
                   rows={2}

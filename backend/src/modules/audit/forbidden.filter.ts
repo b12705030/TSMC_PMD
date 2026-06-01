@@ -1,5 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
-import { ForbiddenException } from '@nestjs/common'
+import { ArgumentsHost, Catch, ExceptionFilter, ForbiddenException } from '@nestjs/common'
 import { AuditService } from './audit.service'
 import type { RequestWithUser } from '../../common/types/request.types'
 
@@ -25,7 +24,7 @@ export class ForbiddenExceptionFilter implements ExceptionFilter {
       httpPath:   req.path,
       httpStatus: 403,
       ipAddress:  req.ip,
-      userAgent:  req.headers['user-agent'] as string | undefined,
+      userAgent:  req.headers['user-agent'],
       detail:     { reason: exception.message, routePattern: (req as any).route?.path },
       createdAt:  new Date(),
     })

@@ -260,7 +260,7 @@ export class GoalsService {
 
   async toggleMilestone(goalId: string, milestoneId: string, user: SessionUser, note?: string) {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
-    if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
+    if (milestone?.goalId !== goalId) throw new NotFoundException('Milestone not found')
 
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
@@ -278,7 +278,7 @@ export class GoalsService {
 
   async updateMilestoneNote(goalId: string, milestoneId: string, user: SessionUser, note: string | null) {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
-    if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
+    if (milestone?.goalId !== goalId) throw new NotFoundException('Milestone not found')
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
     this.assertOwner(goal.userId, user)
@@ -287,7 +287,7 @@ export class GoalsService {
 
   async updateMilestoneUrl(goalId: string, milestoneId: string, user: SessionUser, url: string | null) {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
-    if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
+    if (milestone?.goalId !== goalId) throw new NotFoundException('Milestone not found')
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
     this.assertOwner(goal.userId, user)
@@ -311,7 +311,7 @@ export class GoalsService {
 
   async deleteMilestone(goalId: string, milestoneId: string, user: SessionUser) {
     const milestone = await this.prisma.goalMilestone.findUnique({ where: { id: milestoneId } })
-    if (!milestone || milestone.goalId !== goalId) throw new NotFoundException('Milestone not found')
+    if (milestone?.goalId !== goalId) throw new NotFoundException('Milestone not found')
 
     const goal = await this.prisma.goal.findUnique({ where: { id: goalId } })
     if (!goal) throw new NotFoundException('Goal not found')
@@ -340,7 +340,7 @@ export class GoalsService {
     // RegionalHR can read any goal within their region
     if (user.role === Role.RegionalHR) {
       const employee = await this.prisma.user.findUnique({ where: { id: goalOwnerId } })
-      if (!employee || employee.regionId !== user.regionId) throw new ForbiddenException()
+      if (employee?.regionId !== user.regionId) throw new ForbiddenException()
       return
     }
 

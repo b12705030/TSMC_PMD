@@ -91,11 +91,29 @@ export class CyclesService {
 
   async advanceStatus(id: string, user: SessionUser) {
     const cycle = await this.getCycle(id, user)
-
     const next = NEXT_STATUS[cycle.status]
     if (!next) throw new BadRequestException('Cycle is already completed')
 
-    // Before starting employee review: check published template exists, then dry-run for coverage gaps
+    await this.assertAdvanceGates(id, cycle, next)
+
+    const reviewRows = next === CycleStatus.EmployeeReview
+      ? await this.buildReviewRows(cycle.id, cycle.regionId)
+      : []
+
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.performanceCycle.update({ where: { id }, data: { status: next } })
+      if (reviewRows.length) {
+        await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
+      }
+      return result
+    })
+  }
+
+  private async assertAdvanceGates(
+    id: string,
+    cycle: { id: string; regionId: string },
+    next: CycleStatus,
+  ) {
     if (next === CycleStatus.EmployeeReview) {
       const publishedTemplate = await this.prisma.formTemplate.findFirst({
         where: { cycleId: id, status: TemplateStatus.Published },
@@ -103,7 +121,6 @@ export class CyclesService {
       if (!publishedTemplate) {
         throw new BadRequestException('此週期尚未有已發布的評核模板，請先發布模板後再開始員工自評期。')
       }
-
       const unmatched = await this.dryRunReviews(cycle.id, cycle.regionId)
       if (unmatched.length > 0) {
         throw new BadRequestException({
@@ -113,58 +130,16 @@ export class CyclesService {
       }
     }
 
-    // Completeness gates before advancing
-    if (next === CycleStatus.SupervisorReview) {
-      const pendingCount = await this.prisma.performanceReview.count({
-        where: { cycleId: id, status: ReviewStatus.PendingEmployeeSubmit },
-      })
-      if (pendingCount > 0) {
-        throw new BadRequestException(
-          `尚有 ${pendingCount} 位員工未完成自評，請等所有員工提交後再推進。`,
-        )
-      }
+    const pendingGates: { status: CycleStatus; reviewStatus: ReviewStatus; msg: (n: number) => string }[] = [
+      { status: CycleStatus.SupervisorReview, reviewStatus: ReviewStatus.PendingEmployeeSubmit,   msg: (n) => `尚有 ${n} 位員工未完成自評，請等所有員工提交後再推進。` },
+      { status: CycleStatus.Calibration,      reviewStatus: ReviewStatus.PendingSupervisorReview, msg: (n) => `尚有 ${n} 份評核未由主管完成審核，請等所有主管提交後再推進。` },
+      { status: CycleStatus.Completed,        reviewStatus: ReviewStatus.PendingManagerApproval,  msg: (n) => `尚有 ${n} 份評核未由主管校準發布，請完成校準後再關閉週期。` },
+    ]
+    for (const gate of pendingGates) {
+      if (next !== gate.status) continue
+      const count = await this.prisma.performanceReview.count({ where: { cycleId: id, status: gate.reviewStatus } })
+      if (count > 0) throw new BadRequestException(gate.msg(count))
     }
-
-    if (next === CycleStatus.Calibration) {
-      const pendingCount = await this.prisma.performanceReview.count({
-        where: { cycleId: id, status: ReviewStatus.PendingSupervisorReview },
-      })
-      if (pendingCount > 0) {
-        throw new BadRequestException(
-          `尚有 ${pendingCount} 份評核未由主管完成審核，請等所有主管提交後再推進。`,
-        )
-      }
-    }
-
-    if (next === CycleStatus.Completed) {
-      const pendingCount = await this.prisma.performanceReview.count({
-        where: { cycleId: id, status: ReviewStatus.PendingManagerApproval },
-      })
-      if (pendingCount > 0) {
-        throw new BadRequestException(
-          `尚有 ${pendingCount} 份評核未由主管校準發布，請完成校準後再關閉週期。`,
-        )
-      }
-    }
-
-    // Build review rows before the transaction (read-only)
-    const reviewRows = next === CycleStatus.EmployeeReview
-      ? await this.buildReviewRows(cycle.id, cycle.regionId)
-      : []
-
-    // Atomic: status update + review creation
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const result = await tx.performanceCycle.update({
-        where: { id },
-        data:  { status: next },
-      })
-      if (reviewRows.length) {
-        await tx.performanceReview.createMany({ data: reviewRows, skipDuplicates: true })
-      }
-      return result
-    })
-
-    return updated
   }
 
   /** HR 確認週期將在 reviewStart 當天自動推進 */

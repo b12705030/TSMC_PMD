@@ -128,7 +128,7 @@ export class TemplatesService {
 
   async deleteCustomQuestion(templateId: string, questionId: string, user: SessionUser) {
     const question = await this.prisma.templateQuestion.findUnique({ where: { id: questionId } })
-    if (!question || question.templateId !== templateId) {
+    if (question?.templateId !== templateId) {
       throw new NotFoundException('Question not found')
     }
     // isGlobal 保護優先
@@ -204,7 +204,7 @@ export class TemplatesService {
   ) {
     if (user.role !== Role.Admin) throw new ForbiddenException()
     const question = await this.prisma.templateQuestion.findUnique({ where: { id: questionId } })
-    if (!question || question.templateId !== templateId) {
+    if (question?.templateId !== templateId) {
       throw new NotFoundException('Question not found')
     }
     return this.prisma.templateQuestion.update({

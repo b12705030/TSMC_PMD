@@ -121,7 +121,7 @@ export class ReviewsService {
     if (review.status !== ReviewStatus.PendingEmployeeSubmit) throw new ForbiddenException('Already submitted')
     return this.prisma.performanceReview.update({
       where: { id },
-      data:  { employeeAnswers: dto.answers as object[] },
+      data:  { employeeAnswers: dto.answers.map((a) => ({ questionId: a.questionId, answer: a.answer })) },
     })
   }
 
@@ -179,7 +179,7 @@ export class ReviewsService {
     return this.prisma.performanceReview.update({
       where: { id },
       data: {
-        ...(dto.answers  && { supervisorAnswers: dto.answers as object[] }),
+        ...(dto.answers  && { supervisorAnswers: dto.answers.map((a) => ({ questionId: a.questionId, answer: a.answer })) }),
         ...(dto.comment  !== undefined && { supervisorComment: dto.comment }),
         ...(dto.grade    !== undefined && { grade: dto.grade }),
       },

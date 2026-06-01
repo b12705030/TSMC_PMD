@@ -8,6 +8,13 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 
+class AuditFilterQuery {
+  outcome?: string
+  resource?: string
+  fromDate?: string
+  toDate?: string
+}
+
 @Controller('audit')
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.Admin, Role.GlobalHR, Role.RegionalHR)
@@ -17,23 +24,20 @@ export class AuditController {
   @Get()
   async getLogs(
     @CurrentUser() user: SessionUser,
+    @Query() filters: AuditFilterQuery,
     @Query('q') q = '',
-    @Query('outcome') outcome?: string,
-    @Query('resource') resource?: string,
-    @Query('fromDate') fromDate?: string,
-    @Query('toDate') toDate?: string,
     @Query('from') from = '0',
     @Query('size') size = '50',
   ) {
     return this.auditService.search({
       q,
-      outcome,
-      resource,
+      outcome:  filters.outcome,
+      resource: filters.resource,
       regionId: isGlobalRole(user) ? undefined : user.regionId,
-      fromDate,
-      toDate,
-      from: Number(from),
-      size: Number(size),
+      fromDate: filters.fromDate,
+      toDate:   filters.toDate,
+      from:     Number(from),
+      size:     Number(size),
     })
   }
 }

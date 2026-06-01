@@ -19,9 +19,10 @@ import type { SessionUser } from '../../common/types/request.types'
 
 const COOKIE_NAME = 'sessionId'
 const isProd = process.env.NODE_ENV === 'production'
+const SAME_SITE: 'none' | 'lax' = isProd ? 'none' : 'lax'
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+  sameSite: SAME_SITE,
   secure: isProd,
   maxAge: 1000 * 60 * 60 * 8, // 8 hours
 }
@@ -51,7 +52,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response
   ) {
-    const sessionId = req.cookies?.[COOKIE_NAME] as string | undefined
+    const sessionId = req.cookies?.[COOKIE_NAME]
     if (!sessionId) throw new UnauthorizedException()
     const ip = (req.ip ?? req.socket.remoteAddress) ?? 'unknown'
     await this.authService.logout(sessionId, user.id, user.name, user.regionId, ip)

@@ -34,7 +34,7 @@ export class AuditWriteInterceptor implements NestInterceptor {
             httpPath:   req.path,
             httpStatus: res.statusCode,
             ipAddress:  req.ip,
-            userAgent:  req.headers['user-agent'] as string | undefined,
+            userAgent:  req.headers['user-agent'],
             detail:     sanitizeBody(req.body),
             createdAt:  new Date(),
           })

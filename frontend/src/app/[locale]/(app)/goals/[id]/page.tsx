@@ -45,11 +45,11 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
   // Auto-open milestone input when redirected from goal creation (?m=1)
   useEffect(() => {
-    const url = new URL(window.location.href)
+    const url = new URL(globalThis.location.href)
     if (url.searchParams.get('m') === '1') {
       setShowInput(true)
       url.searchParams.delete('m')
-      window.history.replaceState({}, '', url.toString())
+      globalThis.history.replaceState({}, '', url.toString())
     }
   }, [])
 
@@ -71,9 +71,8 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const progressPct = totalCount > 0
     ? Math.round((doneCount / totalCount) * 100)
     : config.pct
-  const progressColor = totalCount > 0
-    ? (progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500')
-    : config.color
+  const activeColor   = progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500'
+  const progressColor = totalCount > 0 ? activeColor : config.color
 
   const dueDate    = new Date(goal.dueDate)
   const daysLeft   = Math.ceil((dueDate.getTime() - Date.now()) / 86400000)
@@ -87,13 +86,11 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const breadcrumbLabel = isOwner ? t('detail.breadcrumb') : tNav('teamGoals')
   const breadcrumbHref  = isOwner ? '/goals' : '/goals/team'
 
-  const deadlineLabel = goal.status === 'Completed'
-    ? t('deadline.completed')
-    : isToday
-    ? '今天截止'
-    : isOverdue
-    ? t('deadline.overdue', { days: Math.abs(daysLeft) })
-    : t('deadline.due', { date: dueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) })
+  let deadlineLabel: string
+  if (goal.status === 'Completed') deadlineLabel = t('deadline.completed')
+  else if (isToday)   deadlineLabel = '今天截止'
+  else if (isOverdue) deadlineLabel = t('deadline.overdue', { days: Math.abs(daysLeft) })
+  else                deadlineLabel = t('deadline.due', { date: dueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) })
 
   async function handleSubmitForApproval() {
     setSubmitting(true)
@@ -210,6 +207,14 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  const STATUS_BADGE_CLASS: Partial<Record<string, string>> = {
+    Completed:       'bg-green-100 text-green-700',
+    Approved:        'bg-indigo-100 text-indigo-700',
+    PendingApproval: 'bg-yellow-100 text-yellow-700',
+    Rejected:        'bg-red-100 text-red-700',
+  }
+  const statusBadgeClass = STATUS_BADGE_CLASS[goal.status] ?? 'bg-gray-100 text-gray-500'
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -223,12 +228,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 mb-5">
         <div className="flex items-start justify-between gap-3 mb-4">
           <h1 className="text-xl font-bold text-gray-900">{goal.title}</h1>
-          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium
-            ${goal.status === 'Completed'       ? 'bg-green-100 text-green-700'
-            : goal.status === 'Approved'        ? 'bg-indigo-100 text-indigo-700'
-            : goal.status === 'PendingApproval' ? 'bg-yellow-100 text-yellow-700'
-            : goal.status === 'Rejected'        ? 'bg-red-100 text-red-700'
-            : 'bg-gray-100 text-gray-500'}`}
+          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass}`}
           >
             {config.label}
           </span>
@@ -271,79 +271,21 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
           ))}
         </div>
 
-        {/* 退回原因 banner（員工看到） */}
-        {goal.status === 'Rejected' && goal.rejectionReason && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-xs font-semibold text-red-700 mb-1">退回原因</p>
-            <p className="text-sm text-red-600">{goal.rejectionReason}</p>
-          </div>
-        )}
-
-        {/* Employee: submit draft for approval */}
-        {canSubmit && (
-          <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
-            <p className="text-xs text-gray-400">{t('detail.submit.draftNote')}</p>
-            <button
-              data-testid="goal-submit-approval"
-              onClick={handleSubmitForApproval}
-              disabled={submitting}
-              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
-            >
-              {submitting ? t('detail.submit.submitting') : t('detail.submit.submitBtn')}
-            </button>
-          </div>
-        )}
-
-        {/* Supervisor / Manager approval actions */}
-        {canApprove && !showRejectPanel && (
-          <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
-            <p className="flex-1 text-xs text-yellow-700">{t('detail.submit.pendingNote')}</p>
-            <button
-              onClick={() => setShowRejectPanel(true)}
-              disabled={approving}
-              className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-            >
-              {t('detail.submit.rejectBtn')}
-            </button>
-            <button
-              onClick={handleApprove}
-              disabled={approving}
-              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
-            >
-              {approving ? t('detail.submit.processing') : t('detail.submit.approveBtn')}
-            </button>
-          </div>
-        )}
-
-        {/* 退回確認 inline 面板 */}
-        {canApprove && showRejectPanel && (
-          <div className="mt-5 border-t border-red-100 pt-4 space-y-3">
-            <p className="text-xs font-semibold text-red-700">確定要退回此目標嗎？</p>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="請填寫退回原因（選填），員工將看到此訊息"
-              rows={3}
-              className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-red-300 resize-none"
-            />
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleReject}
-                disabled={approving}
-                className="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40"
-              >
-                {approving ? t('detail.submit.processing') : '確定退回'}
-              </button>
-              <button
-                onClick={() => { setShowRejectPanel(false); setRejectReason('') }}
-                disabled={approving}
-                className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        )}
+        <GoalActionsPanel
+          goalStatus={goal.status}
+          rejectionReason={goal.rejectionReason ?? null}
+          canSubmit={canSubmit}
+          canApprove={canApprove}
+          submitting={submitting}
+          approving={approving}
+          showRejectPanel={showRejectPanel}
+          rejectReason={rejectReason}
+          onSubmit={handleSubmitForApproval}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onSetShowRejectPanel={setShowRejectPanel}
+          onSetRejectReason={setRejectReason}
+        />
       </div>
 
       {/* Milestones */}
@@ -410,11 +352,88 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   )
 }
 
+function GoalActionsPanel({
+  goalStatus, rejectionReason, canSubmit, canApprove,
+  submitting, approving, showRejectPanel, rejectReason,
+  onSubmit, onApprove, onReject, onSetShowRejectPanel, onSetRejectReason,
+}: Readonly<{
+  goalStatus: string
+  rejectionReason: string | null
+  canSubmit: boolean
+  canApprove: boolean
+  submitting: boolean
+  approving: boolean
+  showRejectPanel: boolean
+  rejectReason: string
+  onSubmit: () => void
+  onApprove: () => void
+  onReject: () => void
+  onSetShowRejectPanel: (v: boolean) => void
+  onSetRejectReason: (v: string) => void
+}>) {
+  const t = useTranslations('goals')
+  return (
+    <>
+      {goalStatus === 'Rejected' && rejectionReason && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-xs font-semibold text-red-700 mb-1">退回原因</p>
+          <p className="text-sm text-red-600">{rejectionReason}</p>
+        </div>
+      )}
+      {canSubmit && (
+        <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+          <p className="text-xs text-gray-400">{t('detail.submit.draftNote')}</p>
+          <button data-testid="goal-submit-approval" onClick={onSubmit} disabled={submitting}
+            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40">
+            {submitting ? t('detail.submit.submitting') : t('detail.submit.submitBtn')}
+          </button>
+        </div>
+      )}
+      {canApprove && !showRejectPanel && (
+        <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
+          <p className="flex-1 text-xs text-yellow-700">{t('detail.submit.pendingNote')}</p>
+          <button onClick={() => onSetShowRejectPanel(true)} disabled={approving}
+            className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+            {t('detail.submit.rejectBtn')}
+          </button>
+          <button onClick={onApprove} disabled={approving}
+            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40">
+            {approving ? t('detail.submit.processing') : t('detail.submit.approveBtn')}
+          </button>
+        </div>
+      )}
+      {canApprove && showRejectPanel && (
+        <div className="mt-5 border-t border-red-100 pt-4 space-y-3">
+          <p className="text-xs font-semibold text-red-700">確定要退回此目標嗎？</p>
+          <textarea value={rejectReason} onChange={(e) => onSetRejectReason(e.target.value)}
+            placeholder="請填寫退回原因（選填），員工將看到此訊息" rows={3}
+            className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-red-300 resize-none"
+          />
+          <div className="flex items-center gap-2">
+            <button onClick={onReject} disabled={approving}
+              className="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40">
+              {approving ? t('detail.submit.processing') : '確定退回'}
+            </button>
+            <button onClick={() => { onSetShowRejectPanel(false); onSetRejectReason('') }} disabled={approving}
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function urlDisplay(raw: string) {
+  try { return new URL(raw).hostname } catch { return raw }
+}
+
 function MilestoneItem({
   milestone, isOwner, isDragging,
   onToggle, onComplete, onUpdateNote, onUpdateUrl,
   onDelete, onDragStart, onDragOver, onDrop, onDragEnd,
-}: {
+}: Readonly<{
   milestone: GoalMilestone
   isOwner: boolean
   isDragging: boolean
@@ -427,7 +446,7 @@ function MilestoneItem({
   onDragOver: (e: React.DragEvent) => void
   onDrop: () => void
   onDragEnd: () => void
-}) {
+}>) {
   const t = useTranslations('goals')
 
   const [noteInput, setNoteInput]       = useState('')
@@ -470,10 +489,6 @@ function MilestoneItem({
     if (u) onUpdateUrl(u.startsWith('http') ? u : `https://${u}`)
   }
 
-  function urlDisplay(raw: string) {
-    try { return new URL(raw).hostname } catch { return raw }
-  }
-
   return (
     <li
       draggable={isOwner && !done}
@@ -504,7 +519,7 @@ function MilestoneItem({
           disabled={!isOwner}
           className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors ${
             done ? 'border-gray-800 bg-gray-800' : 'border-gray-300 hover:border-gray-500'
-          } ${!isOwner ? 'cursor-default' : ''}`}
+          } ${isOwner ? '' : 'cursor-default'}`}
         >
           {done && (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
@@ -522,7 +537,7 @@ function MilestoneItem({
           {/* ── Note section (done state only) ── */}
           {done && isOwner && showNoteInput && (
             <input autoFocus value={noteInput} onChange={(e) => setNoteInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') submitNewNote(); if (e.key === 'Escape') { setShowNoteInput(false); setNoteInput('') } }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { submitNewNote() } else if (e.key === 'Escape') { setShowNoteInput(false); setNoteInput('') } }}
               onBlur={submitNewNote}
               placeholder={t('detail.milestone.notePlaceholder')}
               className="mt-1.5 w-full text-xs text-gray-500 placeholder-gray-300 bg-transparent outline-none border-b border-gray-200 pb-0.5 focus:border-indigo-300"
@@ -530,7 +545,7 @@ function MilestoneItem({
           )}
           {done && isOwner && !showNoteInput && editingNote && (
             <input autoFocus value={noteEdit} onChange={(e) => setNoteEdit(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') submitNoteEdit(); if (e.key === 'Escape') setEditingNote(false) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { submitNoteEdit() } else if (e.key === 'Escape') { setEditingNote(false) } }}
               onBlur={submitNoteEdit}
               className="mt-1.5 w-full text-xs text-gray-600 bg-transparent outline-none border-b border-indigo-300 pb-0.5"
             />
@@ -563,7 +578,7 @@ function MilestoneItem({
           {/* ── URL section (always) ── */}
           {isOwner && showUrlInput && (
             <input autoFocus value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') submitUrl(); if (e.key === 'Escape') { setShowUrlInput(false); setUrlInput('') } }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { submitUrl() } else if (e.key === 'Escape') { setShowUrlInput(false); setUrlInput('') } }}
               onBlur={submitUrl}
               placeholder={t('detail.milestone.urlPlaceholder')}
               className="mt-1.5 w-full text-xs text-gray-500 placeholder-gray-300 bg-transparent outline-none border-b border-gray-200 pb-0.5 focus:border-indigo-300"
