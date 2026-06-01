@@ -66,6 +66,41 @@ function RegionSelect({
   )
 }
 
+// ─── Date warning helper ──────────────────────────────────────────────────────
+
+type TFn = ReturnType<typeof useTranslations>
+
+function getDateWarning(cycle: PerformanceCycle, t: TFn, locale: string): string | null {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+
+  if (cycle.status === 'GoalSetting') {
+    const goalEnd = new Date(cycle.goalSettingEnd)
+    if (today < goalEnd) {
+      const days = Math.ceil((goalEnd.getTime() - today.getTime()) / 86400000)
+      return t('dateWarning.goalEndEarly', { date: fmt(cycle.goalSettingEnd, locale), days })
+    }
+  }
+  if (cycle.status === 'InProgress') {
+    const reviewStart = new Date(cycle.reviewStart)
+    if (today < reviewStart) {
+      const days = Math.ceil((reviewStart.getTime() - today.getTime()) / 86400000)
+      return t('dateWarning.reviewStartEarly', { date: fmt(cycle.reviewStart, locale), days })
+    }
+    if (today > reviewStart) {
+      const days = Math.ceil((today.getTime() - reviewStart.getTime()) / 86400000)
+      return t('dateWarning.reviewStartLate', { date: fmt(cycle.reviewStart, locale), days })
+    }
+  }
+  if (cycle.status === 'Calibration') {
+    const reviewEnd = new Date(cycle.reviewEnd)
+    if (today < reviewEnd) {
+      const days = Math.ceil((reviewEnd.getTime() - today.getTime()) / 86400000)
+      return t('dateWarning.reviewEndEarly', { date: fmt(cycle.reviewEnd, locale), days })
+    }
+  }
+  return null
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CyclesPage() {
@@ -134,37 +169,6 @@ export default function CyclesPage() {
     reviewStart:      '',
     reviewEnd:        '',
   })
-
-  function getDateWarning(cycle: PerformanceCycle): string | null {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-
-    if (cycle.status === 'GoalSetting') {
-      const goalEnd = new Date(cycle.goalSettingEnd)
-      if (today < goalEnd) {
-        const days = Math.ceil((goalEnd.getTime() - today.getTime()) / 86400000)
-        return t('dateWarning.goalEndEarly', { date: fmt(cycle.goalSettingEnd, locale), days })
-      }
-    }
-    if (cycle.status === 'InProgress') {
-      const reviewStart = new Date(cycle.reviewStart)
-      if (today < reviewStart) {
-        const days = Math.ceil((reviewStart.getTime() - today.getTime()) / 86400000)
-        return t('dateWarning.reviewStartEarly', { date: fmt(cycle.reviewStart, locale), days })
-      }
-      if (today > reviewStart) {
-        const days = Math.ceil((today.getTime() - reviewStart.getTime()) / 86400000)
-        return t('dateWarning.reviewStartLate', { date: fmt(cycle.reviewStart, locale), days })
-      }
-    }
-    if (cycle.status === 'Calibration') {
-      const reviewEnd = new Date(cycle.reviewEnd)
-      if (today < reviewEnd) {
-        const days = Math.ceil((reviewEnd.getTime() - today.getTime()) / 86400000)
-        return t('dateWarning.reviewEndEarly', { date: fmt(cycle.reviewEnd, locale), days })
-      }
-    }
-    return null
-  }
 
   const nextStatusLabel: Record<string, string> = {
     GoalSetting:      t('advance.GoalSetting'),
@@ -294,11 +298,11 @@ export default function CyclesPage() {
         onConfirm={handleAdvanceConfirmed}
         onCancel={() => { setPendingAdvance(null); setManagerQStatus(null) }}
       >
-        {pendingAdvance && getDateWarning(pendingAdvance) && (
+        {pendingAdvance && getDateWarning(pendingAdvance, t, locale) && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="flex items-center gap-1.5 text-xs text-amber-700">
               <WarnIcon />
-              {getDateWarning(pendingAdvance)}
+              {getDateWarning(pendingAdvance, t, locale)}
             </p>
           </div>
         )}

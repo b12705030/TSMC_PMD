@@ -27,7 +27,7 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
   U:       'bg-red-100 text-red-800 ring-red-300',
 }
 
-export default function CalibratePage({ params }: { params: Promise<{ cycleId: string }> }) {
+export default function CalibratePage({ params }: Readonly<{ params: Promise<{ cycleId: string }> }>) {
   const { cycleId } = use(params)
   const t = useTranslations('reviews')
 
@@ -106,13 +106,14 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
       </div>
 
       {error && <ErrorBanner message={error} />}
-      {isLoading ? (
-        <Loading />
-      ) : reviews.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
-          {t('calibrate.empty')}
-        </div>
-      ) : (
+      {(() => {
+        if (isLoading) return <Loading />
+        if (reviews.length === 0) return (
+          <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
+            {t('calibrate.empty')}
+          </div>
+        )
+        return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs text-gray-500">
@@ -137,7 +138,8 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
             </tbody>
           </table>
         </div>
-      )}
+        )
+      })()}
 
       <ConfirmDialog
         open={showConfirm}
@@ -153,14 +155,17 @@ export default function CalibratePage({ params }: { params: Promise<{ cycleId: s
 
 function CalibrateRow({
   review, onGradeChange, onRankChange,
-}: {
+}: Readonly<{
   review: PerformanceReviewDetail
   onGradeChange: (g: ReviewGrade) => void
   onRankChange: (r: number) => void
-}) {
+}>) {
   const t = useTranslations('reviews')
   const [rankInput, setRankInput] = useState(review.rank?.toString() ?? '')
   const isPending = review.status === 'PendingManagerApproval'
+  const gradeDisplay = review.grade
+    ? <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${GRADE_COLOR[review.grade]}`}>{GRADE_DISPLAY[review.grade]}</span>
+    : <span className="text-gray-300">—</span>
 
   // Sync when parent rank changes (e.g. from server)
   useEffect(() => { setRankInput(review.rank?.toString() ?? '') }, [review.rank])
@@ -196,13 +201,7 @@ function CalibrateRow({
               </button>
             ))}
           </div>
-        ) : (
-          review.grade ? (
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${GRADE_COLOR[review.grade]}`}>
-              {GRADE_DISPLAY[review.grade]}
-            </span>
-          ) : <span className="text-gray-300">—</span>
-        )}
+        ) : gradeDisplay}
       </td>
       <td className="px-4 py-3">
         {isPending ? (

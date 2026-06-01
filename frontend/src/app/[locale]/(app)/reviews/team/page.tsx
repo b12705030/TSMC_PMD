@@ -9,7 +9,7 @@ import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { useTeamReviews } from '@/modules/reviews/hooks/useReviews'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import type { PerformanceReviewDetail, ReviewGrade, ReviewStatus } from '@/types'
+import type { PerformanceReviewDetail, ReviewGrade } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
   O: 'O', S_Plus: 'S+', S: 'S', S_Minus: 'S-', I: 'I', U: 'U',
@@ -24,6 +24,19 @@ const GRADE_TEXT_COLOR: Record<ReviewGrade, string> = {
   U:       'text-red-500',
 }
 
+function buildCycleMap(reviews: PerformanceReviewDetail[]) {
+  const map = new Map<string, { id: string; name: string; pendingApproval: number }>()
+  for (const r of reviews) {
+    if (!map.has(r.cycleId)) {
+      map.set(r.cycleId, { id: r.cycleId, name: r.cycle.name, pendingApproval: 0 })
+    }
+    if (r.status === 'PendingManagerApproval') {
+      map.get(r.cycleId)!.pendingApproval++
+    }
+  }
+  return map
+}
+
 export default function TeamReviewsPage() {
   const t = useTranslations('reviews')
 
@@ -33,18 +46,7 @@ export default function TeamReviewsPage() {
   const isSupervisor = user?.role === 'Supervisor'
 
   const pendingCount = reviews.filter((r) => r.status === 'PendingSupervisorReview').length
-
-  const cycleMap = new Map<string, { id: string; name: string; pendingApproval: number }>()
-  if (isManager) {
-    for (const r of reviews) {
-      if (!cycleMap.has(r.cycleId)) {
-        cycleMap.set(r.cycleId, { id: r.cycleId, name: r.cycle.name, pendingApproval: 0 })
-      }
-      if (r.status === 'PendingManagerApproval') {
-        cycleMap.get(r.cycleId)!.pendingApproval++
-      }
-    }
-  }
+  const cycleMap = isManager ? buildCycleMap(reviews) : new Map()
 
   return (
     <div>
@@ -82,19 +84,18 @@ export default function TeamReviewsPage() {
         </div>
       )}
 
-      {isLoading ? (
-        <Loading />
-      ) : error ? (
-        <ErrorBanner message={error} onRetry={refetch} />
-      ) : reviews.length === 0 ? (
-        <EmptyState title={t('teamEmpty.title')} description={t('teamEmpty.desc')} />
-      ) : (
-        <div className="space-y-3">
-          {reviews.map((review) => (
-            <TeamReviewCard key={review.id} review={review} isManager={isManager} isSupervisor={isSupervisor} />
-          ))}
-        </div>
-      )}
+      {(() => {
+        if (isLoading) return <Loading />
+        if (error) return <ErrorBanner message={error} onRetry={refetch} />
+        if (reviews.length === 0) return <EmptyState title={t('teamEmpty.title')} description={t('teamEmpty.desc')} />
+        return (
+          <div className="space-y-3">
+            {reviews.map((review) => (
+              <TeamReviewCard key={review.id} review={review} isManager={isManager} isSupervisor={isSupervisor} />
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -103,11 +104,11 @@ function TeamReviewCard({
   review,
   isManager,
   isSupervisor,
-}: {
+}: Readonly<{
   review: PerformanceReviewDetail
   isManager: boolean
   isSupervisor: boolean
-}) {
+}>) {
   const t = useTranslations('reviews')
   // Supervisors should not know an appeal was filed — show Appealed as Published
   const displayStatus = isSupervisor && review.status === 'Appealed' ? 'Published' : review.status
@@ -120,17 +121,14 @@ function TeamReviewCard({
     if (displayStatus === 'PendingSupervisorReview') {
       // 這是主管的工作，對 Manager 只是資訊提示
       actionLabel = t('teamActionWaitingSup', { supervisor: review.supervisor?.name ?? '-' })
-      needsAction = false
     } else if (displayStatus === 'PendingManagerApproval') {
       actionLabel = t('teamActionManager')
       needsAction = true
     }
-  } else {
+  } else if (displayStatus === 'PendingSupervisorReview') {
     // Supervisor
-    if (displayStatus === 'PendingSupervisorReview') {
-      actionLabel = t('teamActionPending')
-      needsAction = true
-    }
+    actionLabel = t('teamActionPending')
+    needsAction = true
   }
 
   return (
@@ -158,7 +156,7 @@ function TeamReviewCard({
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge status={displayStatus as ReviewStatus} />
+          <StatusBadge status={displayStatus} />
           {review.grade && (
             <span className={`text-xl font-bold ${GRADE_TEXT_COLOR[review.grade]}`}>
               {GRADE_DISPLAY[review.grade]}

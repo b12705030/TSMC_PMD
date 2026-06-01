@@ -14,7 +14,7 @@ import type { ReviewTemplate, TemplateQuestion } from '@/types'
 
 const QUESTION_TYPES = ['Text', 'Rating', 'MultipleChoice'] as const
 
-export default function TemplateDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function TemplateDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = use(params)
   const t = useTranslations('templates')
   const tCommon = useTranslations('common')
@@ -194,7 +194,7 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ id: s
                   <label className="label">{t('detail.optionsLabel')}</label>
                   <div className="space-y-2">
                     {optionInputs.map((opt, i) => (
-                      <div key={i} className="flex gap-2">
+                      <div key={`opt-${opt}-${i}`} className="flex gap-2">
                         <input
                           className="input flex-1"
                           value={opt}
@@ -251,12 +251,12 @@ export default function TemplateDetailPage({ params }: { params: Promise<{ id: s
 
 function QuestionRow({
   question, index, canDelete, onDelete,
-}: {
+}: Readonly<{
   question: TemplateQuestion
   index: number
   canDelete: boolean
   onDelete?: () => void
-}) {
+}>) {
   const t = useTranslations('templates')
 
   return (

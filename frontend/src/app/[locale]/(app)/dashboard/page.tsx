@@ -340,13 +340,64 @@ function ActiveCycles({ cycles }: Readonly<{ cycles: PerformanceCycle[] }>) {
 
 // ─── Employee Section ─────────────────────────────────────────────────────────
 
+type GoalStats = { total: number; draft: number; pendingApproval: number; approved: number; completed: number; rejected: number }
+
+function GoalsContent({ isLoading, error, stats, t }: Readonly<{ isLoading: boolean; error: string | null; stats: GoalStats; t: TDashFn }>) {
+  if (isLoading) return <Loading />
+  if (error) return <ErrorBanner message={error} />
+  if (stats.total === 0) return (
+    <div className="card py-6 text-center">
+      <p className="text-sm text-gray-500">{t('goals.empty')}</p>
+      <Link href="/goals" className="btn-primary mt-3 inline-block text-sm">{t('goals.setGoal')}</Link>
+    </div>
+  )
+  const chips = [
+    { label: t('goals.draft'),           count: stats.draft,            color: 'bg-gray-100 text-gray-600' },
+    { label: t('goals.pendingApproval'), count: stats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
+    { label: t('goals.approved'),        count: stats.approved,         color: 'bg-green-100 text-green-700' },
+    { label: t('goals.completed'),       count: stats.completed,        color: 'bg-indigo-100 text-indigo-700' },
+    ...(stats.rejected > 0 ? [{ label: t('goals.rejected'), count: stats.rejected, color: 'bg-red-100 text-red-700' }] : [] as { label: string; count: number; color: string }[]),
+  ]
+  return (
+    <div className="grid grid-cols-4 gap-1.5">
+      {chips.map(({ label, count, color }) => (
+        <Link key={label} href="/goals" className={`rounded-lg px-2 py-2 text-center ${color} block hover:opacity-80`}>
+          <p className="text-lg font-bold leading-tight">{count}</p>
+          <p className="mt-0.5 text-[10px] font-medium leading-tight">{label}</p>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+type TDashFn = ReturnType<typeof useTranslations<'dashboard'>>
+
+function ReviewsContent({ isLoading, error, reviews, t }: Readonly<{ isLoading: boolean; error: string | null; reviews: ReturnType<typeof useReviews>['reviews']; t: TDashFn }>) {
+  if (isLoading) return <Loading />
+  if (error) return <ErrorBanner message={error} />
+  if (reviews.length === 0) return <p className="text-muted">{t('myReviews.empty')}</p>
+  return (
+    <div className="space-y-2">
+      {reviews.slice(0, 4).map((r) => (
+        <Link key={r.id} href={`/reviews/${r.id}`} className="card-sm flex items-center justify-between hover:bg-gray-50">
+          <div>
+            <p className="text-sm font-medium text-gray-900">{r.cycle.name}</p>
+            <p className="text-xs text-gray-400">{r.template.name}</p>
+          </div>
+          <StatusBadge status={r.status} />
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 function EmployeeSection() {
   const t = useTranslations('dashboard')
   const { reviews, isLoading: rl, error: rlErr } = useReviews()
   const { goals,   isLoading: gl, error: glErr } = useGoals()
 
   const pendingReviews = reviews.filter((r) => r.status === 'PendingEmployeeSubmit')
-  const goalStats = {
+  const goalStats: GoalStats = {
     total:           goals.length,
     draft:           goals.filter((g) => g.status === 'Draft').length,
     pendingApproval: goals.filter((g) => g.status === 'PendingApproval').length,
@@ -356,60 +407,6 @@ function EmployeeSection() {
   }
 
   const hasActionItems = (!gl && goalStats.rejected > 0) || (!rl && pendingReviews.length > 0)
-
-  let goalsContent: React.ReactNode
-  if (gl) {
-    goalsContent = <Loading />
-  } else if (glErr) {
-    goalsContent = <ErrorBanner message={glErr} />
-  } else if (goalStats.total === 0) {
-    goalsContent = (
-      <div className="card py-6 text-center">
-        <p className="text-sm text-gray-500">{t('goals.empty')}</p>
-        <Link href="/goals" className="btn-primary mt-3 inline-block text-sm">{t('goals.setGoal')}</Link>
-      </div>
-    )
-  } else {
-    goalsContent = (
-      <div className="grid grid-cols-4 gap-1.5">
-        {[
-          { label: t('goals.draft'),           count: goalStats.draft,            color: 'bg-gray-100 text-gray-600' },
-          { label: t('goals.pendingApproval'), count: goalStats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
-          { label: t('goals.approved'),        count: goalStats.approved,         color: 'bg-green-100 text-green-700' },
-          { label: t('goals.completed'),       count: goalStats.completed,        color: 'bg-indigo-100 text-indigo-700' },
-          ...(goalStats.rejected > 0 ? [{ label: t('goals.rejected'), count: goalStats.rejected, color: 'bg-red-100 text-red-700' }] : [] as { label: string; count: number; color: string }[]),
-        ].map(({ label, count, color }) => (
-          <Link key={label} href="/goals" className={`rounded-lg px-2 py-2 text-center ${color} block hover:opacity-80`}>
-            <p className="text-lg font-bold leading-tight">{count}</p>
-            <p className="mt-0.5 text-[10px] font-medium leading-tight">{label}</p>
-          </Link>
-        ))}
-      </div>
-    )
-  }
-
-  let reviewsContent: React.ReactNode
-  if (rl) {
-    reviewsContent = <Loading />
-  } else if (rlErr) {
-    reviewsContent = <ErrorBanner message={rlErr} />
-  } else if (reviews.length === 0) {
-    reviewsContent = <p className="text-muted">{t('myReviews.empty')}</p>
-  } else {
-    reviewsContent = (
-      <div className="space-y-2">
-        {reviews.slice(0, 4).map((r) => (
-          <Link key={r.id} href={`/reviews/${r.id}`} className="card-sm flex items-center justify-between hover:bg-gray-50">
-            <div>
-              <p className="text-sm font-medium text-gray-900">{r.cycle.name}</p>
-              <p className="text-xs text-gray-400">{r.template.name}</p>
-            </div>
-            <StatusBadge status={r.status} />
-          </Link>
-        ))}
-      </div>
-    )
-  }
 
   return (
     <>
@@ -455,7 +452,7 @@ function EmployeeSection() {
             <h2 className="section-heading mb-0">{t('goals.title')}</h2>
             <Link href="/goals" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
-          {goalsContent}
+          <GoalsContent isLoading={gl} error={glErr} stats={goalStats} t={t} />
         </section>
 
         {/* Reviews */}
@@ -464,7 +461,7 @@ function EmployeeSection() {
             <h2 className="section-heading mb-0">{t('myReviews.title')}</h2>
             <Link href="/reviews" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
-          {reviewsContent}
+          <ReviewsContent isLoading={rl} error={rlErr} reviews={reviews} t={t} />
         </section>
       </div>
     </>

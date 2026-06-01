@@ -9,13 +9,13 @@ import { RoleBadge } from '@/components/RoleBadge'
 import { StatusBadge } from '@/components/StatusBadge'
 import { useEmployee } from '@/modules/users/hooks/useTeam'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
-import type { ReviewGrade } from '@/types'
+import type { ReviewGrade, PerformanceReviewDetail } from '@/types'
 
 const GRADE_DISPLAY: Record<ReviewGrade, string> = {
   O: 'O', S_Plus: 'S+', S: 'S', S_Minus: 'S-', I: 'I', U: 'U',
 }
 
-export default function EmployeeDetailPage({ params }: { params: Promise<{ employeeId: string }> }) {
+export default function EmployeeDetailPage({ params }: Readonly<{ params: Promise<{ employeeId: string }> }>) {
   const { employeeId } = use(params)
   const t = useTranslations('team')
 
@@ -79,17 +79,22 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
         <p className="text-muted">{t('employee.noReviews')}</p>
       ) : (
         <div className="space-y-2">
-          {reviews.map((review) => (
-            <Link key={review.id} href={`/reviews/${review.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
-              <p className="text-sm text-gray-700">{(review as { cycle?: { name: string } }).cycle?.name ?? review.cycleId}</p>
-              <div className="flex items-center gap-3">
-                {review.grade && (
-                  <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade as ReviewGrade]}</span>
-                )}
-                <StatusBadge status={isSupervisor && review.status === 'Appealed' ? 'Published' : review.status} />
-              </div>
-            </Link>
-          ))}
+          {reviews.map((review) => {
+            const reviewWithCycle = review as PerformanceReviewDetail
+            const cycleName = reviewWithCycle.cycle?.name ?? review.cycleId
+            const displayStatus = isSupervisor && review.status === 'Appealed' ? 'Published' : review.status
+            return (
+              <Link key={review.id} href={`/reviews/${review.id}?from=team`} className="card-sm flex items-center justify-between hover:shadow-md transition-shadow block">
+                <p className="text-sm text-gray-700">{cycleName}</p>
+                <div className="flex items-center gap-3">
+                  {review.grade && (
+                    <span className="text-sm font-bold text-gray-900">{GRADE_DISPLAY[review.grade]}</span>
+                  )}
+                  <StatusBadge status={displayStatus} />
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

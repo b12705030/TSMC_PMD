@@ -47,7 +47,7 @@ function SupervisorTeamView() {
   )
 }
 
-function EmployeeRow({ emp }: { emp: User }) {
+function EmployeeRow({ emp }: Readonly<{ emp: User }>) {
   const t = useTranslations('team')
   return (
     <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">

@@ -34,32 +34,30 @@ export default function ReviewsPage() {
         description={t('myDesc')}
       />
 
-      {isLoading ? (
-        <Loading />
-      ) : error ? (
-        <ErrorBanner message={error} onRetry={refetch} />
-      ) : reviews.length === 0 ? (
-        <EmptyState title={t('empty.title')} description={t('empty.desc')} />
-      ) : (
-        <div className="space-y-3">
-          {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} statusLabel={STATUS_LABEL} />
-          ))}
-        </div>
-      )}
+      {(() => {
+        if (isLoading) return <Loading />
+        if (error) return <ErrorBanner message={error} onRetry={refetch} />
+        if (reviews.length === 0) return <EmptyState title={t('empty.title')} description={t('empty.desc')} />
+        return (
+          <div className="space-y-3">
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} statusLabel={STATUS_LABEL} />
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }
 
-function ReviewCard({ review, statusLabel }: { review: PerformanceReviewDetail; statusLabel: Record<ReviewStatus, string> }) {
+function ReviewCard({ review, statusLabel }: Readonly<{ review: PerformanceReviewDetail; statusLabel: Record<ReviewStatus, string> }>) {
   const t = useTranslations('reviews')
   const isActionRequired = review.status === 'PendingEmployeeSubmit'
 
-  const cycleTypeLabel = review.cycle.type === 'Annual'
-    ? t('cycleType.Annual')
-    : review.cycle.type === 'Quarterly'
-    ? t('cycleType.Quarterly')
-    : t('cycleType.Probation')
+  let cycleTypeLabel: string
+  if (review.cycle.type === 'Annual') cycleTypeLabel = t('cycleType.Annual')
+  else if (review.cycle.type === 'Quarterly') cycleTypeLabel = t('cycleType.Quarterly')
+  else cycleTypeLabel = t('cycleType.Probation')
 
   return (
     <Link

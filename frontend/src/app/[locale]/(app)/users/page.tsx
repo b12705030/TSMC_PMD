@@ -25,12 +25,12 @@ function EditUserModal({
   regions,
   onClose,
   onSave,
-}: {
+}: Readonly<{
   user: User
   regions: Region[]
   onClose: () => void
   onSave: (id: string, payload: UpdateUserPayload) => Promise<User>
-}) {
+}>) {
   const t = useTranslations('users')
   const [form, setForm] = useState<UpdateUserPayload>({
     role:         user.role,
@@ -56,7 +56,7 @@ function EditUserModal({
     setForm((p) => ({ ...p, regionId, departmentId: '' }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError('')
@@ -152,11 +152,11 @@ function CreateUserModal({
   regions,
   onClose,
   onCreate,
-}: {
+}: Readonly<{
   regions: Region[]
   onClose: () => void
   onCreate: (payload: CreateUserPayload) => Promise<User>
-}) {
+}>) {
   const t = useTranslations('users')
   const [form, setForm] = useState<CreateUserPayload>({
     employeeId: '', name: '', email: '',
@@ -179,7 +179,7 @@ function CreateUserModal({
     setForm((p) => ({ ...p, regionId, departmentId: '' }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
     if (!form.employeeId || !form.name || !form.email || !form.regionId || !form.departmentId) {
       setError(t('requiredFields'))

@@ -21,7 +21,7 @@ const GRADE_COLOR: Record<ReviewGrade, string> = {
   U:       'bg-red-100 text-red-800',
 }
 
-export default function CompareReviewsPage({ params }: { params: Promise<{ cycleId: string }> }) {
+export default function CompareReviewsPage({ params }: Readonly<{ params: Promise<{ cycleId: string }> }>) {
   const { cycleId } = use(params)
   const t = useTranslations('reviews')
 
@@ -58,13 +58,14 @@ export default function CompareReviewsPage({ params }: { params: Promise<{ cycle
         ]}
       />
 
-      {isLoading ? (
-        <Loading />
-      ) : reviews.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
-          {t('compare.empty')}
-        </div>
-      ) : (
+      {(() => {
+        if (isLoading) return <Loading />
+        if (reviews.length === 0) return (
+          <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
+            {t('compare.empty')}
+          </div>
+        )
+        return (
         <>
           <p className="mb-4 text-xs text-gray-400">
             {t('compare.summary', { count: reviews.length })}
@@ -75,7 +76,8 @@ export default function CompareReviewsPage({ params }: { params: Promise<{ cycle
             ))}
           </div>
         </>
-      )}
+        )
+      })()}
     </div>
   )
 }
@@ -83,10 +85,10 @@ export default function CompareReviewsPage({ params }: { params: Promise<{ cycle
 function ReviewCard({
   review,
   statusLabel,
-}: {
+}: Readonly<{
   review: PerformanceReviewDetail
   statusLabel: Record<ReviewStatus, string>
-}) {
+}>) {
   const t = useTranslations('reviews')
   const hasGrade = !!review.grade
   const isPending = review.status === 'PendingManagerApproval'

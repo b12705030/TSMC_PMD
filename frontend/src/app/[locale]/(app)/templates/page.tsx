@@ -157,23 +157,24 @@ export default function TemplatesPage() {
         ) : undefined}
       />
 
-      {isLoading ? (
-        <Loading />
-      ) : loadError ? (
-        <ErrorBanner message={loadError} />
-      ) : templates.length === 0 ? (
-        <EmptyState
-          title={t('empty.title')}
-          description={t('empty.desc')}
-          action={isHR ? <button className="btn-primary" onClick={() => setShowModal(true)}>{t('empty.btn')}</button> : undefined}
-        />
-      ) : (
-        <div className="space-y-3">
-          {templates.map((tmpl) => (
-            <TemplateRow key={tmpl.id} template={tmpl} onPublish={() => setPendingPublishId(tmpl.id)} isHR={isHR} />
-          ))}
-        </div>
-      )}
+      {(() => {
+        if (isLoading) return <Loading />
+        if (loadError) return <ErrorBanner message={loadError} />
+        if (templates.length === 0) return (
+          <EmptyState
+            title={t('empty.title')}
+            description={t('empty.desc')}
+            action={isHR ? <button className="btn-primary" onClick={() => setShowModal(true)}>{t('empty.btn')}</button> : undefined}
+          />
+        )
+        return (
+          <div className="space-y-3">
+            {templates.map((tmpl) => (
+              <TemplateRow key={tmpl.id} template={tmpl} onPublish={() => setPendingPublishId(tmpl.id)} isHR={isHR} />
+            ))}
+          </div>
+        )
+      })()}
 
       <ConfirmDialog
         open={!!pendingPublishId}
@@ -357,8 +358,17 @@ export default function TemplatesPage() {
                   <span className="text-xs font-normal text-gray-400">{t('modal.questionsLocked')}</span>
                 </p>
                 <div className="space-y-3">
-                  {questions.map((q, i) => (
-                    <div key={i} className="card-sm flex gap-3">
+                  {questions.map((q, i) => {
+                    function updateOption(oi: number, value: string) {
+                      const opts = [...q.options]
+                      opts[oi] = value
+                      updateQuestion(i, 'options', opts)
+                    }
+                    function removeOption(oi: number) {
+                      updateQuestion(i, 'options', q.options.filter((_, j) => j !== oi))
+                    }
+                    return (
+                    <div key={q.orderIndex} className="card-sm flex gap-3">
                       <div className="flex-1 space-y-2">
                         <input
                           className="input"
@@ -390,21 +400,17 @@ export default function TemplatesPage() {
                           <div className="space-y-1.5 rounded-lg bg-gray-50 p-3">
                             <p className="text-xs font-medium text-gray-500">{t('modal.options')}</p>
                             {q.options.map((opt, oi) => (
-                              <div key={oi} className="flex gap-2">
+                              <div key={`${q.orderIndex}-opt-${oi}`} className="flex gap-2">
                                 <input
                                   className="input flex-1"
                                   value={opt}
-                                  onChange={(e) => {
-                                    const opts = [...q.options]
-                                    opts[oi] = e.target.value
-                                    updateQuestion(i, 'options', opts)
-                                  }}
+                                  onChange={(e) => updateOption(oi, e.target.value)}
                                   placeholder={t('modal.optionPlaceholder', { index: oi + 1 })}
                                 />
                                 {q.options.length > 2 && (
                                   <button
                                     type="button"
-                                    onClick={() => updateQuestion(i, 'options', q.options.filter((_, j) => j !== oi))}
+                                    onClick={() => removeOption(oi)}
                                     className="px-1 text-lg leading-none text-gray-400 hover:text-red-500"
                                   >×</button>
                                 )}
@@ -428,7 +434,8 @@ export default function TemplatesPage() {
                         </button>
                       )}
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <button type="button" onClick={addQuestion} className="btn-link mt-2">
                   {t('modal.addQuestion')}
@@ -457,11 +464,11 @@ function TemplateRow({
   template,
   onPublish,
   isHR,
-}: {
+}: Readonly<{
   template: ReviewTemplate
   onPublish: () => void
   isHR: boolean
-}) {
+}>) {
   const t = useTranslations('templates')
   const baseCount   = template.questions.filter((q) => !q.isCustom).length
   const customCount = template.questions.filter((q) => q.isCustom).length
