@@ -398,11 +398,11 @@ function GoalActionsPanel({
       {canApprove && !showRejectPanel && (
         <div className="mt-5 flex gap-3 border-t border-yellow-100 pt-4">
           <p className="flex-1 text-xs text-yellow-700">{t('detail.submit.pendingNote')}</p>
-          <button onClick={() => onSetShowRejectPanel(true)} disabled={approving}
+          <button data-testid="goal-reject" onClick={() => onSetShowRejectPanel(true)} disabled={approving}
             className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40">
             {t('detail.submit.rejectBtn')}
           </button>
-          <button onClick={onApprove} disabled={approving}
+          <button data-testid="goal-approve" onClick={onApprove} disabled={approving}
             className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40">
             {approving ? t('detail.submit.processing') : t('detail.submit.approveBtn')}
           </button>

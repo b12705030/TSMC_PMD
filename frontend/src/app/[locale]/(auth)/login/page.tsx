@@ -89,7 +89,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && <p className="text-error">{error}</p>}
+            {error && <p data-testid="login-error" className="text-error">{error}</p>}
 
             <button type="submit" data-testid="login-submit" disabled={loading} className="btn-primary w-full">
               {loading ? t('signingIn') : t('signIn')}

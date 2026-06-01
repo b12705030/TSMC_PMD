@@ -58,6 +58,7 @@ describe('GoalsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPrisma.$transaction.mockResolvedValue(undefined)
     service = new GoalsService(mockPrisma as any, mockNotifications as any)
   })
 
@@ -130,6 +131,49 @@ describe('GoalsService', () => {
     expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['emp-1'], expect.objectContaining({ type: 'GoalApproved' }))
   })
 
+  it('rejects pending goals with a reason and notifies the owner', async () => {
+    mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'emp-1', status: 'PendingApproval' })
+    mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'emp-1', regionId: 'region-1', supervisorId: 'sup-1' })
+    mockPrisma.goal.update.mockResolvedValueOnce({ id: 'goal-1', userId: 'emp-1', status: 'Rejected', title: 'Goal' })
+
+    const result = await service.rejectGoal('goal-1', user(Role.Supervisor, { id: 'sup-1' }), 'Needs clearer metric')
+
+    expect(result.status).toBe('Rejected')
+    expect(mockPrisma.goal.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: { status: 'Rejected', rejectionReason: 'Needs clearer metric' },
+    }))
+    expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['emp-1'], expect.objectContaining({ type: 'GoalRejected' }))
+  })
+
+  it('returns manager team goals for direct reports and reports via supervisors', async () => {
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([{ id: 'direct-1' }])
+      .mockResolvedValueOnce([{ id: 'via-sup-1' }])
+    mockPrisma.goal.findMany.mockResolvedValueOnce([{ id: 'goal-1' }])
+
+    const result = await service.getTeamGoals(user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(result).toEqual([{ id: 'goal-1' }])
+    expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(1, {
+      where: { managerId: 'mgr-1', supervisorId: null },
+      select: { id: true },
+    })
+    expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(2, {
+      where: { supervisor: { managerId: 'mgr-1' } },
+      select: { id: true },
+    })
+    expect(mockPrisma.goal.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: { in: ['direct-1', 'via-sup-1'] }, status: { not: 'Draft' } },
+    }))
+  })
+
+  it('enforces region isolation when RegionalHR reads employee goals', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce({ id: 'emp-1', regionId: 'region-2', supervisor: null })
+
+    await expect(service.getGoalsByEmployee('emp-1', user(Role.RegionalHR, { regionId: 'region-1' })))
+      .rejects.toThrow(ForbiddenException)
+  })
+
   it('adds milestones after the latest order index', async () => {
     mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
     mockPrisma.goalMilestone.findFirst.mockResolvedValueOnce({ orderIndex: 2 })
@@ -141,6 +185,77 @@ describe('GoalsService', () => {
     expect(mockPrisma.goalMilestone.create).toHaveBeenCalledWith({
       data: { goalId: 'goal-1', title: 'Ship it', orderIndex: 3 },
     })
+  })
+
+  it('toggles milestone completion with note and clears both when reopened', async () => {
+    mockPrisma.goalMilestone.findUnique.mockResolvedValueOnce({ id: 'm-1', goalId: 'goal-1', completedAt: null })
+    mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+    mockPrisma.goalMilestone.update.mockResolvedValueOnce({ id: 'm-1', completedAt: new Date(), note: 'done' })
+
+    await service.toggleMilestone('goal-1', 'm-1', user(Role.Employee), 'done')
+
+    expect(mockPrisma.goalMilestone.update).toHaveBeenCalledWith({
+      where: { id: 'm-1' },
+      data:  { completedAt: expect.any(Date), note: 'done' },
+    })
+
+    mockPrisma.goalMilestone.findUnique.mockResolvedValueOnce({ id: 'm-1', goalId: 'goal-1', completedAt: new Date() })
+    mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+    mockPrisma.goalMilestone.update.mockResolvedValueOnce({ id: 'm-1', completedAt: null, note: null })
+
+    await service.toggleMilestone('goal-1', 'm-1', user(Role.Employee), 'ignored')
+
+    expect(mockPrisma.goalMilestone.update).toHaveBeenLastCalledWith({
+      where: { id: 'm-1' },
+      data:  { completedAt: null, note: null },
+    })
+  })
+
+  it('updates milestone note and url only for the owner', async () => {
+    mockPrisma.goalMilestone.findUnique
+      .mockResolvedValueOnce({ id: 'm-1', goalId: 'goal-1' })
+      .mockResolvedValueOnce({ id: 'm-1', goalId: 'goal-1' })
+    mockPrisma.goal.findUnique
+      .mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+      .mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+    mockPrisma.goalMilestone.update
+      .mockResolvedValueOnce({ id: 'm-1', note: 'new note' })
+      .mockResolvedValueOnce({ id: 'm-1', url: 'https://example.com' })
+
+    await service.updateMilestoneNote('goal-1', 'm-1', user(Role.Employee), 'new note')
+    await service.updateMilestoneUrl('goal-1', 'm-1', user(Role.Employee), 'https://example.com')
+
+    expect(mockPrisma.goalMilestone.update).toHaveBeenNthCalledWith(1, { where: { id: 'm-1' }, data: { note: 'new note' } })
+    expect(mockPrisma.goalMilestone.update).toHaveBeenNthCalledWith(2, { where: { id: 'm-1' }, data: { url: 'https://example.com' } })
+  })
+
+  it('reorders milestones in a transaction', async () => {
+    mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+    mockPrisma.goalMilestone.updateMany
+      .mockReturnValueOnce(Promise.resolve({ count: 1 }))
+      .mockReturnValueOnce(Promise.resolve({ count: 1 }))
+
+    await service.reorderMilestones('goal-1', ['m-2', 'm-1'], user(Role.Employee))
+
+    expect(mockPrisma.goalMilestone.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: 'm-2', goalId: 'goal-1' },
+      data:  { orderIndex: 0 },
+    })
+    expect(mockPrisma.goalMilestone.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: 'm-1', goalId: 'goal-1' },
+      data:  { orderIndex: 1 },
+    })
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith([expect.any(Promise), expect.any(Promise)])
+  })
+
+  it('deletes milestones only after validating ownership', async () => {
+    mockPrisma.goalMilestone.findUnique.mockResolvedValueOnce({ id: 'm-1', goalId: 'goal-1' })
+    mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1' })
+    mockPrisma.goalMilestone.delete.mockResolvedValueOnce({ id: 'm-1' })
+
+    await service.deleteMilestone('goal-1', 'm-1', user(Role.Employee))
+
+    expect(mockPrisma.goalMilestone.delete).toHaveBeenCalledWith({ where: { id: 'm-1' } })
   })
 
   it('throws when deleting a non-draft goal', async () => {

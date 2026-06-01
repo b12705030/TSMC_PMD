@@ -159,6 +159,7 @@ export default function NewGoalPage() {
                   {label}
                 </label>
                 <textarea
+                  data-testid={`goal-new-${key}`}
                   value={form[key as FormField]}
                   onChange={(e) => handleChange(key, e.target.value)}
                   placeholder={hint}
