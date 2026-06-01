@@ -26,7 +26,7 @@ export function createGoalsService(): GoalsService {
 }
 
 export function createTemplatesService(): TemplatesService {
-  return new TemplatesService(testPrisma)
+  return new TemplatesService(testPrisma, notifications)
 }
 
 export function createReviewsService(): ReviewsService {
