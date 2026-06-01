@@ -28,14 +28,14 @@ function fmt(date: string) {
   return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-function AnswerBlock({ questions, answers, borderColor, bgColor, textColor, label }: {
+function AnswerBlock({ questions, answers, borderColor, bgColor, textColor, label }: Readonly<{
   questions: TemplateQuestion[]
   answers: ReviewAnswer[]
   borderColor: string
   bgColor: string
   textColor: string
   label: string
-}) {
+}>) {
   return (
     <div className={`rounded-xl border ${borderColor} ${bgColor} p-4 h-full`}>
       <p className={`mb-3 text-xs font-semibold uppercase tracking-wide ${textColor}`}>{label}</p>
@@ -56,7 +56,7 @@ function AnswerBlock({ questions, answers, borderColor, bgColor, textColor, labe
   )
 }
 
-export default function AppealDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AppealDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = use(params)
   const t = useTranslations('appeals')
 

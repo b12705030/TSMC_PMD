@@ -8,7 +8,7 @@ import { DeadlineToast } from '@/components/DeadlineToast'
 import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter()
   const { user, isLoading, setUser } = useAuth()
   useEffect(() => {
@@ -33,10 +33,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="h-3 w-24 rounded bg-gray-100 animate-pulse" />
           </div>
           <div className="flex-1 px-3 py-4 space-y-1">
-            {[80, 64, 72, 64, 72, 56, 68, 60, 72].map((w, i) => (
-              <div key={i} className="flex items-center gap-3 px-2 py-2">
+            {[
+              { id: 'sk-0', w: 80 }, { id: 'sk-1', w: 64 }, { id: 'sk-2', w: 72 },
+              { id: 'sk-3', w: 64 }, { id: 'sk-4', w: 72 }, { id: 'sk-5', w: 56 },
+              { id: 'sk-6', w: 68 }, { id: 'sk-7', w: 60 }, { id: 'sk-8', w: 72 },
+            ].map(({ id, w }) => (
+              <div key={id} className="flex items-center gap-3 px-2 py-2">
                 <div className="h-4 w-4 rounded bg-gray-200 animate-pulse shrink-0" />
-                <div className={`h-3 w-${w === 80 ? '[80px]' : w === 64 ? '[64px]' : w === 72 ? '[72px]' : w === 56 ? '[56px]' : w === 60 ? '[60px]' : '[68px]'} rounded bg-gray-100 animate-pulse`} style={{ width: w }} />
+                <div className="h-3 rounded bg-gray-100 animate-pulse" style={{ width: w }} />
               </div>
             ))}
           </div>

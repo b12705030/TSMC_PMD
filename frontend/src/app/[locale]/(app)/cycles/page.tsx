@@ -30,7 +30,7 @@ function WarnIcon() {
   )
 }
 
-function WarnText({ children }: { children: React.ReactNode }) {
+function WarnText({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
       <WarnIcon />
@@ -45,11 +45,11 @@ function RegionSelect({
   allRegions,
   value,
   onChange,
-}: {
+}: Readonly<{
   allRegions: { id: string; name: string; code: string }[]
   value: string
   onChange: (regionId: string) => void
-}) {
+}>) {
   const tCommon = useTranslations('common')
   return (
     <select
@@ -231,6 +231,43 @@ export default function CyclesPage() {
     finally { setPendingAdvance(null); setManagerQStatus(null) }
   }
 
+  let cyclesContent: React.ReactNode
+  if (isLoading) {
+    cyclesContent = <Loading />
+  } else if (loadError) {
+    cyclesContent = <ErrorBanner message={loadError} />
+  } else if (cycles.length === 0) {
+    cyclesContent = (
+      <EmptyState
+        title={t('emptyTitle')}
+        description={canEdit ? t('emptyDescAdmin') : t('emptyDescUser')}
+        action={canEdit ? <button type="button" data-testid="cycles-add" className="btn-primary" onClick={() => setShowModal(true)}>{t('addCycle')}</button> : undefined}
+      />
+    )
+  } else {
+    cyclesContent = (
+      <div className="space-y-4">
+        {cycles.map((cycle) => {
+          const cycleTemplates = showTemplateTrack ? templates.filter((tt) => tt.cycleId === cycle.id) : null
+          return (
+            <CycleCard
+              key={cycle.id}
+              cycle={cycle}
+              canEdit={canEdit}
+              isAdmin={isAdmin}
+              cycleTemplates={cycleTemplates}
+              nextStatusLabel={nextStatusLabel}
+              onAdvance={canEdit ? () => handleAdvanceClick(cycle) : undefined}
+              onEdit={isAdmin ? () => setEditingCycle(cycle) : undefined}
+              onConfirmAdvance={canEdit ? () => setConfirmingCycle(cycle) : undefined}
+              onPostpone={canEdit ? () => { setPostponingCycle(cycle); setNewReviewStart(cycle.reviewStart.slice(0, 10)) } : undefined}
+            />
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader
@@ -243,34 +280,7 @@ export default function CyclesPage() {
         ) : undefined}
       />
 
-      {isLoading ? (
-        <Loading />
-      ) : loadError ? (
-        <ErrorBanner message={loadError} />
-      ) : cycles.length === 0 ? (
-        <EmptyState
-          title={t('emptyTitle')}
-          description={canEdit ? t('emptyDescAdmin') : t('emptyDescUser')}
-          action={canEdit ? <button type="button" data-testid="cycles-add" className="btn-primary" onClick={() => setShowModal(true)}>{t('addCycle')}</button> : undefined}
-        />
-      ) : (
-        <div className="space-y-4">
-          {cycles.map((cycle) => (
-            <CycleCard
-              key={cycle.id}
-              cycle={cycle}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              cycleTemplates={showTemplateTrack ? templates.filter((tt) => tt.cycleId === cycle.id) : null}
-              nextStatusLabel={nextStatusLabel}
-              onAdvance={canEdit ? () => handleAdvanceClick(cycle) : undefined}
-              onEdit={isAdmin ? () => setEditingCycle(cycle) : undefined}
-              onConfirmAdvance={canEdit ? () => setConfirmingCycle(cycle) : undefined}
-              onPostpone={canEdit ? () => { setPostponingCycle(cycle); setNewReviewStart(cycle.reviewStart.slice(0, 10)) } : undefined}
-            />
-          ))}
-        </div>
-      )}
+      {cyclesContent}
 
       {/* Advance confirmation */}
       <ConfirmDialog
@@ -306,7 +316,7 @@ export default function CyclesPage() {
             <p className="mt-2 text-xs text-amber-600">{t('pendingManagersNote')}</p>
           </div>
         )}
-        {managerQStatus && managerQStatus.pending.length === 0 && (
+        {managerQStatus?.pending.length === 0 && (
           <p className="mt-2 text-xs text-green-700">{t('allManagersDone')}</p>
         )}
       </ConfirmDialog>
@@ -477,11 +487,11 @@ function TemplatePrepTrack({
   cycleTemplates,
   cycleStatus,
   canEdit,
-}: {
+}: Readonly<{
   cycleTemplates: ReviewTemplate[]
   cycleStatus: string
   canEdit: boolean
-}) {
+}>) {
   const t = useTranslations('cycles')
 
   const hasTemplate   = cycleTemplates.length > 0
@@ -490,12 +500,13 @@ function TemplatePrepTrack({
   const reviewStarted = STATUS_ORDER[cycleStatus] >= STATUS_ORDER['EmployeeReview']
   const isAboutToStart = cycleStatus === 'InProgress' && canEdit
 
+  const templateCountWord = cycleTemplates.length === 1 ? 'template' : 'templates'
   const preNodes = [
     {
       label:       t('templateTrack.node0Label'),
       description: t('templateTrack.node0Desc'),
       done:        hasTemplate,
-      detail:      hasTemplate ? `${cycleTemplates.length} ${cycleTemplates.length === 1 ? 'template' : 'templates'}` : '',
+      detail:      hasTemplate ? `${cycleTemplates.length} ${templateCountWord}` : '',
     },
     {
       label:       t('templateTrack.node1Label'),
@@ -524,7 +535,7 @@ function TemplatePrepTrack({
 
       <div className="flex items-start gap-0">
         {preNodes.map((node, i) => (
-          <div key={i} className="flex flex-1 items-start">
+          <div key={node.label} className="flex flex-1 items-start">
             <div className="flex flex-1 flex-col items-center">
               <div className="flex w-full items-center">
                 <div className={[
@@ -587,7 +598,7 @@ function TemplatePrepTrack({
 
 function CycleCard({
   cycle, canEdit, isAdmin, cycleTemplates, nextStatusLabel, onAdvance, onEdit, onConfirmAdvance, onPostpone,
-}: {
+}: Readonly<{
   cycle: PerformanceCycle
   canEdit: boolean
   isAdmin: boolean
@@ -597,7 +608,7 @@ function CycleCard({
   onEdit?: () => void
   onConfirmAdvance?: () => void
   onPostpone?: () => void
-}) {
+}>) {
   const t      = useTranslations('cycles')
   const locale = useLocale()
 
@@ -714,11 +725,11 @@ function CycleCard({
 
 function EditCycleModal({
   cycle, onClose, onSave,
-}: {
+}: Readonly<{
   cycle: PerformanceCycle
   onClose: () => void
   onSave: (id: string, payload: UpdateCyclePayload) => Promise<void>
-}) {
+}>) {
   const t       = useTranslations('cycles')
   const tCommon = useTranslations('common')
 

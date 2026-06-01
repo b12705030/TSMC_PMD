@@ -75,14 +75,17 @@ export default function GoalsPage() {
         />
       ) : (
         <div className="space-y-3">
-          {goals.map((goal) => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              STATUS_CONFIG={STATUS_CONFIG}
-              onDelete={goal.status === 'Draft' ? () => { setDeleteError(''); setDeletingId(goal.id) } : undefined}
-            />
-          ))}
+          {goals.map((goal) => {
+            const onDelete = goal.status === 'Draft' ? () => { setDeleteError(''); setDeletingId(goal.id) } : undefined
+            return (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                STATUS_CONFIG={STATUS_CONFIG}
+                onDelete={onDelete}
+              />
+            )
+          })}
         </div>
       )}
 
@@ -100,7 +103,7 @@ export default function GoalsPage() {
   )
 }
 
-function GoalCard({ goal, STATUS_CONFIG, onDelete }: { goal: Goal; STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }>; onDelete?: () => void }) {
+function GoalCard({ goal, STATUS_CONFIG, onDelete }: Readonly<{ goal: Goal; STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }>; onDelete?: () => void }>) {
   const t = useTranslations('goals')
   const config      = STATUS_CONFIG[goal.status]
   const dueDate     = new Date(goal.dueDate)
@@ -118,6 +121,33 @@ function GoalCard({ goal, STATUS_CONFIG, onDelete }: { goal: Goal; STATUS_CONFIG
   const isToday   = daysLeft === 0
   const isOverdue = dueDate < new Date() && !isToday && goal.status !== 'Completed' && !allMilestonesDone
 
+  let statusBadgeClass: string
+  if (goal.status === 'Completed')       statusBadgeClass = 'bg-green-100 text-green-700'
+  else if (goal.status === 'Approved')        statusBadgeClass = 'bg-indigo-100 text-indigo-700'
+  else if (goal.status === 'PendingApproval') statusBadgeClass = 'bg-yellow-100 text-yellow-700'
+  else if (goal.status === 'Rejected')        statusBadgeClass = 'bg-red-100 text-red-700'
+  else                                        statusBadgeClass = 'bg-gray-100 text-gray-500'
+
+  let deadlineClass: string
+  if (isOverdue)          deadlineClass = 'text-red-500 font-medium'
+  else if (allMilestonesDone) deadlineClass = 'text-green-600 font-medium'
+  else                    deadlineClass = ''
+
+  let deadlineLabel: string
+  if (goal.status === 'Completed') {
+    deadlineLabel = t('deadline.completed')
+  } else if (allMilestonesDone) {
+    deadlineLabel = `里程碑已全部完成 · ${new Date(lastCompletedAt!).toLocaleDateString()}`
+  } else if (isOverdue) {
+    deadlineLabel = t('deadline.overdue', { days: Math.abs(daysLeft) })
+  } else if (isToday) {
+    deadlineLabel = '今天截止'
+  } else if (daysLeft <= 7) {
+    deadlineLabel = t('deadline.remaining', { days: daysLeft })
+  } else {
+    deadlineLabel = t('deadline.due', { date: dueDate.toLocaleDateString() })
+  }
+
   return (
     <div className="relative">
       <Link href={`/goals/${goal.id}`} className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
@@ -126,13 +156,7 @@ function GoalCard({ goal, STATUS_CONFIG, onDelete }: { goal: Goal; STATUS_CONFIG
           <h3 className="font-semibold text-gray-900 truncate">{goal.title}</h3>
           <p className="mt-0.5 text-sm text-gray-500 line-clamp-1">{goal.description}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium
-          ${goal.status === 'Completed'       ? 'bg-green-100 text-green-700'
-          : goal.status === 'Approved'        ? 'bg-indigo-100 text-indigo-700'
-          : goal.status === 'PendingApproval' ? 'bg-yellow-100 text-yellow-700'
-          : goal.status === 'Rejected'        ? 'bg-red-100 text-red-700'
-          : 'bg-gray-100 text-gray-500'}`}
-        >
+        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass}`}>
           {config.label}
         </span>
       </div>
@@ -147,19 +171,8 @@ function GoalCard({ goal, STATUS_CONFIG, onDelete }: { goal: Goal; STATUS_CONFIG
       </div>
 
       <div className="flex items-center gap-4 text-xs text-gray-400">
-        <span className={isOverdue ? 'text-red-500 font-medium' : allMilestonesDone ? 'text-green-600 font-medium' : ''}>
-          {goal.status === 'Completed'
-            ? t('deadline.completed')
-            : allMilestonesDone
-            ? `里程碑已全部完成 · ${new Date(lastCompletedAt!).toLocaleDateString()}`
-            : isOverdue
-            ? t('deadline.overdue', { days: Math.abs(daysLeft) })
-            : isToday
-            ? '今天截止'
-            : daysLeft <= 7
-            ? t('deadline.remaining', { days: daysLeft })
-            : t('deadline.due', { date: dueDate.toLocaleDateString() })
-          }
+        <span className={deadlineClass}>
+          {deadlineLabel}
         </span>
         <span>{goal.type === 'Personal' ? t('type.Personal') : t('type.Team')}</span>
         {goal.progressUpdates.length > 0 && (
@@ -188,7 +201,7 @@ const STAT_ICONS = {
   complete: <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>,
 }
 
-function StatChip({ icon, value, label }: { icon: keyof typeof STAT_ICONS; value: number; label: string }) {
+function StatChip({ icon, value, label }: Readonly<{ icon: keyof typeof STAT_ICONS; value: number; label: string }>) {
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
       {STAT_ICONS[icon]}

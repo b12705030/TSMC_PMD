@@ -10,7 +10,7 @@ import { useAuth } from '@/modules/auth/hooks/useAuth'
 import { api } from '@/lib/api'
 import type { GoalMilestone, GoalStatus } from '@/types'
 
-export default function GoalDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GoalDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = use(params)
   const t = useTranslations('goals')
   const tCommon = useTranslations('common')

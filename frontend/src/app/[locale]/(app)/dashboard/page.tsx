@@ -29,7 +29,9 @@ const STATUS_ORDER: Record<string, number> = {
 
 type PhaseState = 'done' | 'active' | 'upcoming' | 'overdue'
 
-function getPhaseState(cycle: PerformanceCycle, phase: 'goal' | 'review' | 'publish'): PhaseState {
+type PhaseInput = 'goal' | 'review' | 'publish'
+
+function getPhaseState(cycle: PerformanceCycle, phase: PhaseInput): PhaseState {
   const order = STATUS_ORDER[cycle.status] ?? 0
   const today = new Date(); today.setHours(0, 0, 0, 0)
 
@@ -49,7 +51,7 @@ function getPhaseState(cycle: PerformanceCycle, phase: 'goal' | 'review' | 'publ
   return 'upcoming'
 }
 
-const PHASE_STYLE: Record<'goal' | 'review' | 'publish', Record<PhaseState, string>> = {
+const PHASE_STYLE: Record<PhaseInput, Record<PhaseState, string>> = {
   goal: {
     active:   'bg-blue-400',
     done:     'bg-blue-200',
@@ -70,7 +72,7 @@ const PHASE_STYLE: Record<'goal' | 'review' | 'publish', Record<PhaseState, stri
   },
 }
 
-const PHASE_TEXT: Record<'goal' | 'review' | 'publish', Record<PhaseState, string>> = {
+const PHASE_TEXT: Record<PhaseInput, Record<PhaseState, string>> = {
   goal:    { active: 'text-blue-900',   done: 'text-blue-400',   upcoming: 'text-blue-300',   overdue: 'text-amber-700' },
   review:  { active: 'text-violet-900', done: 'text-violet-400', upcoming: 'text-violet-300', overdue: 'text-amber-700' },
   publish: { active: 'text-emerald-900',done: 'text-emerald-500',upcoming: 'text-emerald-300',overdue: 'text-emerald-300' },
@@ -81,7 +83,7 @@ const STRIPE_STYLE: React.CSSProperties = {
   backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(251,146,60,0.35) 4px, rgba(251,146,60,0.35) 8px)',
 }
 
-function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
+function CycleTimeline({ cycles }: Readonly<{ cycles: PerformanceCycle[] }>) {
   const t      = useTranslations('dashboard')
   const locale = useLocale()
 
@@ -152,20 +154,30 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
           <div style={{ minWidth: 560 }}>
             {/* Month ruler */}
             <div className="relative h-7 border-b border-gray-100 mb-1">
-              {ticks.map((tick, i) => (
-                <span
-                  key={i}
-                  className="absolute bottom-1 whitespace-nowrap text-[10px] text-gray-400"
-                  style={{
-                    left: `${tick.pct.toFixed(2)}%`,
-                    transform: i === 0 ? 'translateX(0)' : i === ticks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
-                  }}
-                >
-                  {tick.label}
-                </span>
-              ))}
-              {ticks.map((tick, i) => (
-                <div key={`g${i}`} className="absolute top-0 bottom-0 border-l border-gray-100" style={{ left: `${tick.pct.toFixed(2)}%` }} />
+              {ticks.map((tick, i) => {
+                let tickTransform: string
+                if (i === 0) {
+                  tickTransform = 'translateX(0)'
+                } else if (i === ticks.length - 1) {
+                  tickTransform = 'translateX(-100%)'
+                } else {
+                  tickTransform = 'translateX(-50%)'
+                }
+                return (
+                  <span
+                    key={tick.label}
+                    className="absolute bottom-1 whitespace-nowrap text-[10px] text-gray-400"
+                    style={{
+                      left: `${tick.pct.toFixed(2)}%`,
+                      transform: tickTransform,
+                    }}
+                  >
+                    {tick.label}
+                  </span>
+                )
+              })}
+              {ticks.map((tick) => (
+                <div key={`g-${tick.label}`} className="absolute top-0 bottom-0 border-l border-gray-100" style={{ left: `${tick.pct.toFixed(2)}%` }} />
               ))}
             </div>
 
@@ -182,6 +194,14 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                     const goalState   = getPhaseState(cycle, 'goal')
                     const reviewState = getPhaseState(cycle, 'review')
                     const pubState    = getPhaseState(cycle, 'publish')
+                    let goalBarLabel: string
+                    if (goalState === 'overdue') {
+                      goalBarLabel = '目標期未推進'
+                    } else if (cycle.status === 'InProgress') {
+                      goalBarLabel = '目標追蹤'
+                    } else {
+                      goalBarLabel = t('timeline.goalSettingBar')
+                    }
                     return (
                       <div className="relative h-8 rounded bg-gray-50">
                         {/* Goal setting bar */}
@@ -195,11 +215,7 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
                           title={t('timeline.goalRange', { start: fmtDate(cycle.goalSettingStart, locale), end: fmtDate(dayBefore(cycle.reviewStart), locale) })}
                         >
                           <span className={`px-1.5 text-[10px] font-medium whitespace-nowrap ${PHASE_TEXT.goal[goalState]}`}>
-                            {goalState === 'overdue'
-                              ? '目標期未推進'
-                              : cycle.status === 'InProgress'
-                                ? '目標追蹤'
-                                : t('timeline.goalSettingBar')}
+                            {goalBarLabel}
                           </span>
                         </div>
 
@@ -279,7 +295,7 @@ function CycleTimeline({ cycles }: { cycles: PerformanceCycle[] }) {
 
 // ─── Active Cycles Detail ─────────────────────────────────────────────────────
 
-function ActiveCycles({ cycles }: { cycles: PerformanceCycle[] }) {
+function ActiveCycles({ cycles }: Readonly<{ cycles: PerformanceCycle[] }>) {
   const t = useTranslations('dashboard')
   const active = cycles.filter((c) => c.status !== 'Completed')
   if (active.length === 0) return null
@@ -341,6 +357,60 @@ function EmployeeSection() {
 
   const hasActionItems = (!gl && goalStats.rejected > 0) || (!rl && pendingReviews.length > 0)
 
+  let goalsContent: React.ReactNode
+  if (gl) {
+    goalsContent = <Loading />
+  } else if (glErr) {
+    goalsContent = <ErrorBanner message={glErr} />
+  } else if (goalStats.total === 0) {
+    goalsContent = (
+      <div className="card py-6 text-center">
+        <p className="text-sm text-gray-500">{t('goals.empty')}</p>
+        <Link href="/goals" className="btn-primary mt-3 inline-block text-sm">{t('goals.setGoal')}</Link>
+      </div>
+    )
+  } else {
+    goalsContent = (
+      <div className="grid grid-cols-4 gap-1.5">
+        {[
+          { label: t('goals.draft'),           count: goalStats.draft,            color: 'bg-gray-100 text-gray-600' },
+          { label: t('goals.pendingApproval'), count: goalStats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
+          { label: t('goals.approved'),        count: goalStats.approved,         color: 'bg-green-100 text-green-700' },
+          { label: t('goals.completed'),       count: goalStats.completed,        color: 'bg-indigo-100 text-indigo-700' },
+          ...(goalStats.rejected > 0 ? [{ label: t('goals.rejected'), count: goalStats.rejected, color: 'bg-red-100 text-red-700' }] : [] as { label: string; count: number; color: string }[]),
+        ].map(({ label, count, color }) => (
+          <Link key={label} href="/goals" className={`rounded-lg px-2 py-2 text-center ${color} block hover:opacity-80`}>
+            <p className="text-lg font-bold leading-tight">{count}</p>
+            <p className="mt-0.5 text-[10px] font-medium leading-tight">{label}</p>
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
+  let reviewsContent: React.ReactNode
+  if (rl) {
+    reviewsContent = <Loading />
+  } else if (rlErr) {
+    reviewsContent = <ErrorBanner message={rlErr} />
+  } else if (reviews.length === 0) {
+    reviewsContent = <p className="text-muted">{t('myReviews.empty')}</p>
+  } else {
+    reviewsContent = (
+      <div className="space-y-2">
+        {reviews.slice(0, 4).map((r) => (
+          <Link key={r.id} href={`/reviews/${r.id}`} className="card-sm flex items-center justify-between hover:bg-gray-50">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{r.cycle.name}</p>
+              <p className="text-xs text-gray-400">{r.template.name}</p>
+            </div>
+            <StatusBadge status={r.status} />
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <>
       {hasActionItems && (
@@ -385,31 +455,7 @@ function EmployeeSection() {
             <h2 className="section-heading mb-0">{t('goals.title')}</h2>
             <Link href="/goals" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
-          {gl ? (
-            <Loading />
-          ) : glErr ? (
-            <ErrorBanner message={glErr} />
-          ) : goalStats.total === 0 ? (
-            <div className="card py-6 text-center">
-              <p className="text-sm text-gray-500">{t('goals.empty')}</p>
-              <Link href="/goals" className="btn-primary mt-3 inline-block text-sm">{t('goals.setGoal')}</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-1.5">
-              {[
-                { label: t('goals.draft'),           count: goalStats.draft,            color: 'bg-gray-100 text-gray-600' },
-                { label: t('goals.pendingApproval'), count: goalStats.pendingApproval,  color: 'bg-yellow-100 text-yellow-700' },
-                { label: t('goals.approved'),        count: goalStats.approved,         color: 'bg-green-100 text-green-700' },
-                { label: t('goals.completed'),       count: goalStats.completed,        color: 'bg-indigo-100 text-indigo-700' },
-                ...(goalStats.rejected > 0 ? [{ label: t('goals.rejected'), count: goalStats.rejected, color: 'bg-red-100 text-red-700' }] : []),
-              ].map(({ label, count, color }) => (
-                <Link key={label} href="/goals" className={`rounded-lg px-2 py-2 text-center ${color} block hover:opacity-80`}>
-                  <p className="text-lg font-bold leading-tight">{count}</p>
-                  <p className="mt-0.5 text-[10px] font-medium leading-tight">{label}</p>
-                </Link>
-              ))}
-            </div>
-          )}
+          {goalsContent}
         </section>
 
         {/* Reviews */}
@@ -418,25 +464,7 @@ function EmployeeSection() {
             <h2 className="section-heading mb-0">{t('myReviews.title')}</h2>
             <Link href="/reviews" className="btn-link text-sm">{t('viewAll')}</Link>
           </div>
-          {rl ? (
-            <Loading />
-          ) : rlErr ? (
-            <ErrorBanner message={rlErr} />
-          ) : reviews.length === 0 ? (
-            <p className="text-muted">{t('myReviews.empty')}</p>
-          ) : (
-            <div className="space-y-2">
-              {reviews.slice(0, 4).map((r) => (
-                <Link key={r.id} href={`/reviews/${r.id}`} className="card-sm flex items-center justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{r.cycle.name}</p>
-                    <p className="text-xs text-gray-400">{r.template.name}</p>
-                  </div>
-                  <StatusBadge status={r.status} />
-                </Link>
-              ))}
-            </div>
-          )}
+          {reviewsContent}
         </section>
       </div>
     </>
@@ -445,7 +473,7 @@ function EmployeeSection() {
 
 // ─── Supervisor / Manager Section ─────────────────────────────────────────────
 
-function TeamReviewSection({ role }: { role: Role }) {
+function TeamReviewSection({ role }: Readonly<{ role: Role }>) {
   const t = useTranslations('dashboard')
   const { reviews, isLoading, error } = useTeamReviews()
 
@@ -453,6 +481,35 @@ function TeamReviewSection({ role }: { role: Role }) {
   const pendingMgr = reviews.filter((r) => r.status === 'PendingManagerApproval')
   const actionItems = role === 'Manager' ? pendingMgr : pendingSup
   const actionLabel = role === 'Manager' ? t('teamReviews.actionLabelManager') : t('teamReviews.actionLabelOther')
+
+  let teamReviewsContent: React.ReactNode
+  if (isLoading) {
+    teamReviewsContent = <Loading />
+  } else if (error) {
+    teamReviewsContent = <ErrorBanner message={error} />
+  } else if (reviews.length === 0) {
+    teamReviewsContent = (
+      <div className="card py-5 text-center">
+        <p className="text-sm text-gray-500">{t('teamReviews.empty')}</p>
+        <p className="mt-1 text-xs text-gray-400">{t('teamReviews.emptyDesc')}</p>
+      </div>
+    )
+  } else {
+    teamReviewsContent = (
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: t('teamReviews.pendingEmployee'),   count: reviews.filter((r) => r.status === 'PendingEmployeeSubmit').length,   color: 'bg-blue-100 text-blue-700' },
+          { label: t('teamReviews.pendingSupervisor'), count: reviews.filter((r) => r.status === 'PendingSupervisorReview').length,  color: 'bg-yellow-100 text-yellow-700' },
+          { label: t('teamReviews.pendingCalibration'),count: reviews.filter((r) => r.status === 'PendingManagerApproval').length,   color: 'bg-purple-100 text-purple-700' },
+        ].map(({ label, count, color }) => (
+          <Link key={label} href="/reviews/team" className={`rounded-lg p-3 text-center ${color} block hover:opacity-80`}>
+            <p className="text-2xl font-bold">{count}</p>
+            <p className="mt-0.5 text-xs font-medium">{label}</p>
+          </Link>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <>
@@ -477,29 +534,7 @@ function TeamReviewSection({ role }: { role: Role }) {
           <h2 className="section-heading mb-0">{t('teamReviews.title')}</h2>
           <Link href="/reviews/team" className="btn-link text-sm">{t('viewAll')}</Link>
         </div>
-        {isLoading ? (
-          <Loading />
-        ) : error ? (
-          <ErrorBanner message={error} />
-        ) : reviews.length === 0 ? (
-          <div className="card py-5 text-center">
-            <p className="text-sm text-gray-500">{t('teamReviews.empty')}</p>
-            <p className="mt-1 text-xs text-gray-400">{t('teamReviews.emptyDesc')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: t('teamReviews.pendingEmployee'),   count: reviews.filter((r) => r.status === 'PendingEmployeeSubmit').length,   color: 'bg-blue-100 text-blue-700' },
-              { label: t('teamReviews.pendingSupervisor'), count: reviews.filter((r) => r.status === 'PendingSupervisorReview').length,  color: 'bg-yellow-100 text-yellow-700' },
-              { label: t('teamReviews.pendingCalibration'),count: reviews.filter((r) => r.status === 'PendingManagerApproval').length,   color: 'bg-purple-100 text-purple-700' },
-            ].map(({ label, count, color }) => (
-              <Link key={label} href="/reviews/team" className={`rounded-lg p-3 text-center ${color} block hover:opacity-80`}>
-                <p className="text-2xl font-bold">{count}</p>
-                <p className="mt-0.5 text-xs font-medium">{label}</p>
-              </Link>
-            ))}
-          </div>
-        )}
+        {teamReviewsContent}
       </section>
 
       {role === 'Manager' && (
@@ -559,7 +594,7 @@ function GradeDistributionChart() {
 
 // ─── HR Section ────────────────────────────────────────────────────────────────
 
-function HRSection({ cycles }: { cycles: PerformanceCycle[] }) {
+function HRSection({ cycles }: Readonly<{ cycles: PerformanceCycle[] }>) {
   const t = useTranslations('dashboard')
   const { templates, isLoading, error: tmplErr } = useTemplates()
 
@@ -576,6 +611,26 @@ function HRSection({ cycles }: { cycles: PerformanceCycle[] }) {
   )
 
   const hasActions = (!isLoading && draftCount > 0) || needsAdvance.length > 0
+
+  let templatesContent: React.ReactNode
+  if (isLoading) {
+    templatesContent = <Loading />
+  } else if (tmplErr) {
+    templatesContent = <ErrorBanner message={tmplErr} />
+  } else {
+    templatesContent = (
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/templates" className="block rounded-lg bg-orange-50 p-4 text-center hover:opacity-80">
+          <p className="text-2xl font-bold text-orange-700">{draftCount}</p>
+          <p className="mt-0.5 text-xs font-medium text-orange-600">{t('templates.draft')}</p>
+        </Link>
+        <Link href="/templates" className="block rounded-lg bg-green-50 p-4 text-center hover:opacity-80">
+          <p className="text-2xl font-bold text-green-700">{publishedCount}</p>
+          <p className="mt-0.5 text-xs font-medium text-green-600">{t('templates.published')}</p>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -628,22 +683,7 @@ function HRSection({ cycles }: { cycles: PerformanceCycle[] }) {
           <h2 className="section-heading mb-0">{t('templates.title')}</h2>
           <Link href="/templates" className="btn-link text-sm">{t('manageTemplates')}</Link>
         </div>
-        {isLoading ? (
-          <Loading />
-        ) : tmplErr ? (
-          <ErrorBanner message={tmplErr} />
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <Link href="/templates" className="block rounded-lg bg-orange-50 p-4 text-center hover:opacity-80">
-              <p className="text-2xl font-bold text-orange-700">{draftCount}</p>
-              <p className="mt-0.5 text-xs font-medium text-orange-600">{t('templates.draft')}</p>
-            </Link>
-            <Link href="/templates" className="block rounded-lg bg-green-50 p-4 text-center hover:opacity-80">
-              <p className="text-2xl font-bold text-green-700">{publishedCount}</p>
-              <p className="mt-0.5 text-xs font-medium text-green-600">{t('templates.published')}</p>
-            </Link>
-          </div>
-        )}
+        {templatesContent}
       </section>
 
       <section className="mb-8">
@@ -667,9 +707,9 @@ const FLOW_STEP_KEY: Record<Role, string> = {
   Admin:      'flowGuide.stepsAdmin',
 }
 
-function FlowGuide({ role }: { role: Role }) {
+function FlowGuide({ role }: Readonly<{ role: Role }>) {
   const t = useTranslations('dashboard')
-  const steps = t.raw(FLOW_STEP_KEY[role] as Parameters<typeof t.raw>[0]) as string[]
+  const steps = t.raw(FLOW_STEP_KEY[role]) as string[]
 
   return (
     <section className="mb-6">
@@ -679,7 +719,7 @@ function FlowGuide({ role }: { role: Role }) {
         </summary>
         <ol className="space-y-2 px-5 pb-4 pt-1">
           {steps.map((step, i) => (
-            <li key={i} className="flex gap-3 text-sm text-gray-600">
+            <li key={step} className="flex gap-3 text-sm text-gray-600">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
                 {i + 1}
               </span>
@@ -705,6 +745,20 @@ export default function DashboardPage() {
   const isSupervisorOrMgr = user.role === 'Supervisor' || user.role === 'Manager'
   const isHROrAdmin       = user.role === 'RegionalHR' || user.role === 'Admin' || user.role === 'GlobalHR'
 
+  let cyclesContent: React.ReactNode
+  if (cyclesLoading) {
+    cyclesContent = <Loading />
+  } else if (cyclesError) {
+    cyclesContent = <ErrorBanner message={cyclesError} />
+  } else {
+    cyclesContent = (
+      <>
+        <CycleTimeline cycles={cycles} />
+        <ActiveCycles  cycles={cycles} />
+      </>
+    )
+  }
+
   return (
     <div>
       <PageHeader title={t('pageTitle')} />
@@ -715,16 +769,7 @@ export default function DashboardPage() {
       {isSupervisorOrMgr && <TeamReviewSection role={user.role} />}
       {isHROrAdmin       && <HRSection cycles={cycles} />}
 
-      {cyclesLoading ? (
-        <Loading />
-      ) : cyclesError ? (
-        <ErrorBanner message={cyclesError} />
-      ) : (
-        <>
-          <CycleTimeline cycles={cycles} />
-          <ActiveCycles  cycles={cycles} />
-        </>
-      )}
+      {cyclesContent}
     </div>
   )
 }

@@ -80,29 +80,33 @@ interface QuestionFieldProps {
   readonly?: boolean
 }
 
-function QuestionField({ q, value, onChange, readonly = false }: QuestionFieldProps) {
+function QuestionField({ q, value, onChange, readonly = false }: Readonly<QuestionFieldProps>) {
   const t = useTranslations('reviews')
 
   if (q.questionType === 'Rating') {
     return (
       <div className="flex gap-2">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            disabled={readonly}
-            onClick={() => !readonly && onChange(String(n))}
-            className={`h-9 w-9 rounded-full border-2 text-sm font-semibold transition-colors ${
-              value === String(n)
-                ? 'border-indigo-600 bg-indigo-600 text-white'
-                : readonly
-                ? 'border-gray-200 text-gray-400'
-                : 'border-gray-200 text-gray-500 hover:border-indigo-400'
-            }`}
-          >
-            {n}
-          </button>
-        ))}
+        {[1, 2, 3, 4, 5].map((n) => {
+          let btnClass: string
+          if (value === String(n)) {
+            btnClass = 'border-indigo-600 bg-indigo-600 text-white'
+          } else if (readonly) {
+            btnClass = 'border-gray-200 text-gray-400'
+          } else {
+            btnClass = 'border-gray-200 text-gray-500 hover:border-indigo-400'
+          }
+          return (
+            <button
+              key={n}
+              type="button"
+              disabled={readonly}
+              onClick={() => !readonly && onChange(String(n))}
+              className={`h-9 w-9 rounded-full border-2 text-sm font-semibold transition-colors ${btnClass}`}
+            >
+              {n}
+            </button>
+          )
+        })}
       </div>
     )
   }
@@ -159,13 +163,13 @@ const STATUS_LABEL: Record<GoalStatus, string> = {
   Rejected:        '已退回',
 }
 
-function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwner }: {
+function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwner }: Readonly<{
   employeeId: string
   cycleId: string
   goalSettingStart: string
   reviewEnd: string
   isOwner: boolean
-}) {
+}>) {
   const [goals, setGoals]     = useState<Goal[]>([])
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
@@ -231,6 +235,8 @@ function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwne
                 const done  = g.milestones.filter((m) => m.completedAt).length
                 const total = g.milestones.length
                 const pct   = total > 0 ? Math.round((done / total) * 100) : null
+                const statusColor = STATUS_COLOR[g.status]
+                const statusLabel = STATUS_LABEL[g.status] ?? g.status
                 return (
                   <div key={g.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2.5">
                     <div className="min-w-0 flex-1">
@@ -244,8 +250,8 @@ function GoalsSummary({ employeeId, cycleId, goalSettingStart, reviewEnd, isOwne
                         </div>
                       )}
                     </div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[g.status as GoalStatus]}`}>
-                      {STATUS_LABEL[g.status as GoalStatus] ?? g.status}
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>
+                      {statusLabel}
                     </span>
                   </div>
                 )
