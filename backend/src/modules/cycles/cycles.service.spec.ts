@@ -88,9 +88,44 @@ describe('CyclesService', () => {
     }, user(Role.Admin))).rejects.toThrow(BadRequestException)
   })
 
+  it('creates cycles in the requested region for global users', async () => {
+    mockPrisma.performanceCycle.create.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-2' })
+
+    const result = await service.createCycle({
+      name: 'Q1',
+      type: 'Quarterly',
+      regionId: 'region-2',
+      goalSettingStart: '2026-01-01',
+      goalSettingEnd: '2026-01-31',
+      reviewStart: '2026-02-01',
+      reviewEnd: '2026-02-28',
+    }, user(Role.Admin, { regionId: 'region-1' }))
+
+    expect(result.regionId).toBe('region-2')
+    expect(mockPrisma.performanceCycle.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ regionId: 'region-2' }),
+    }))
+  })
+
   it('only lets Admin edit cycles', async () => {
     await expect(service.updateCycle('cycle-1', { name: 'New' }, user(Role.RegionalHR)))
       .rejects.toThrow(ForbiddenException)
+  })
+
+  it('updates editable goal-setting cycles', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', status: CycleStatus.GoalSetting })
+    mockPrisma.performanceCycle.update.mockResolvedValueOnce({ id: 'cycle-1', name: 'Updated' })
+
+    const result = await service.updateCycle('cycle-1', {
+      name: 'Updated',
+      reviewStart: '2026-03-01',
+    }, user(Role.Admin))
+
+    expect(result.name).toBe('Updated')
+    expect(mockPrisma.performanceCycle.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'cycle-1' },
+      data:  { name: 'Updated', reviewStart: new Date('2026-03-01') },
+    }))
   })
 
   it('requires a published template before advancing into employee review', async () => {
@@ -133,6 +168,41 @@ describe('CyclesService', () => {
     await expect(service.confirmAdvance('cycle-1', user(Role.RegionalHR))).rejects.toThrow(BadRequestException)
   })
 
+  it('confirms an in-progress cycle and notifies the HR user', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1',
+      name: 'Cycle',
+      regionId: 'region-1',
+      status: CycleStatus.InProgress,
+      advanceConfirmed: false,
+      reviewStart: new Date('2026-02-01'),
+    })
+    mockPrisma.performanceCycle.update.mockResolvedValueOnce({ id: 'cycle-1', advanceConfirmed: true })
+
+    const result = await service.confirmAdvance('cycle-1', user(Role.RegionalHR))
+
+    expect(result.advanceConfirmed).toBe(true)
+    expect(mockPrisma.performanceCycle.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ advanceConfirmed: true, advanceConfirmedAt: expect.any(Date) }),
+    }))
+    expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['user-1'], expect.objectContaining({
+      type: 'CycleAdvanceReminder',
+      cycleId: 'cycle-1',
+    }))
+  })
+
+  it('blocks duplicate advance confirmations', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1',
+      regionId: 'region-1',
+      status: CycleStatus.InProgress,
+      advanceConfirmed: true,
+    })
+
+    await expect(service.confirmAdvance('cycle-1', user(Role.RegionalHR))).rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
   it('postpones review start and resets advance confirmation', async () => {
     mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
       id: 'cycle-1',
@@ -147,6 +217,27 @@ describe('CyclesService', () => {
 
     expect(result.advanceConfirmed).toBe(false)
     expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['emp-1'], expect.objectContaining({ type: 'CyclePostponed' }))
+  })
+
+  it('rejects postponing review start to today or the past', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1',
+      regionId: 'region-1',
+      status: CycleStatus.InProgress,
+    })
+
+    await expect(service.postpone('cycle-1', { newReviewStart: '2000-01-01' }, user(Role.RegionalHR)))
+      .rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
+  it('blocks completing cycles while manager approvals are pending', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1', regionId: 'region-1', status: CycleStatus.Calibration,
+    })
+    mockPrisma.performanceReview.count.mockResolvedValueOnce(1)
+
+    await expect(service.advanceStatus('cycle-1', user(Role.RegionalHR))).rejects.toThrow(BadRequestException)
   })
 
   it('returns manager questionnaire completion status', async () => {

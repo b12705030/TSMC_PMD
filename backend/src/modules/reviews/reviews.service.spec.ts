@@ -61,6 +61,32 @@ describe('ReviewsService', () => {
     await expect(service.getTeamReviews(user(Role.Employee))).rejects.toThrow(ForbiddenException)
   })
 
+  it('scopes cycle reviews by region for RegionalHR', async () => {
+    mockPrisma.performanceReview.findMany.mockResolvedValueOnce([])
+
+    await service.getCycleReviews('cycle-1', user(Role.RegionalHR, { regionId: 'region-1' }))
+
+    expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { cycleId: 'cycle-1', employee: { regionId: 'region-1' } },
+    }))
+  })
+
+  it('scopes cycle reviews to manager reporting chain', async () => {
+    mockPrisma.performanceReview.findMany.mockResolvedValueOnce([])
+
+    await service.getCycleReviews('cycle-1', user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        cycleId: 'cycle-1',
+        OR: [
+          { employee: { supervisor: { managerId: 'mgr-1' } } },
+          { employee: { managerId: 'mgr-1', supervisorId: null } },
+        ],
+      },
+    }))
+  })
+
   it('saves employee answers only while pending employee submit', async () => {
     mockPrisma.performanceReview.findUnique.mockResolvedValueOnce({
       id: 'review-1', employeeId: 'emp-1', status: ReviewStatus.PendingEmployeeSubmit,
@@ -146,6 +172,46 @@ describe('ReviewsService', () => {
     expect(result.grade).toBe('S_Plus')
     expect(mockPrisma.performanceReview.update).toHaveBeenCalledWith(expect.objectContaining({
       data: { grade: 'S_Plus', rank: 1 },
+    }))
+  })
+
+  it('returns employee reviews for direct manager reports', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 'emp-1',
+      regionId: 'region-1',
+      managerId: 'mgr-1',
+      supervisorId: null,
+      supervisor: null,
+    })
+    mockPrisma.performanceReview.findMany.mockResolvedValueOnce([{
+      id: 'review-1',
+      template: { questions: [question] },
+      employee: { departmentId: 'dept-1' },
+      supervisor: null,
+    }])
+
+    const result = await service.getReviewsByEmployee('emp-1', user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(result).toHaveLength(1)
+    expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { employeeId: 'emp-1' },
+    }))
+  })
+
+  it('publishes graded reviews and notifies employees', async () => {
+    mockPrisma.performanceReview.findMany
+      .mockResolvedValueOnce([{ id: 'review-1', grade: 'S' }])
+      .mockResolvedValueOnce([{ employeeId: 'emp-1' }])
+    mockPrisma.performanceReview.updateMany.mockResolvedValueOnce({ count: 1 })
+
+    await service.publishAll('cycle-1', user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(mockPrisma.performanceReview.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['review-1'] } },
+      data:  { status: ReviewStatus.Published, publishedAt: expect.any(Date) },
+    })
+    expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['emp-1'], expect.objectContaining({
+      type: 'ReviewPublished',
     }))
   })
 

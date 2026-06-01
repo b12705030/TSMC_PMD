@@ -3,38 +3,45 @@ import { GoalsService } from './goals.service'
 import { Role } from '../../common/enums/role.enum'
 import type { SessionUser } from '../../common/types/request.types'
 
-const mockPrisma = {
-  goal: {
-    findMany:   jest.fn(),
-    findUnique: jest.fn(),
-    create:     jest.fn(),
-    update:     jest.fn(),
-    delete:     jest.fn(),
-  },
-  user: {
-    findMany:   jest.fn(),
-    findUnique: jest.fn(),
-  },
-  performanceCycle: {
-    findUnique: jest.fn(),
-  },
-  progressUpdate: {
-    create: jest.fn(),
-  },
-  goalMilestone: {
-    findFirst:  jest.fn(),
-    findUnique: jest.fn(),
-    create:     jest.fn(),
-    update:     jest.fn(),
-    updateMany: jest.fn(),
-    delete:     jest.fn(),
-  },
-  $transaction: jest.fn(),
+function createMockPrisma() {
+  return {
+    goal: {
+      findMany:   jest.fn(),
+      findUnique: jest.fn(),
+      create:     jest.fn(),
+      update:     jest.fn(),
+      delete:     jest.fn(),
+    },
+    user: {
+      findMany:   jest.fn(),
+      findUnique: jest.fn(),
+    },
+    performanceCycle: {
+      findUnique: jest.fn(),
+    },
+    progressUpdate: {
+      create: jest.fn(),
+    },
+    goalMilestone: {
+      findFirst:  jest.fn(),
+      findUnique: jest.fn(),
+      create:     jest.fn(),
+      update:     jest.fn(),
+      updateMany: jest.fn(),
+      delete:     jest.fn(),
+    },
+    $transaction: jest.fn(),
+  }
 }
 
-const mockNotifications = {
-  createForUsers: jest.fn().mockResolvedValue(undefined),
+function createMockNotifications() {
+  return {
+    createForUsers: jest.fn().mockResolvedValue(undefined),
+  }
 }
+
+let mockPrisma: ReturnType<typeof createMockPrisma>
+let mockNotifications: ReturnType<typeof createMockNotifications>
 
 function user(role: Role, overrides: Partial<SessionUser> = {}): SessionUser {
   return {
@@ -57,7 +64,8 @@ describe('GoalsService', () => {
   let service: GoalsService
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockPrisma = createMockPrisma()
+    mockNotifications = createMockNotifications()
     mockPrisma.$transaction.mockResolvedValue(undefined)
     service = new GoalsService(mockPrisma as any, mockNotifications as any)
   })
@@ -79,6 +87,37 @@ describe('GoalsService', () => {
     expect(result.status).toBe('Draft')
     expect(mockPrisma.goal.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ userId: 'user-1', cycleId: 'cycle-1' }),
+    }))
+  })
+
+  it('lists my goals ordered by newest first', async () => {
+    mockPrisma.goal.findMany.mockResolvedValueOnce([{ id: 'goal-1' }])
+
+    const result = await service.getMyGoals('user-1')
+
+    expect(result).toEqual([{ id: 'goal-1' }])
+    expect(mockPrisma.goal.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where:   { userId: 'user-1' },
+      orderBy: { createdAt: 'desc' },
+    }))
+  })
+
+  it('creates an unlinked personal goal with null cycleId', async () => {
+    mockPrisma.goal.create.mockResolvedValueOnce({ id: 'goal-1', cycleId: null, type: 'Personal' })
+
+    const result = await service.createGoal(user(Role.Employee), {
+      title:       'Improve quality',
+      description: 'desc',
+      metric:      'metric',
+      targetValue: '100',
+      relevance:   'rel',
+      dueDate:     '2026-12-31',
+    })
+
+    expect(result.cycleId).toBeNull()
+    expect(mockPrisma.performanceCycle.findUnique).not.toHaveBeenCalled()
+    expect(mockPrisma.goal.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ cycleId: null, type: 'Personal' }),
     }))
   })
 
@@ -172,6 +211,24 @@ describe('GoalsService', () => {
 
     await expect(service.getGoalsByEmployee('emp-1', user(Role.RegionalHR, { regionId: 'region-1' })))
       .rejects.toThrow(ForbiddenException)
+  })
+
+  it('allows managers to read goals for reports via supervisors', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 'emp-1',
+      regionId: 'region-1',
+      managerId: null,
+      supervisorId: 'sup-1',
+      supervisor: { managerId: 'mgr-1' },
+    })
+    mockPrisma.goal.findMany.mockResolvedValueOnce([{ id: 'goal-1' }])
+
+    const result = await service.getGoalsByEmployee('emp-1', user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(result).toEqual([{ id: 'goal-1' }])
+    expect(mockPrisma.goal.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 'emp-1', status: { not: 'Draft' } },
+    }))
   })
 
   it('adds milestones after the latest order index', async () => {
