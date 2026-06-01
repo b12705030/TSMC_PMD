@@ -77,7 +77,8 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
   const dueDate    = new Date(goal.dueDate)
   const daysLeft   = Math.ceil((dueDate.getTime() - Date.now()) / 86400000)
   const isToday    = daysLeft === 0
-  const isOverdue  = dueDate < new Date() && !isToday && goal.status !== 'Completed'
+  const allMilestonesDone = totalCount > 0 && doneCount === totalCount
+  const isOverdue  = dueDate < new Date() && !isToday && goal.status !== 'Completed' && !allMilestonesDone
   const canApprove = (user?.role === 'Supervisor' || user?.role === 'Manager') && goal.status === 'PendingApproval'
   const isOwner    = user?.id === goal.userId
   const canSubmit  = isOwner && (goal.status === 'Draft' || goal.status === 'Rejected')
@@ -88,6 +89,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
   let deadlineLabel: string
   if (goal.status === 'Completed') deadlineLabel = t('deadline.completed')
+  else if (allMilestonesDone) deadlineLabel = `里程碑已全部完成 · ${new Date(milestones.find(m => m.completedAt)?.completedAt ?? '').toLocaleDateString()}`
   else if (isToday)   deadlineLabel = '今天截止'
   else if (isOverdue) deadlineLabel = t('deadline.overdue', { days: Math.abs(daysLeft) })
   else                deadlineLabel = t('deadline.due', { date: dueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) })
@@ -207,6 +209,10 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  let deadlineLabelClass = ''
+  if (isOverdue)         deadlineLabelClass = 'text-red-500 font-medium'
+  else if (allMilestonesDone) deadlineLabelClass = 'text-green-600 font-medium'
+
   const STATUS_BADGE_CLASS: Partial<Record<string, string>> = {
     Completed:       'bg-green-100 text-green-700',
     Approved:        'bg-indigo-100 text-indigo-700',
@@ -254,7 +260,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Meta */}
         <div className="flex flex-wrap gap-4 text-xs text-gray-400 mb-5">
-          <span className={isOverdue ? 'text-red-500 font-medium' : ''}>{deadlineLabel}</span>
+          <span className={deadlineLabelClass}>{deadlineLabel}</span>
           <span>{goal.type === 'Personal' ? t('type.Personal') : t('type.Team')}</span>
         </div>
 

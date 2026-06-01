@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { HealthController } from './health.controller'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { MetricsMiddleware } from './metrics.middleware'
 import { ConfigModule } from '@nestjs/config'
@@ -19,6 +20,7 @@ import { AuditWriteInterceptor } from './modules/audit/audit-write.interceptor'
 import { ForbiddenExceptionFilter } from './modules/audit/forbidden.filter'
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     // IP-based throttle：每分鐘最多 60 次請求（正常使用完全不受影響）
