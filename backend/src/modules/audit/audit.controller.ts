@@ -8,11 +8,14 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 
-class AuditFilterQuery {
+class AuditQueryDto {
+  q?: string
   outcome?: string
   resource?: string
   fromDate?: string
   toDate?: string
+  from?: string
+  size?: string
 }
 
 @Controller('audit')
@@ -24,20 +27,17 @@ export class AuditController {
   @Get()
   async getLogs(
     @CurrentUser() user: SessionUser,
-    @Query() filters: AuditFilterQuery,
-    @Query('q') q = '',
-    @Query('from') from = '0',
-    @Query('size') size = '50',
+    @Query() query: AuditQueryDto,
   ) {
     return this.auditService.search({
-      q,
-      outcome:  filters.outcome,
-      resource: filters.resource,
+      q:        query.q        ?? '',
+      outcome:  query.outcome,
+      resource: query.resource,
       regionId: isGlobalRole(user) ? undefined : user.regionId,
-      fromDate: filters.fromDate,
-      toDate:   filters.toDate,
-      from:     Number(from),
-      size:     Number(size),
+      fromDate: query.fromDate,
+      toDate:   query.toDate,
+      from:     Number(query.from  ?? 0),
+      size:     Number(query.size  ?? 50),
     })
   }
 }
