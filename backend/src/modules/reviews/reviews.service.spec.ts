@@ -57,6 +57,28 @@ describe('ReviewsService', () => {
     }))
   })
 
+  it('scopes team reviews by region for RegionalHR', async () => {
+    mockPrisma.performanceReview.findMany.mockResolvedValueOnce([])
+
+    await service.getTeamReviews(user(Role.RegionalHR, { regionId: 'region-1' }))
+
+    expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { employee: { regionId: 'region-1' } },
+    }))
+  })
+
+  it('returns all team reviews for global roles', async () => {
+    mockPrisma.performanceReview.findMany.mockResolvedValueOnce([])
+
+    await service.getTeamReviews(user(Role.Admin))
+
+    expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      include: expect.any(Object),
+      orderBy: { createdAt: 'desc' },
+    }))
+    expect(mockPrisma.performanceReview.findMany.mock.calls[0][0].where).toBeUndefined()
+  })
+
   it('blocks employees from reading team reviews', async () => {
     await expect(service.getTeamReviews(user(Role.Employee))).rejects.toThrow(ForbiddenException)
   })
@@ -196,6 +218,19 @@ describe('ReviewsService', () => {
     expect(mockPrisma.performanceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { employeeId: 'emp-1' },
     }))
+  })
+
+  it('blocks supervisors from reading non-direct employee reviews', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 'emp-1',
+      regionId: 'region-1',
+      supervisorId: 'other-sup',
+      managerId: null,
+      supervisor: null,
+    })
+
+    await expect(service.getReviewsByEmployee('emp-1', user(Role.Supervisor, { id: 'sup-1' })))
+      .rejects.toThrow(ForbiddenException)
   })
 
   it('publishes graded reviews and notifies employees', async () => {

@@ -128,6 +128,14 @@ describe('CyclesService', () => {
     }))
   })
 
+  it('blocks editing cycles after goal setting ends', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', status: CycleStatus.InProgress })
+
+    await expect(service.updateCycle('cycle-1', { name: 'Too late' }, user(Role.Admin)))
+      .rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
   it('requires a published template before advancing into employee review', async () => {
     mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
       id: 'cycle-1', regionId: 'region-1', status: CycleStatus.InProgress,
@@ -219,6 +227,18 @@ describe('CyclesService', () => {
     expect(mockNotifications.createForUsers).toHaveBeenCalledWith(['emp-1'], expect.objectContaining({ type: 'CyclePostponed' }))
   })
 
+  it('only postpones in-progress cycles', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1',
+      regionId: 'region-1',
+      status: CycleStatus.GoalSetting,
+    })
+
+    await expect(service.postpone('cycle-1', { newReviewStart: '2099-01-01' }, user(Role.RegionalHR)))
+      .rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
   it('rejects postponing review start to today or the past', async () => {
     mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
       id: 'cycle-1',
@@ -252,6 +272,13 @@ describe('CyclesService', () => {
 
     expect(result.complete).toHaveLength(1)
     expect(result.pending).toHaveLength(1)
+  })
+
+  it('blocks manager questionnaire status across regions', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-2' })
+
+    await expect(service.getManagerQuestionnaireStatus('cycle-1', user(Role.RegionalHR, { regionId: 'region-1' })))
+      .rejects.toThrow(ForbiddenException)
   })
 
   it('throws not found for missing cycles', async () => {

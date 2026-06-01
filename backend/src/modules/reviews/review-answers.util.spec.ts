@@ -43,6 +43,12 @@ describe('validateReviewAnswers', () => {
     ).not.toThrow()
   })
 
+  it('rejects answers for unknown question ids', () => {
+    expect(() =>
+      validateReviewAnswers([{ questionId: 'q-missing', answer: 'oops' }], [ratingQ]),
+    ).toThrow(BadRequestException)
+  })
+
   it('rejects invalid rating values', () => {
     expect(() =>
       validateReviewAnswers([{ questionId: 'q-rating', answer: '6' }], [ratingQ]),
@@ -75,5 +81,9 @@ describe('validateReviewAnswers', () => {
       required: false,
     })
     expect(() => validateReviewAnswers([], [optional])).not.toThrow()
+  })
+
+  it('allows required questions to be omitted when required checks are skipped', () => {
+    expect(() => validateReviewAnswers(null, [ratingQ], true)).not.toThrow()
   })
 })

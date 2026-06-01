@@ -88,6 +88,26 @@ describe('TemplatesService', () => {
     }))
   })
 
+  it('lets admins create globally locked base questions with explicit options', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-1' })
+    mockPrisma.formTemplate.create.mockResolvedValueOnce({ id: 'tpl-1' })
+
+    await service.createTemplate({
+      ...templateDto,
+      questions: [
+        { questionText: 'Q1', questionType: 'MultipleChoice', options: ['A'], required: true, orderIndex: 0, isGlobal: true },
+      ],
+    } as any, user(Role.Admin))
+
+    expect(mockPrisma.formTemplate.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        questions: {
+          create: [expect.objectContaining({ options: ['A'], isGlobal: true })],
+        },
+      }),
+    }))
+  })
+
   it('blocks creating a template for a cycle outside the user region', async () => {
     mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-2' })
 
@@ -109,6 +129,24 @@ describe('TemplatesService', () => {
     expect(result.orderIndex).toBe(3)
     expect(mockPrisma.templateQuestion.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ isCustom: true, scopeDepartmentId: 'dept-1', orderIndex: 3 }),
+    }))
+  })
+
+  it('defaults custom question order from zero when a template has no questions', async () => {
+    mockPrisma.formTemplate.findUnique.mockResolvedValueOnce({ id: 'tpl-1', regionId: 'region-1' })
+    mockPrisma.templateQuestion.aggregate.mockResolvedValueOnce({ _max: { orderIndex: null } })
+    mockPrisma.templateQuestion.create.mockResolvedValueOnce({ id: 'q-1', orderIndex: 0 })
+
+    const result = await service.addCustomQuestion('tpl-1', {
+      questionText: 'Department question',
+      questionType: 'MultipleChoice',
+      options: ['A', 'B'],
+      required: false,
+    }, user(Role.Manager))
+
+    expect(result.orderIndex).toBe(0)
+    expect(mockPrisma.templateQuestion.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ options: ['A', 'B'], orderIndex: 0 }),
     }))
   })
 

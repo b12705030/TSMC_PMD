@@ -8,9 +8,9 @@ Last verified on 2026-06-02.
 
 | Layer | Command | Suites / files | Tests | Requires DB? | CI status |
 | --- | --- | ---: | ---: | --- | --- |
-| Backend unit | `cd backend && npm run test:unit` | 29 suites | 185 | No | Yes |
+| Backend unit | `cd backend && npm run test:unit` | 29 suites | 201 | No | Yes |
 | Backend integration | `cd backend && npm run test:integration` | 5 suites | 20 | Yes, PostgreSQL | Yes |
-| Backend unit + integration | `cd backend && npm run test:all` | 34 suites | 205 | Integration only | Yes, split by job |
+| Backend unit + integration | `cd backend && npm run test:all` | 34 suites | 221 | Integration only | Yes, split by job |
 | E2E smoke | `cd e2e && npm test` | 3 files | 10 | Full app stack | Local only |
 | Frontend checks | `cd frontend && npm run lint && npm run type-check && npm run build` | N/A | N/A | No | Yes |
 
@@ -57,22 +57,22 @@ npm run test:cov
 | `src/modules/audit/audit.controller.spec.ts` | 5 | Audit controller filtering and delegation |
 | `src/modules/audit/audit.service.spec.ts` | 8 | Audit persistence/search behavior with mocked dependencies |
 | `src/modules/audit/forbidden.filter.spec.ts` | 4 | Forbidden response handling and audit logging |
-| `src/modules/auth/auth.controller.spec.ts` | 5 | Login/logout/me controller wiring, session cookie set/clear |
+| `src/modules/auth/auth.controller.spec.ts` | 7 | Login/logout/me controller wiring, session cookie set/clear |
 | `src/modules/auth/auth.service.spec.ts` | 5 | Login, invalid credentials, sessions, logout audit |
 | `src/modules/config/config.controller.spec.ts` | 3 | Config controller delegation |
 | `src/modules/config/config.service.spec.ts` | 7 | Region config reads/updates and RBAC |
 | `src/modules/users/users.controller.spec.ts` | 5 | Users controller delegation and query parsing |
-| `src/modules/users/users.service.spec.ts` | 21 | User listing, hierarchy, metadata, create/update rules |
+| `src/modules/users/users.service.spec.ts` | 23 | User listing, hierarchy, metadata, create/update rules |
 | `src/modules/goals/goals.controller.spec.ts` | 4 | Goal controller delegation and milestone normalization |
-| `src/modules/goals/goals.service.spec.ts` | 19 | Goal creation, approval, team access, milestones, deletes |
+| `src/modules/goals/goals.service.spec.ts` | 21 | Goal creation, approval, team access, milestones, deletes |
 | `src/modules/cycles/cycles.controller.spec.ts` | 3 | Cycle controller reads, writes, status actions |
-| `src/modules/cycles/cycles.service.spec.ts` | 16 | Cycle RBAC, date validation, advance gates, review row creation, confirm/postpone |
+| `src/modules/cycles/cycles.service.spec.ts` | 19 | Cycle RBAC, date validation, advance gates, review row creation, confirm/postpone |
 | `src/modules/cycles/cycles.scheduler.spec.ts` | 4 | Auto-advance and reminder scheduler behavior |
-| `src/modules/reviews/review-answers.util.spec.ts` | 6 | Required answers, rating/option/text validation |
+| `src/modules/reviews/review-answers.util.spec.ts` | 8 | Required answers, rating/option/text validation |
 | `src/modules/reviews/reviews.controller.spec.ts` | 4 | Review controller delegation |
-| `src/modules/reviews/reviews.service.spec.ts` | 14 | Review scopes, submit flows, calibration, publish, stats |
+| `src/modules/reviews/reviews.service.spec.ts` | 17 | Review scopes, submit flows, calibration, publish, stats |
 | `src/modules/templates/templates.controller.spec.ts` | 4 | Template controller delegation |
-| `src/modules/templates/templates.service.spec.ts` | 9 | Template creation, custom questions, publish conflicts, global lock |
+| `src/modules/templates/templates.service.spec.ts` | 11 | Template creation, custom questions, publish conflicts, global lock |
 | `src/modules/appeals/appeals.controller.spec.ts` | 4 | Appeal controller delegation |
 | `src/modules/appeals/appeals.service.spec.ts` | 8 | Appeal creation, access scopes, responses, resolved states |
 | `src/modules/notifications/notifications.controller.spec.ts` | 4 | Notification controller delegation |
@@ -241,7 +241,7 @@ npx playwright test --list
 Latest observed results:
 
 - Backend type-check passed.
-- Backend unit tests passed: 29 suites, 185 tests.
+- Backend unit tests passed: 29 suites, 201 tests.
 - Backend coverage can be regenerated with `npm run test:cov`.
 - Frontend type-check and lint passed.
 - Playwright listed 10 tests across 3 files.

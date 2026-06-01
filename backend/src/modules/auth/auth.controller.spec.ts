@@ -57,6 +57,17 @@ describe('AuthController', () => {
     expect(mockAuthService.login).toHaveBeenCalledWith(dto, '10.0.0.1')
   })
 
+  it('uses unknown when a login request has no IP address', async () => {
+    const dto = { employeeId: 'emp001', password: 'secret' }
+    const req = { socket: {} }
+    const res = { cookie: jest.fn() }
+    mockAuthService.login.mockResolvedValueOnce({ sessionId: 'session-1', user })
+
+    await controller.login(dto, req as any, res as any)
+
+    expect(mockAuthService.login).toHaveBeenCalledWith(dto, 'unknown')
+  })
+
   it('logs out with the session cookie and clears it', async () => {
     const req = { ip: '127.0.0.1', socket: {}, cookies: { sessionId: 'session-1' } }
     const res = { clearCookie: jest.fn() }
@@ -66,6 +77,16 @@ describe('AuthController', () => {
 
     expect(mockAuthService.logout).toHaveBeenCalledWith('session-1', 'user-1', 'Ada', 'region-1', '127.0.0.1')
     expect(res.clearCookie).toHaveBeenCalledWith('sessionId')
+  })
+
+  it('falls back to unknown IP when logging out without request address data', async () => {
+    const req = { socket: {}, cookies: { sessionId: 'session-1' } }
+    const res = { clearCookie: jest.fn() }
+    mockAuthService.logout.mockResolvedValueOnce(undefined)
+
+    await controller.logout(user, req as any, res as any)
+
+    expect(mockAuthService.logout).toHaveBeenCalledWith('session-1', 'user-1', 'Ada', 'region-1', 'unknown')
   })
 
   it('rejects logout without a session cookie', async () => {

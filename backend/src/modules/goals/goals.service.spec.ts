@@ -129,6 +129,15 @@ describe('GoalsService', () => {
     })).rejects.toThrow(ForbiddenException)
   })
 
+  it('blocks goals linked to inactive cycles', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-1', status: 'Completed' })
+
+    await expect(service.createGoal(user(Role.Employee), {
+      title: 'Goal', description: 'd', metric: 'm', targetValue: 't', relevance: 'r', dueDate: '2026-12-31', cycleId: 'cycle-1',
+    })).rejects.toThrow(BadRequestException)
+    expect(mockPrisma.goal.create).not.toHaveBeenCalled()
+  })
+
   it('only allows owners to update editable goals', async () => {
     mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1', status: 'Draft' })
     mockPrisma.goal.update.mockResolvedValueOnce({ id: 'goal-1', title: 'Updated' })
@@ -204,6 +213,17 @@ describe('GoalsService', () => {
     expect(mockPrisma.goal.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { userId: { in: ['direct-1', 'via-sup-1'] }, status: { not: 'Draft' } },
     }))
+  })
+
+  it('returns an empty team goals list without querying goals when there are no subordinates', async () => {
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    const result = await service.getTeamGoals(user(Role.Manager, { id: 'mgr-1' }))
+
+    expect(result).toEqual([])
+    expect(mockPrisma.goal.findMany).not.toHaveBeenCalled()
   })
 
   it('enforces region isolation when RegionalHR reads employee goals', async () => {

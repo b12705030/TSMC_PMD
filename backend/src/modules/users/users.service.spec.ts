@@ -181,6 +181,13 @@ describe('UsersService', () => {
       }))
     })
 
+    it('returns an empty team for individual contributors', async () => {
+      const result = await service.getTeamMembers(sessionUser(Role.Employee, 'region-tw'))
+
+      expect(result).toEqual([])
+      expect(mockPrisma.user.findMany).not.toHaveBeenCalled()
+    })
+
     it('builds manager hierarchy with supervisor groups and direct reports', async () => {
       mockPrisma.user.findMany
         .mockResolvedValueOnce([
@@ -216,6 +223,12 @@ describe('UsersService', () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce(dbUser({ managerId: 'other', supervisorId: 'sup-1', supervisor: { managerId: 'u1' } }))
       await expect(service.getEmployee('via-sup', sessionUser(Role.Manager)))
         .resolves.toEqual(expect.objectContaining({ supervisorId: 'sup-1' }))
+    })
+
+    it('returns null when an employee cannot be found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(null)
+
+      await expect(service.getEmployee('missing', sessionUser(Role.Admin))).resolves.toBeNull()
     })
   })
 
