@@ -335,6 +335,14 @@ describe('GoalsService', () => {
     expect(mockPrisma.goalMilestone.delete).toHaveBeenCalledWith({ where: { id: 'm-1' } })
   })
 
+  it('throws not found when the milestone does not exist', async () => {
+    mockPrisma.goalMilestone.findUnique.mockResolvedValueOnce(null)
+
+    await expect(service.toggleMilestone('goal-1', 'ms-missing', user(Role.Employee)))
+      .rejects.toThrow(NotFoundException)
+    expect(mockPrisma.goalMilestone.update).not.toHaveBeenCalled()
+  })
+
   it('throws when deleting a non-draft goal', async () => {
     mockPrisma.goal.findUnique.mockResolvedValueOnce({ id: 'goal-1', userId: 'user-1', status: 'Approved' })
 

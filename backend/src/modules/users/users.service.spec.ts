@@ -230,6 +230,15 @@ describe('UsersService', () => {
 
       await expect(service.getEmployee('missing', sessionUser(Role.Admin))).resolves.toBeNull()
     })
+
+    it('blocks supervisors from reading employees outside their direct reports', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(
+        dbUser({ supervisorId: 'other-sup', managerId: null }),
+      )
+
+      await expect(service.getEmployee('u-target', sessionUser(Role.Supervisor)))
+        .rejects.toThrow(ForbiddenException)
+    })
   })
 
   describe('user listing and metadata', () => {
@@ -248,6 +257,26 @@ describe('UsersService', () => {
         }),
         skip: 10,
         take: 25,
+      }))
+    })
+
+    it('returns all regions', async () => {
+      mockPrisma.region.findMany.mockResolvedValueOnce([{ id: 'r-1', name: 'Taiwan', code: 'TW' }])
+
+      const result = await service.getDistinctRegions()
+
+      expect(result).toEqual([{ id: 'r-1', name: 'Taiwan', code: 'TW' }])
+    })
+
+    it('returns distinct job titles scoped by region for non-global users', async () => {
+      mockPrisma.user.findMany.mockResolvedValueOnce([{ jobTitle: 'Engineer' }])
+
+      const result = await service.getDistinctJobTitles(sessionUser(Role.RegionalHR, 'region-tw'))
+
+      expect(result).toEqual(['Engineer'])
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { regionId: 'region-tw' },
+        distinct: ['jobTitle'],
       }))
     })
 

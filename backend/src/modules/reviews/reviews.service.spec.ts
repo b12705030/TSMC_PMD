@@ -109,6 +109,23 @@ describe('ReviewsService', () => {
     }))
   })
 
+  it('saves supervisor review with only a comment when answers are omitted', async () => {
+    mockPrisma.performanceReview.findUnique.mockResolvedValueOnce({
+      id: 'review-1', supervisorId: 'sup-1', status: ReviewStatus.PendingSupervisorReview,
+      employee: { managerId: null },
+    })
+    mockPrisma.performanceReview.update.mockResolvedValueOnce({ id: 'review-1' })
+
+    await service.saveSupervisorReview('review-1', user(Role.Supervisor, { id: 'sup-1' }), {
+      answers: null,
+      comment: 'Good work',
+    } as any)
+
+    const callData = mockPrisma.performanceReview.update.mock.calls[0][0].data
+    expect(callData.supervisorAnswers).toBeUndefined()
+    expect(callData.supervisorComment).toBe('Good work')
+  })
+
   it('saves employee answers only while pending employee submit', async () => {
     mockPrisma.performanceReview.findUnique.mockResolvedValueOnce({
       id: 'review-1', employeeId: 'emp-1', status: ReviewStatus.PendingEmployeeSubmit,

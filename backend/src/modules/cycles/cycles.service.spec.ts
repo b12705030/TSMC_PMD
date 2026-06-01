@@ -274,6 +274,26 @@ describe('CyclesService', () => {
     expect(result.pending).toHaveLength(1)
   })
 
+  it('blocks advancing from employee review when employees are still pending', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1', regionId: 'region-1', status: CycleStatus.EmployeeReview,
+    })
+    mockPrisma.performanceReview.count.mockResolvedValueOnce(2)
+
+    await expect(service.advanceStatus('cycle-1', user(Role.RegionalHR))).rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
+  it('blocks advancing from supervisor review when supervisor reviews are pending', async () => {
+    mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({
+      id: 'cycle-1', regionId: 'region-1', status: CycleStatus.SupervisorReview,
+    })
+    mockPrisma.performanceReview.count.mockResolvedValueOnce(3)
+
+    await expect(service.advanceStatus('cycle-1', user(Role.RegionalHR))).rejects.toThrow(BadRequestException)
+    expect(mockPrisma.performanceCycle.update).not.toHaveBeenCalled()
+  })
+
   it('blocks manager questionnaire status across regions', async () => {
     mockPrisma.performanceCycle.findUnique.mockResolvedValueOnce({ id: 'cycle-1', regionId: 'region-2' })
 

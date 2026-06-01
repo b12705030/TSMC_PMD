@@ -150,6 +150,20 @@ describe('TemplatesService', () => {
     }))
   })
 
+  it('throws not found when deleting a question that does not exist', async () => {
+    mockPrisma.templateQuestion.findUnique.mockResolvedValueOnce(null)
+
+    await expect(service.deleteCustomQuestion('tpl-1', 'q-missing', user(Role.Manager)))
+      .rejects.toThrow(NotFoundException)
+  })
+
+  it('throws not found when setting global lock on a missing question', async () => {
+    mockPrisma.templateQuestion.findUnique.mockResolvedValueOnce(null)
+
+    await expect(service.setQuestionGlobalLock('tpl-1', 'q-missing', true, user(Role.Admin)))
+      .rejects.toThrow(NotFoundException)
+  })
+
   it('prevents deleting globally locked or HR base questions', async () => {
     mockPrisma.templateQuestion.findUnique.mockResolvedValueOnce({
       id: 'q-1', templateId: 'tpl-1', isGlobal: true, isCustom: true, scopeDepartmentId: 'dept-1',
