@@ -18,10 +18,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import type { SessionUser } from '../../common/types/request.types'
 
 const COOKIE_NAME = 'sessionId'
+const isProd = process.env.NODE_ENV === 'production'
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+  secure: isProd,
   maxAge: 1000 * 60 * 60 * 8, // 8 hours
 }
 
