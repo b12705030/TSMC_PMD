@@ -41,7 +41,7 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 npm test
 
 | File | Covers |
 |------|--------|
-| `tests/auth.spec.ts` | Login, logout, invalid credentials, auth redirect, session cookie |
+| `tests/auth.spec.ts` | Login, logout, invalid credentials, auth redirect, session cookie lifecycle, expired-session redirect |
 | `tests/rbac.spec.ts` | Employee vs HR cycle admin button |
 | `tests/goals.spec.ts` | Create goal, submit for approval, supervisor approve |
 

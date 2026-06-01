@@ -16,7 +16,7 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="mb-2 flex items-center gap-1 text-sm text-gray-500">
           {breadcrumbs.map((crumb, index) => (
-            <span key={index} className="flex items-center gap-1">
+            <span key={`${crumb.href ?? 'current'}-${crumb.label}-${index}`} className="flex items-center gap-1">
               {index > 0 && <span>/</span>}
               {crumb.href ? (
                 <a href={crumb.href} className="hover:text-gray-900">

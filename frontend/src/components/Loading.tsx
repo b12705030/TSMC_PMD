@@ -1,8 +1,8 @@
 export function Loading({ className }: { className?: string }) {
   return (
     <div className={`animate-pulse space-y-3 ${className ?? ''}`}>
-      {[80, 100, 64].map((w, i) => (
-        <div key={i} className="rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
+      {[80, 100, 64].map((w) => (
+        <div key={w} className="rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="space-y-2 flex-1">
               <div className="h-4 rounded bg-gray-200" style={{ width: `${w}%` }} />
