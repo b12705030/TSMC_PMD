@@ -29,11 +29,11 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/40"
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/40 cursor-default"
         onClick={onCancel}
         onKeyDown={(e) => { if (e.key === 'Escape') onCancel() }}
-        role="button"
         tabIndex={-1}
         aria-label="關閉對話框"
       />

@@ -8,7 +8,7 @@ import { routing } from '@/i18n/routing'
 type Locale = (typeof routing.locales)[number]
 
 export function LanguageSwitcher() {
-  const locale   = useLocale() as Locale
+  const locale   = useLocale()
   const pathname = usePathname()
   const t        = useTranslations('language')
   const [open, setOpen] = useState(false)
@@ -34,7 +34,7 @@ export function LanguageSwitcher() {
     } else {
       segments.splice(1, 0, next)
     }
-    window.location.assign(segments.join('/') || `/${next}`)
+    globalThis.location.assign(segments.join('/') || `/${next}`)
   }
 
   return (

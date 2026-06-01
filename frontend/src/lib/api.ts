@@ -15,7 +15,7 @@ class ApiError extends Error {
 // 全域 401 事件：讓 AuthContext 監聽並清除 user
 // reason: 'idle' | 'expired'
 export function dispatchUnauthorized(reason: 'idle' | 'expired') {
-  window.dispatchEvent(new CustomEvent('app:unauthorized', { detail: { reason } }))
+  globalThis.dispatchEvent(new CustomEvent('app:unauthorized', { detail: { reason } }))
 }
 
 async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
@@ -23,7 +23,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
     method,
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include', // send session cookie
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
 
   if (!res.ok) {

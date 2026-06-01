@@ -71,12 +71,12 @@ export function IdleWatcher({ onIdle }: Props) {
       }
     }
 
-    EVENTS.forEach((e) => window.addEventListener(e, handleActivity, { passive: true }))
+    EVENTS.forEach((e) => globalThis.addEventListener(e, handleActivity, { passive: true }))
     resetTimers()
 
     return () => {
       clearTimers()
-      EVENTS.forEach((e) => window.removeEventListener(e, handleActivity))
+      EVENTS.forEach((e) => globalThis.removeEventListener(e, handleActivity))
     }
   }, [resetTimers, clearTimers])
 

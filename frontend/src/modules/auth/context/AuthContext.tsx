@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '@/lib/api'
 import type { User } from '@/types'
 
@@ -36,12 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.setItem(LOGOUT_REASON_KEY, reason)
       setUser(null)
     }
-    window.addEventListener('app:unauthorized', handler)
-    return () => window.removeEventListener('app:unauthorized', handler)
+    globalThis.addEventListener('app:unauthorized', handler)
+    return () => globalThis.removeEventListener('app:unauthorized', handler)
   }, [])
 
+  const value = useMemo(() => ({ user, isLoading, setUser }), [user, isLoading, setUser])
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, setUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

@@ -34,11 +34,18 @@ export function DataTable<T extends { id: string }>({
     }
   }
 
+  function toSortStr(row: unknown): string {
+    const p = (row as Record<string, unknown>)[sortKey ?? '']
+    if (typeof p === 'string')  return p
+    if (typeof p === 'number' || typeof p === 'boolean') return p.toString()
+    return ''
+  }
+
   const sorted = [...data].sort((a, b) => {
     if (!sortKey) return 0
-    const aVal = String((a as Record<string, unknown>)[sortKey] ?? '')
-    const bVal = String((b as Record<string, unknown>)[sortKey] ?? '')
-    return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+    return sortDir === 'asc'
+      ? toSortStr(a).localeCompare(toSortStr(b))
+      : toSortStr(b).localeCompare(toSortStr(a))
   })
 
   return (
@@ -81,9 +88,12 @@ export function DataTable<T extends { id: string }>({
               <tr key={row.id} className="hover:bg-gray-50">
                 {columns.map((col) => (
                   <td key={String(col.key)} className="px-4 py-3 text-sm text-gray-700">
-                    {col.render
-                      ? col.render(row)
-                      : String((row as Record<string, unknown>)[String(col.key)] ?? '—')}
+                    {col.render ? col.render(row) : (() => {
+                      const v = (row as Record<string, unknown>)[String(col.key)]
+                      if (typeof v === 'string')  return v
+                      if (typeof v === 'number' || typeof v === 'boolean') return v.toString()
+                      return '—'
+                    })()}
                   </td>
                 ))}
               </tr>

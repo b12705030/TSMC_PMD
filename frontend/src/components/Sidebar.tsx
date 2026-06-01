@@ -12,6 +12,35 @@ import { RoleBadge } from '@/components/RoleBadge'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import type { Role, AppNotification } from '@/types'
 
+// ─── Notification routing ─────────────────────────────────────────────────────
+
+function getNotificationHref(type: string, role: string): string | null {
+  switch (type) {
+    case 'GoalSubmitted':
+      return role === 'Employee' ? '/goals' : '/goals/team'
+    case 'GoalRejected':
+    case 'GoalApproved':
+      return '/goals'
+    case 'AppealFiled':
+      return '/appeals'
+    case 'AppealResolved':
+      return role === 'Employee' ? '/reviews' : '/appeals'
+    case 'ReviewSubmitted':
+    case 'ReviewApproved':
+      return '/reviews/team'
+    case 'ReviewPublished':
+      return '/reviews'
+    case 'CycleAutoAdvanced':
+    case 'CyclePostponed':
+    case 'CycleAdvanceReminder':
+      return '/cycles'
+    case 'TemplatePublished':
+      return '/templates'
+    default:
+      return null
+  }
+}
+
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function Icon({ path, path2 }: { path: string; path2?: string }) {
@@ -101,34 +130,6 @@ export function Sidebar() {
   const { notifications, unreadCount: notifUnread, markRead, markAllRead } = useNotifications()
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
-
-  // 通知點擊導航對應頁面
-  function getNotificationHref(type: string, role: string): string | null {
-    switch (type) {
-      case 'GoalSubmitted':
-        return role === 'Employee' ? '/goals' : '/goals/team'
-      case 'GoalRejected':
-      case 'GoalApproved':
-        return '/goals'
-      case 'AppealFiled':
-        return '/appeals'
-      case 'AppealResolved':
-        return role === 'Employee' ? '/reviews' : '/appeals'
-      case 'ReviewSubmitted':
-      case 'ReviewApproved':
-        return '/reviews/team'
-      case 'ReviewPublished':
-        return '/reviews'
-      case 'CycleAutoAdvanced':
-      case 'CyclePostponed':
-      case 'CycleAdvanceReminder':
-        return '/cycles'
-      case 'TemplatePublished':
-        return '/templates'
-      default:
-        return null
-    }
-  }
 
   // 點外部關閉通知面板
   useEffect(() => {
@@ -316,34 +317,27 @@ export function Sidebar() {
                 <li className="px-4 py-6 text-center text-sm text-gray-400">沒有通知</li>
               ) : (
                 notifications.map((n: AppNotification) => (
-                  <li
-                    key={n.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      if (!n.read) markRead(n.id)
-                      const href = getNotificationHref(n.type, user.role)
-                      if (href) { setNotifOpen(false); router.push(href) }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                  <li key={n.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
                         if (!n.read) markRead(n.id)
                         const href = getNotificationHref(n.type, user.role)
                         if (href) { setNotifOpen(false); router.push(href) }
-                      }
-                    }}
-                    className={`cursor-pointer px-4 py-3 hover:bg-gray-50 transition-colors ${n.read ? '' : 'bg-blue-50/50'}`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />}
-                      <div className={!n.read ? '' : 'ml-4'}>
-                        <p className="text-xs font-semibold text-gray-800">{n.title}</p>
-                        <p className="mt-0.5 text-xs text-gray-500 leading-snug">{n.message}</p>
-                        <p className="mt-1 text-xs text-gray-300">
-                          {new Date(n.createdAt).toLocaleDateString('zh-TW')}
-                        </p>
+                      }}
+                      className={`w-full text-left cursor-pointer px-4 py-3 hover:bg-gray-50 transition-colors ${n.read ? '' : 'bg-blue-50/50'}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />}
+                        <div className={n.read ? 'ml-4' : ''}>
+                          <p className="text-xs font-semibold text-gray-800">{n.title}</p>
+                          <p className="mt-0.5 text-xs text-gray-500 leading-snug">{n.message}</p>
+                          <p className="mt-1 text-xs text-gray-300">
+                            {new Date(n.createdAt).toLocaleDateString('zh-TW')}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   </li>
                 ))
               )}
