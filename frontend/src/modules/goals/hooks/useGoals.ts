@@ -22,7 +22,12 @@ export function useGoals() {
 
   useEffect(() => { fetch() }, [fetch])
 
-  return { goals, isLoading, error, refetch: fetch }
+  async function deleteGoal(id: string) {
+    await api.delete(`/goals/${id}`)
+    setGoals((prev) => prev.filter((g) => g.id !== id))
+  }
+
+  return { goals, isLoading, error, refetch: fetch, deleteGoal }
 }
 
 export function useGoal(id: string) {

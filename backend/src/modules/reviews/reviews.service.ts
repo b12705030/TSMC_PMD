@@ -11,7 +11,8 @@ const REVIEW_INCLUDE = {
   cycle:      true,
   template:   { include: { questions: { orderBy: { orderIndex: 'asc' as const } } } },
   employee:   { select: { id: true, name: true, employeeId: true, jobLevel: true, jobTitle: true, departmentId: true, managerId: true, regionId: true } },
-  supervisor: { select: { id: true, name: true, employeeId: true } },
+  supervisor: { select: { id: true, name: true, employeeId: true, manager: { select: { departmentId: true } } } },
+  appeal:     { select: { id: true, status: true, reason: true, managerResponse: true, resolvedAt: true } },
 }
 
 @Injectable()
@@ -129,16 +130,18 @@ export class ReviewsService {
     const review = await this.prisma.performanceReview.findUnique({
       where:   { id },
       include: {
-        template: { include: { questions: true } },
-        employee: { select: { departmentId: true } },
+        template:  { include: { questions: true } },
+        employee:  { select: { departmentId: true } },
+        supervisor: { select: { manager: { select: { departmentId: true } } } },
       },
     })
     if (!review) throw new NotFoundException('Review not found')
     if (review.employeeId !== user.id) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingEmployeeSubmit) throw new ForbiddenException('Already submitted')
 
+    const mgrDeptId = review.supervisor?.manager?.departmentId ?? null
     const scopedQuestions = review.template.questions.filter(
-      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId || q.scopeDepartmentId === mgrDeptId
     )
     validateReviewAnswers(
       review.employeeAnswers as { questionId: string; answer: string }[],
@@ -188,8 +191,9 @@ export class ReviewsService {
     const review = await this.prisma.performanceReview.findUnique({
       where:   { id },
       include: {
-        template: { include: { questions: true } },
-        employee: { select: { managerId: true, departmentId: true } },
+        template:  { include: { questions: true } },
+        employee:  { select: { managerId: true, departmentId: true } },
+        supervisor: { select: { manager: { select: { departmentId: true } } } },
       },
     })
     if (!review) throw new NotFoundException('Review not found')
@@ -198,8 +202,9 @@ export class ReviewsService {
     if (!isReviewer) throw new ForbiddenException()
     if (review.status !== ReviewStatus.PendingSupervisorReview) throw new ForbiddenException()
 
+    const mgrDeptId = review.supervisor?.manager?.departmentId ?? null
     const scopedQuestions = review.template.questions.filter(
-      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+      (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId || q.scopeDepartmentId === mgrDeptId
     )
     validateReviewAnswers(
       review.supervisorAnswers as { questionId: string; answer: string }[],
@@ -347,13 +352,18 @@ export class ReviewsService {
   private scopeQuestions<T extends {
     template: { questions: { scopeDepartmentId: string | null }[] }
     employee: { departmentId: string }
+    supervisor: { manager: { departmentId: string } | null } | null
   }>(review: T): T {
+    const managerDeptId = review.supervisor?.manager?.departmentId ?? null
     return {
       ...review,
       template: {
         ...review.template,
         questions: review.template.questions.filter(
-          (q) => q.scopeDepartmentId === null || q.scopeDepartmentId === review.employee.departmentId
+          (q) =>
+            q.scopeDepartmentId === null ||
+            q.scopeDepartmentId === review.employee.departmentId ||
+            q.scopeDepartmentId === managerDeptId,
         ),
       },
     }

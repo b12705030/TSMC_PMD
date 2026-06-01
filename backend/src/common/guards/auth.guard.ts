@@ -35,10 +35,10 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Session idle timeout')
     }
 
-    // 非同步更新 lastActiveAt（不阻塞請求）
+    // 非同步更新 lastActiveAt 與 expiresAt（rolling session，不阻塞請求）
     void this.prisma.session.update({
       where: { id: sessionId },
-      data:  { lastActiveAt: new Date() },
+      data:  { lastActiveAt: new Date(), expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 8) },
     })
 
     const { user } = session

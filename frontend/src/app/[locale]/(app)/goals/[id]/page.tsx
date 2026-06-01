@@ -76,7 +76,9 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
     : config.color
 
   const dueDate    = new Date(goal.dueDate)
-  const isOverdue  = dueDate < new Date() && goal.status !== 'Completed'
+  const daysLeft   = Math.ceil((dueDate.getTime() - Date.now()) / 86400000)
+  const isToday    = daysLeft === 0
+  const isOverdue  = dueDate < new Date() && !isToday && goal.status !== 'Completed'
   const canApprove = (user?.role === 'Supervisor' || user?.role === 'Manager') && goal.status === 'PendingApproval'
   const isOwner    = user?.id === goal.userId
   const canSubmit  = isOwner && (goal.status === 'Draft' || goal.status === 'Rejected')
@@ -87,8 +89,10 @@ export default function GoalDetailPage({ params }: { params: Promise<{ id: strin
 
   const deadlineLabel = goal.status === 'Completed'
     ? t('deadline.completed')
+    : isToday
+    ? '今天截止'
     : isOverdue
-    ? t('deadline.overdue', { days: Math.abs(Math.ceil((dueDate.getTime() - Date.now()) / 86400000)) })
+    ? t('deadline.overdue', { days: Math.abs(daysLeft) })
     : t('deadline.due', { date: dueDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) })
 
   async function handleSubmitForApproval() {

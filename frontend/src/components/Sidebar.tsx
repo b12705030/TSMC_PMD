@@ -113,7 +113,7 @@ export function Sidebar() {
       case 'AppealFiled':
         return '/appeals'
       case 'AppealResolved':
-        return '/appeals'
+        return role === 'Employee' ? '/reviews' : '/appeals'
       case 'ReviewSubmitted':
       case 'ReviewApproved':
         return '/reviews/team'
@@ -123,6 +123,8 @@ export function Sidebar() {
       case 'CyclePostponed':
       case 'CycleAdvanceReminder':
         return '/cycles'
+      case 'TemplatePublished':
+        return '/templates'
       default:
         return null
     }

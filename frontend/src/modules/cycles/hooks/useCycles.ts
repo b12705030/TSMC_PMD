@@ -39,7 +39,9 @@ export function useCycles() {
   useEffect(() => { fetchCycles() }, [])
 
   async function createCycle(payload: CreateCyclePayload): Promise<PerformanceCycle> {
-    const cycle = await api.post<PerformanceCycle>('/cycles', payload)
+    const { regionId, ...rest } = payload
+    const body = regionId ? { ...rest, regionId } : rest
+    const cycle = await api.post<PerformanceCycle>('/cycles', body)
     setCycles((prev) => [cycle, ...prev])
     return cycle
   }

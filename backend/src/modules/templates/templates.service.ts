@@ -4,8 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Role } from '@prisma/client'
+import { NotificationType, Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { isGlobalRole } from '../../common/utils/region.util'
 import type { SessionUser } from '../../common/types/request.types'
 import type { CreateTemplateDto } from './dto/create-template.dto'
@@ -13,7 +14,10 @@ import type { AddCustomQuestionDto } from './dto/add-question.dto'
 
 @Injectable()
 export class TemplatesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async getTemplates(user: SessionUser) {
     const where = isGlobalRole(user)
@@ -166,11 +170,30 @@ export class TemplatesService {
       )
     }
 
-    return this.prisma.formTemplate.update({
+    const published = await this.prisma.formTemplate.update({
       where: { id },
       data:  { status: 'Published' },
       include: { questions: { orderBy: { orderIndex: 'asc' } } },
     })
+
+    // 通知同地區所有 Manager 前往新增自訂題目
+    const managers = await this.prisma.user.findMany({
+      where:  { regionId: template.regionId, role: Role.Manager },
+      select: { id: true },
+    })
+    if (managers.length > 0) {
+      await this.notifications.createForUsers(
+        managers.map((m) => m.id),
+        {
+          type:    NotificationType.TemplatePublished,
+          title:   '績效評核模板已發布',
+          message: `HR 已發布模板「${published.name}」，請前往新增部門自訂題目。`,
+          cycleId: template.cycleId ?? undefined,
+        },
+      )
+    }
+
+    return published
   }
 
   async setQuestionGlobalLock(

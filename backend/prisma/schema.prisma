@@ -370,6 +370,7 @@ enum NotificationType {
   ReviewSubmitted       // 員工提交自評，通知 Supervisor
   ReviewApproved        // Supervisor 提交評核，通知 Manager
   ReviewPublished       // Manager 發布評核結果，通知員工
+  TemplatePublished     // HR 發布模板，通知 Manager 新增自訂題目
 }
 
 model Notification {

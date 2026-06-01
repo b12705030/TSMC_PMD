@@ -5,13 +5,16 @@
  * - 偵測使用者閒置（滑鼠/鍵盤/觸碰）
  * - 閒置 25 分鐘時顯示右下角倒數 Toast（5 分鐘倒數）
  * - 閒置 30 分鐘時呼叫 onIdle() → 觸發登出
+ * - 偵測到活動時每 30 秒送 keepalive，同步後端 lastActiveAt
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { api } from '@/lib/api'
 
-const IDLE_WARN_MS   = 1000 * 60 * 25 // 25 分鐘後顯示警告
-const IDLE_LOGOUT_MS = 1000 * 60 * 30 // 30 分鐘後登出
-const WARN_DURATION  = IDLE_LOGOUT_MS - IDLE_WARN_MS // 5 分鐘倒數
+const IDLE_WARN_MS      = 1000 * 60 * 25 // 25 分鐘後顯示警告
+const IDLE_LOGOUT_MS    = 1000 * 60 * 30 // 30 分鐘後登出
+const WARN_DURATION     = IDLE_LOGOUT_MS - IDLE_WARN_MS // 5 分鐘倒數
+const KEEPALIVE_MS      = 1000 * 10      // 最多每 10 秒送一次 keepalive
 
 interface Props {
   onIdle: () => void
@@ -21,9 +24,10 @@ export function IdleWatcher({ onIdle }: Props) {
   const [showWarning, setShowWarning] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(Math.floor(WARN_DURATION / 1000))
 
-  const warnTimer   = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const logoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const warnTimer         = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const logoutTimer       = useRef<ReturnType<typeof setTimeout> | null>(null)
   const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastKeepalive     = useRef<number>(0)
 
   const clearTimers = useCallback(() => {
     if (warnTimer.current)   clearTimeout(warnTimer.current)
@@ -58,7 +62,14 @@ export function IdleWatcher({ onIdle }: Props) {
   // 監聽使用者活動
   useEffect(() => {
     const EVENTS = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
-    const handleActivity = () => resetTimers()
+    const handleActivity = () => {
+      resetTimers()
+      const now = Date.now()
+      if (now - lastKeepalive.current >= KEEPALIVE_MS) {
+        lastKeepalive.current = now
+        api.get('/auth/me').catch(() => {})
+      }
+    }
 
     EVENTS.forEach((e) => window.addEventListener(e, handleActivity, { passive: true }))
     resetTimers()

@@ -540,6 +540,18 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               {t('detail.published.appealSubmitted')}
             </p>
           )}
+
+          {isEmployee && review.appeal?.status === 'Resolved' && review.appeal.managerResponse && (
+            <div className="mt-4 border-t border-green-200 pt-4 space-y-2">
+              <p className="text-xs font-semibold text-gray-600">申訴結果</p>
+              <p className="text-sm text-gray-700">{review.appeal.managerResponse}</p>
+              {review.appeal.resolvedAt && (
+                <p className="text-xs text-gray-400">
+                  {new Date(review.appeal.resolvedAt).toLocaleDateString('zh-TW')} 處理完畢
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 

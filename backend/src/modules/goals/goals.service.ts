@@ -320,6 +320,14 @@ export class GoalsService {
     await this.prisma.goalMilestone.delete({ where: { id: milestoneId } })
   }
 
+  async deleteGoal(id: string, user: SessionUser) {
+    const goal = await this.prisma.goal.findUnique({ where: { id } })
+    if (!goal) throw new NotFoundException('Goal not found')
+    this.assertOwner(goal.userId, user)
+    if (goal.status !== 'Draft') throw new BadRequestException('只有草稿目標可以刪除')
+    await this.prisma.goal.delete({ where: { id } })
+  }
+
   private assertOwner(goalOwnerId: string, user: SessionUser) {
     if (isGlobalRole(user)) return
     if (goalOwnerId !== user.id) throw new ForbiddenException()

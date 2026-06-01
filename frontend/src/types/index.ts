@@ -58,6 +58,7 @@ export type NotificationType =
   | 'ReviewSubmitted'
   | 'ReviewApproved'
   | 'ReviewPublished'
+  | 'TemplatePublished'
 
 export interface AppNotification {
   id: string
@@ -180,6 +181,7 @@ export interface PerformanceReviewDetail extends PerformanceReview {
   employee: { id: string; name: string; employeeId: string; jobLevel: string; jobTitle: string; managerId: string | null }
   supervisor: { id: string; name: string; employeeId: string } | null
   template: { id: string; name: string; questions: TemplateQuestion[] }
+  appeal: { id: string; status: string; reason: string; managerResponse: string | null; resolvedAt: string | null } | null
 }
 
 // ─── Appeal ───────────────────────────────────────────────────────────────────

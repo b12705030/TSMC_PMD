@@ -307,7 +307,7 @@ export default function CyclesPage() {
           </div>
         )}
         {managerQStatus && managerQStatus.pending.length === 0 && (
-          <p className="text-xs text-green-700">{t('allManagersDone')}</p>
+          <p className="mt-2 text-xs text-green-700">{t('allManagersDone')}</p>
         )}
       </ConfirmDialog>
 

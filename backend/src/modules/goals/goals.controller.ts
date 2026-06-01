@@ -147,6 +147,13 @@ export class GoalsController {
     return this.goalsService.rejectGoal(id, user, body.reason)
   }
 
+  @Delete(':id')
+  @HttpCode(204)
+  @Roles(Role.Employee, Role.Supervisor, Role.Manager)
+  deleteGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {
+    return this.goalsService.deleteGoal(id, user)
+  }
+
   @Patch(':id/submit')
   @Roles(Role.Employee, Role.Supervisor, Role.Manager)
   submitGoal(@Param('id') id: string, @CurrentUser() user: SessionUser) {

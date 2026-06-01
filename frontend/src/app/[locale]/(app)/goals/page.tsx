@@ -1,18 +1,32 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/EmptyState'
 import { Loading } from '@/components/Loading'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useGoals } from '@/modules/goals/hooks/useGoals'
 import type { Goal, GoalStatus } from '@/types'
 
 export default function GoalsPage() {
   const t = useTranslations('goals')
 
-  const { goals, isLoading, error, refetch } = useGoals()
+  const { goals, isLoading, error, refetch, deleteGoal } = useGoals()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDeleteConfirm() {
+    if (!deletingId) return
+    try {
+      await deleteGoal(deletingId)
+      setDeletingId(null)
+    } catch {
+      setDeleteError('刪除失敗，請再試一次')
+    }
+  }
 
   const STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> = {
     Draft:             { label: t('statusLabel.Draft'),           color: 'bg-gray-300',   pct: 0   },
@@ -61,22 +75,52 @@ export default function GoalsPage() {
         />
       ) : (
         <div className="space-y-3">
-          {goals.map((goal) => <GoalCard key={goal.id} goal={goal} STATUS_CONFIG={STATUS_CONFIG} />)}
+          {goals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              STATUS_CONFIG={STATUS_CONFIG}
+              onDelete={goal.status === 'Draft' ? () => { setDeleteError(''); setDeletingId(goal.id) } : undefined}
+            />
+          ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deletingId}
+        title="刪除目標"
+        description="確定要刪除這個草稿目標嗎？此操作無法復原。"
+        confirmLabel="刪除"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeletingId(null)}
+      >
+        {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
+      </ConfirmDialog>
     </div>
   )
 }
 
-function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }> }) {
+function GoalCard({ goal, STATUS_CONFIG, onDelete }: { goal: Goal; STATUS_CONFIG: Record<GoalStatus, { label: string; color: string; pct: number }>; onDelete?: () => void }) {
   const t = useTranslations('goals')
-  const config  = STATUS_CONFIG[goal.status]
-  const dueDate = new Date(goal.dueDate)
-  const isOverdue = dueDate < new Date() && goal.status !== 'Completed'
+  const config      = STATUS_CONFIG[goal.status]
+  const dueDate     = new Date(goal.dueDate)
+  const mTotal      = goal.milestones.length
+  const mDone       = goal.milestones.filter((m) => m.completedAt).length
+  const progressPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : config.pct
+  const progressColor = mTotal > 0
+    ? (progressPct === 100 ? 'bg-green-500' : 'bg-indigo-500')
+    : config.color
+  const allMilestonesDone = mTotal > 0 && mDone === mTotal
+  const lastCompletedAt   = allMilestonesDone
+    ? goal.milestones.reduce((latest, m) => m.completedAt && m.completedAt > (latest ?? '') ? m.completedAt : latest, null as string | null)
+    : null
   const daysLeft  = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  const isToday   = daysLeft === 0
+  const isOverdue = dueDate < new Date() && !isToday && goal.status !== 'Completed' && !allMilestonesDone
 
   return (
-    <Link href={`/goals/${goal.id}`} className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
+    <div className="relative">
+      <Link href={`/goals/${goal.id}`} className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-900 truncate">{goal.title}</h3>
@@ -96,18 +140,22 @@ function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<G
       <div className="mb-3">
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
-            className={`h-1.5 rounded-full transition-all ${config.color}`}
-            style={{ width: `${config.pct}%` }}
+            className={`h-1.5 rounded-full transition-all ${progressColor}`}
+            style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-gray-400">
-        <span className={isOverdue ? 'text-red-500 font-medium' : ''}>
+        <span className={isOverdue ? 'text-red-500 font-medium' : allMilestonesDone ? 'text-green-600 font-medium' : ''}>
           {goal.status === 'Completed'
             ? t('deadline.completed')
+            : allMilestonesDone
+            ? `里程碑已全部完成 · ${new Date(lastCompletedAt!).toLocaleDateString()}`
             : isOverdue
             ? t('deadline.overdue', { days: Math.abs(daysLeft) })
+            : isToday
+            ? '今天截止'
             : daysLeft <= 7
             ? t('deadline.remaining', { days: daysLeft })
             : t('deadline.due', { date: dueDate.toLocaleDateString() })
@@ -119,6 +167,18 @@ function GoalCard({ goal, STATUS_CONFIG }: { goal: Goal; STATUS_CONFIG: Record<G
         )}
       </div>
     </Link>
+    {onDelete && (
+      <button
+        onClick={(e) => { e.preventDefault(); onDelete() }}
+        className="absolute right-3 top-3 rounded-md p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+        title="刪除草稿"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+    )}
+    </div>
   )
 }
 
