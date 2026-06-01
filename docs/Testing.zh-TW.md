@@ -14,14 +14,7 @@
 | E2E smoke test | `cd e2e && npm test` | 3 files | 10 | 需要完整 app stack | 目前只本機 |
 | 前端檢查 | `cd frontend && npm run lint && npm run type-check && npm run build` | N/A | N/A | 否 | 是 |
 
-最新一次本機後端 coverage：
-
-| 指標 | 數值 |
-| --- | ---: |
-| Statements | 83.7% |
-| Branches | 57.82% |
-| Functions | 84.32% |
-| Lines | 88.16% |
+從 `backend/` 執行 `npm run test:cov` 可以產生當下 coverage。這份文件刻意不硬寫 coverage 百分比，因為每次新增測試或調整被量測的 source files 都會讓數字變動。
 
 ## 測試金字塔
 
@@ -57,27 +50,27 @@ npm run test:cov
 | --- | ---: | --- |
 | `src/app.module.spec.ts` | 1 | App module imports、health controller、global provider 接線 |
 | `src/health.controller.spec.ts` | 1 | Health endpoint 回傳格式 |
-| `src/common/guards/auth.guard.spec.ts` | 4 | Session cookie auth guard |
+| `src/common/guards/auth.guard.spec.ts` | 5 | Session cookie auth guard |
 | `src/common/guards/roles.guard.spec.ts` | 3 | Role metadata access check |
 | `src/common/utils/region.util.spec.ts` | 3 | Global role 判斷 |
 | `src/modules/audit/audit-write.interceptor.spec.ts` | 6 | Audit interceptor 成功/失敗 logging |
 | `src/modules/audit/audit.controller.spec.ts` | 5 | Audit controller filter 與 delegation |
-| `src/modules/audit/audit.service.spec.ts` | 9 | Audit 查詢/寫入，外部依賴 mock |
+| `src/modules/audit/audit.service.spec.ts` | 8 | Audit 查詢/寫入，外部依賴 mock |
 | `src/modules/audit/forbidden.filter.spec.ts` | 4 | Forbidden response 與 audit logging |
 | `src/modules/auth/auth.controller.spec.ts` | 5 | Login/logout/me controller 接線、cookie set/clear |
 | `src/modules/auth/auth.service.spec.ts` | 5 | Login、invalid credentials、session、logout audit |
 | `src/modules/config/config.controller.spec.ts` | 3 | Config controller delegation |
 | `src/modules/config/config.service.spec.ts` | 7 | Region config 讀寫與 RBAC |
 | `src/modules/users/users.controller.spec.ts` | 5 | Users controller delegation 與 query parsing |
-| `src/modules/users/users.service.spec.ts` | 23 | User listing、hierarchy、metadata、create/update |
+| `src/modules/users/users.service.spec.ts` | 21 | User listing、hierarchy、metadata、create/update |
 | `src/modules/goals/goals.controller.spec.ts` | 4 | Goal controller delegation、milestone normalization |
-| `src/modules/goals/goals.service.spec.ts` | 21 | Goal 建立、審核、team access、milestone、delete |
+| `src/modules/goals/goals.service.spec.ts` | 19 | Goal 建立、審核、team access、milestone、delete |
 | `src/modules/cycles/cycles.controller.spec.ts` | 3 | Cycle controller 讀取、寫入、狀態操作 |
-| `src/modules/cycles/cycles.service.spec.ts` | 15 | Cycle RBAC、日期驗證、advance gates、review rows、confirm/postpone |
+| `src/modules/cycles/cycles.service.spec.ts` | 16 | Cycle RBAC、日期驗證、advance gates、review rows、confirm/postpone |
 | `src/modules/cycles/cycles.scheduler.spec.ts` | 4 | Auto-advance 與 reminder scheduler |
 | `src/modules/reviews/review-answers.util.spec.ts` | 6 | 必填答案、rating/option/text validation |
 | `src/modules/reviews/reviews.controller.spec.ts` | 4 | Review controller delegation |
-| `src/modules/reviews/reviews.service.spec.ts` | 13 | Review scopes、submit、calibration、publish、stats |
+| `src/modules/reviews/reviews.service.spec.ts` | 14 | Review scopes、submit、calibration、publish、stats |
 | `src/modules/templates/templates.controller.spec.ts` | 4 | Template controller delegation |
 | `src/modules/templates/templates.service.spec.ts` | 9 | Template 建立、自訂題、publish conflict、global lock |
 | `src/modules/appeals/appeals.controller.spec.ts` | 4 | Appeal controller delegation |
@@ -247,6 +240,6 @@ npx playwright test --list
 
 - Backend type-check passed.
 - Backend unit tests passed：29 suites，185 tests。
-- Backend coverage：83.7% statements，88.16% lines。
+- Backend coverage 可用 `npm run test:cov` 重新產生。
 - Frontend type-check 與 lint passed。
 - Playwright 可列出 3 個檔案、10 個 tests。
