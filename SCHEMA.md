@@ -4,6 +4,162 @@
 
 ![ER Diagram](<ER diagram.svg>)
 
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '13px'}}}%%
+flowchart LR
+
+    classDef auth    fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,rx:6
+    classDef cycle   fill:#dcfce7,stroke:#16a34a,color:#14532d,rx:6
+    classDef tmpl    fill:#fef9c3,stroke:#ca8a04,color:#713f12,rx:6
+    classDef goal    fill:#ffedd5,stroke:#ea580c,color:#7c2d12,rx:6
+    classDef review  fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e,rx:6
+    classDef comply  fill:#fce7f3,stroke:#db2777,color:#831843,rx:6
+
+    %% ── 認證 / 組織 ──────────────────────────────────────
+    Region["**Region**
+    ─────────────
+    🔑 id
+    name · code"]
+
+    RegionConfig["**RegionConfig**
+    ─────────────
+    🔑 id
+    🔗 regionId
+    key · value"]
+
+    Department["**Department**
+    ─────────────
+    🔑 id
+    🔗 regionId
+    🔗 parentId?"]
+
+    User["**User**
+    ─────────────
+    🔑 id
+    employeeId · role
+    🔗 regionId
+    🔗 departmentId
+    🔗 managerId?
+    🔗 supervisorId?"]
+
+    Session["**Session**
+    ─────────────
+    🔑 id
+    🔗 userId
+    expiresAt
+    lastActiveAt"]
+
+    %% ── 績效週期 ──────────────────────────────────────────
+    PerformanceCycle["**PerformanceCycle**
+    ─────────────
+    🔑 id
+    name · type · status
+    🔗 regionId
+    goalSettingStart/End
+    reviewStart/End"]
+
+    %% ── 模板 ──────────────────────────────────────────────
+    FormTemplate["**FormTemplate**
+    ─────────────
+    🔑 id
+    🔗 cycleId · regionId
+    appliesGrades[]
+    applyTitles[]
+    status"]
+
+    TemplateQuestion["**TemplateQuestion**
+    ─────────────
+    🔑 id
+    🔗 templateId
+    questionType
+    isCustom · orderIndex"]
+
+    %% ── 目標 ──────────────────────────────────────────────
+    Goal["**Goal**
+    ─────────────
+    🔑 id
+    🔗 userId · cycleId?
+    type · status · dueDate"]
+
+    GoalMilestone["**GoalMilestone**
+    ─────────────
+    🔑 id
+    🔗 goalId
+    title · completedAt?"]
+
+    ProgressUpdate["**ProgressUpdate**
+    ─────────────
+    🔑 id
+    🔗 goalId · userId
+    content"]
+
+    %% ── 評核 ──────────────────────────────────────────────
+    PerformanceReview["**PerformanceReview**
+    ─────────────
+    🔑 id
+    🔗 cycleId · templateId
+    🔗 employeeId · supervisorId?
+    status · grade? · rank?"]
+
+    Appeal["**Appeal**
+    ─────────────
+    🔑 id
+    🔗 reviewId
+    🔗 employeeId · managerId
+    status · reason"]
+
+    %% ── 合規 / 通知 ───────────────────────────────────────
+    AuditLog["**AuditLog**
+    ─────────────
+    🔑 id
+    🔗 userId
+    action · outcome
+    httpMethod · ipAddress"]
+
+    Notification["**Notification**
+    ─────────────
+    🔑 id
+    🔗 userId · cycleId?
+    type · read"]
+
+    %% ── 關係 ──────────────────────────────────────────────
+    Region      -->|"1:N"| RegionConfig
+    Region      -->|"1:N"| Department
+    Region      -->|"1:N"| User
+    Region      -->|"1:N"| PerformanceCycle
+    Region      -->|"1:N"| FormTemplate
+
+    Department  -->|"1:N"| User
+    Department  -->|"self"| Department
+
+    User        -->|"1:N"| Session
+    User        -->|"1:N"| Goal
+    User        -->|"1:N"| AuditLog
+    User        -->|"1:N"| Notification
+    User        -->|"self mgr"| User
+
+    PerformanceCycle -->|"1:N"| FormTemplate
+    PerformanceCycle -->|"1:N"| PerformanceReview
+    PerformanceCycle -->|"1:N"| Goal
+    PerformanceCycle -->|"1:N"| Notification
+
+    FormTemplate     -->|"1:N"| TemplateQuestion
+    FormTemplate     -->|"1:N"| PerformanceReview
+
+    Goal             -->|"1:N"| GoalMilestone
+    Goal             -->|"1:N"| ProgressUpdate
+
+    PerformanceReview -->|"1:1"| Appeal
+
+    %% ── 樣式 ──────────────────────────────────────────────
+    class Region,RegionConfig,Department,User,Session auth
+    class PerformanceCycle cycle
+    class FormTemplate,TemplateQuestion tmpl
+    class Goal,GoalMilestone,ProgressUpdate goal
+    class PerformanceReview,Appeal review
+    class AuditLog,Notification comply
+```
+
 ## 概覽
 
 本文件記錄 `schema.prisma` 的設計決策，以及與原始 Spec 的差異與取捨。
